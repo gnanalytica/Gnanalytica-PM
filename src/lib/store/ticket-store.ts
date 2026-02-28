@@ -118,7 +118,8 @@ export const useTicketStore = create<TicketState>()(
         setTimeout(() => {
           set((state) => {
             if (!state.flashIds[id]) return state;
-            const { [id]: _, ...rest } = state.flashIds;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [id]: _flash, ...rest } = state.flashIds;
             return { flashIds: rest };
           });
         }, 600);
@@ -136,7 +137,8 @@ export const useTicketStore = create<TicketState>()(
       removeTicket: (id) =>
         set((state) => {
           if (!state.byId[id]) return state;
-          const { [id]: _, ...rest } = state.byId;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _ticket, ...rest } = state.byId;
           return {
             byId: rest,
             ids: state.ids.filter((i) => i !== id),

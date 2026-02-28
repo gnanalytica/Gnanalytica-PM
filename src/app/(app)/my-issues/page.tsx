@@ -9,26 +9,12 @@ import { useWorkspaceNav } from '@/lib/hooks/use-workspace-nav';
 import { TicketSidePanel } from '@/components/tickets/ticket-side-panel';
 import { EmptyState, ClipboardIcon, ClockIcon } from '@/components/empty-state';
 import { MyIssueListSkeleton } from '@/components/skeletons';
-import type { Ticket, TicketPriority, ActivityLog } from '@/types';
+import { PriorityIcon, StatusCircle } from '@/components/tickets/ticket-list-view';
+import type { Ticket, ActivityLog } from '@/types';
 
 // ── Constants ──
 
 type Tab = 'assigned' | 'created' | 'activity';
-
-const STATUS_COLORS: Record<string, string> = {
-  backlog: 'bg-[#6b7280]',
-  todo: 'bg-[#8b919a]',
-  in_progress: 'bg-[#6e9ade]',
-  done: 'bg-[#5fae7e]',
-  canceled: 'bg-[#c27070]',
-};
-
-const PRIORITY_BADGES: Record<TicketPriority, { label: string; className: string }> = {
-  urgent: { label: 'Urgent', className: 'bg-[#c27070]/15 text-[#c27070]' },
-  high: { label: 'High', className: 'bg-[#c48a5a]/15 text-[#c48a5a]' },
-  medium: { label: 'Medium', className: 'bg-[#c9a04e]/15 text-[#c9a04e]' },
-  low: { label: 'Low', className: 'bg-surface-secondary text-content-muted' },
-};
 
 const ACTION_LABELS: Record<string, string> = {
   ticket_created: 'created ticket',
@@ -69,9 +55,9 @@ function groupByDate<T>(items: T[], dateKey: (item: T) => string): DateGroups<T>
 
 // ── Flatten grouped data into virtualizable rows ──
 
-type VirtualTicketRow = { type: 'header'; label: string } | { type: 'ticket'; ticket: Ticket };
+type VirtualTicketRow = { type: 'header'; label: string; count: number } | { type: 'ticket'; ticket: Ticket };
 type VirtualActivityRow =
-  | { type: 'header'; label: string }
+  | { type: 'header'; label: string; count: number }
   | { type: 'activity'; entry: ActivityLog & { ticket?: { id: string; title: string } } };
 
 function flattenTicketGroups(tickets: Ticket[]): VirtualTicketRow[] {
@@ -86,7 +72,7 @@ function flattenTicketGroups(tickets: Ticket[]): VirtualTicketRow[] {
   const rows: VirtualTicketRow[] = [];
   for (const section of sections) {
     if (section.items.length === 0) continue;
-    rows.push({ type: 'header', label: section.label });
+    rows.push({ type: 'header', label: section.label, count: section.items.length });
     for (const ticket of section.items) {
       rows.push({ type: 'ticket', ticket });
     }
@@ -108,7 +94,7 @@ function flattenActivityGroups(
   const rows: VirtualActivityRow[] = [];
   for (const section of sections) {
     if (section.items.length === 0) continue;
-    rows.push({ type: 'header', label: section.label });
+    rows.push({ type: 'header', label: section.label, count: section.items.length });
     for (const entry of section.items) {
       rows.push({ type: 'activity', entry });
     }
@@ -124,8 +110,13 @@ function LoadingSkeleton() {
 
 // ── Helpers ──
 
-function shortId(id: string) {
-  return id.slice(0, 6).toUpperCase();
+function ticketShortId(id: string) {
+  return `T-${id.slice(0, 4).toUpperCase()}`;
+}
+
+function formatDescriptiveDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  return `Updated on ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
 }
 
 function formatRelativeTime(isoDate: string): string {
@@ -155,7 +146,7 @@ function VirtualizedTicketList({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (rows[index].type === 'header' ? 28 : 34),
+    estimateSize: (index) => (rows[index].type === 'header' ? 32 : 40),
     overscan: 10,
     measureElement: (el) => el.getBoundingClientRect().height,
   });
@@ -182,15 +173,25 @@ function VirtualizedTicketList({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <h3 className="text-[11px] font-medium text-content-muted uppercase tracking-wider px-6 pt-2 pb-1">
-                  {row.label}
-                </h3>
+                <div className="flex items-center gap-2 px-6 pt-3 pb-1">
+                  <svg className="w-3 h-3 text-content-muted" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 4l4 4-4 4" />
+                  </svg>
+                  <span className="text-[12px] font-medium text-content-secondary">
+                    {row.label}
+                  </span>
+                  <span className="text-[11px] text-content-muted flex items-center gap-0.5">
+                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor" opacity="0.5">
+                      <path d="M8 3l5 9H3z" />
+                    </svg>
+                    {row.count}
+                  </span>
+                </div>
               </div>
             );
           }
 
           const ticket = row.ticket;
-          const badge = PRIORITY_BADGES[ticket.priority];
 
           return (
             <div
@@ -207,18 +208,44 @@ function VirtualizedTicketList({
             >
               <button
                 onClick={() => onTicketClick(ticket.id)}
-                className="w-full flex items-center px-6 py-1.5 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
+                className="w-full flex items-center px-6 py-2 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
               >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_COLORS[ticket.status] ?? 'bg-content-muted'}`} />
-                <span className="text-[11px] text-content-muted font-mono flex-shrink-0 ml-2 mr-2">
-                  {shortId(ticket.id)}
+                {/* Priority bars icon */}
+                <div className="flex-shrink-0 mr-2">
+                  <PriorityIcon priority={ticket.priority} />
+                </div>
+
+                {/* Ticket ID */}
+                <span className="text-[11px] text-content-muted font-mono flex-shrink-0 mr-2">
+                  {ticketShortId(ticket.id)}
                 </span>
-                <span className="text-[13px] text-content-primary font-medium truncate flex-1">
+
+                {/* Status circle */}
+                <div className="flex-shrink-0 mr-2">
+                  <StatusCircle status={ticket.status} />
+                </div>
+
+                {/* Title */}
+                <span className="text-[13px] text-content-primary font-medium truncate flex-1 min-w-0">
                   {ticket.title}
                 </span>
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ml-3 ${badge.className}`}>
-                  {badge.label}
-                </span>
+
+                {/* Labels as pills */}
+                {ticket.labels && ticket.labels.length > 0 && (
+                  <div className="flex gap-1 flex-shrink-0 ml-3">
+                    {ticket.labels.slice(0, 2).map((label) => (
+                      <span
+                        key={label.id}
+                        className="px-1.5 py-px rounded text-[10px] font-medium leading-tight"
+                        style={{ backgroundColor: label.color + '15', color: label.color }}
+                      >
+                        {label.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Assignee avatar */}
                 <div className="flex-shrink-0 ml-2.5">
                   {ticket.assignee ? (
                     ticket.assignee.avatar_url ? (
@@ -234,8 +261,10 @@ function VirtualizedTicketList({
                     <div className="w-5 h-5" />
                   )}
                 </div>
-                <span className="text-[11px] text-content-muted flex-shrink-0 w-12 text-right ml-2">
-                  {formatRelativeTime(ticket.updated_at)}
+
+                {/* Descriptive date */}
+                <span className="text-[11px] text-content-muted flex-shrink-0 text-right ml-3 whitespace-nowrap">
+                  {formatDescriptiveDate(ticket.updated_at)}
                 </span>
               </button>
             </div>
@@ -261,7 +290,7 @@ function VirtualizedActivityList({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (rows[index].type === 'header' ? 28 : 34),
+    estimateSize: (index) => (rows[index].type === 'header' ? 32 : 34),
     overscan: 10,
     measureElement: (el) => el.getBoundingClientRect().height,
   });
@@ -288,9 +317,20 @@ function VirtualizedActivityList({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <h3 className="text-[11px] font-medium text-content-muted uppercase tracking-wider px-6 pt-2 pb-1">
-                  {row.label}
-                </h3>
+                <div className="flex items-center gap-2 px-6 pt-3 pb-1">
+                  <svg className="w-3 h-3 text-content-muted" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 4l4 4-4 4" />
+                  </svg>
+                  <span className="text-[12px] font-medium text-content-secondary">
+                    {row.label}
+                  </span>
+                  <span className="text-[11px] text-content-muted flex items-center gap-0.5">
+                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor" opacity="0.5">
+                      <path d="M8 3l5 9H3z" />
+                    </svg>
+                    {row.count}
+                  </span>
+                </div>
               </div>
             );
           }
@@ -378,16 +418,16 @@ export default function MyIssuesPage() {
         <h1 className="text-13 font-medium text-content-primary">My Issues</h1>
       </div>
 
-      {/* Tab bar */}
+      {/* Tab bar — bordered pill buttons */}
       <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-2.5 py-1 text-[12px] font-medium rounded-full transition-colors ${
+            className={`px-2.5 py-1 text-[12px] font-medium rounded-full border transition-colors ${
               tab === t.key
-                ? 'bg-active text-content-primary'
-                : 'text-content-muted hover:text-content-secondary hover:bg-hover'
+                ? 'bg-content-primary/10 border-content-primary/20 text-content-primary'
+                : 'border-border-subtle text-content-muted hover:text-content-secondary hover:border-content-muted'
             }`}
           >
             {t.label}

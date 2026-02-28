@@ -3,17 +3,16 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Link from 'next/link';
-import type { Ticket, TicketPriority } from '@/types';
-
-const priorityColor: Record<TicketPriority, string> = {
-  urgent: 'bg-[#c27070]',
-  high: 'bg-[#c48a5a]',
-  medium: 'bg-[#c9a04e]',
-  low: 'bg-[#6b7280]',
-};
+import { PriorityIcon, StatusCircle } from '@/components/tickets/ticket-list-view';
+import type { Ticket } from '@/types';
 
 function shortId(id: string) {
-  return `PM-${id.slice(0, 4).toUpperCase()}`;
+  return `T-${id.slice(0, 4).toUpperCase()}`;
+}
+
+function formatCreatedDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  return `Created ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
 }
 
 export function TicketCard({
@@ -51,7 +50,7 @@ export function TicketCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`group bg-surface-tertiary rounded-sm border px-2 py-1 cursor-grab active:cursor-grabbing transition-all duration-[120ms] ease-out outline-none ${
+      className={`group bg-surface-tertiary rounded-sm border px-2.5 py-2 cursor-grab active:cursor-grabbing transition-all duration-[120ms] ease-out outline-none ${
         isOverlay
           ? 'scale-[1.03] rotate-[1.5deg] border-blue-300 bg-surface-tertiary z-50'
           : isPlaceholder
@@ -59,12 +58,9 @@ export function TicketCard({
           : 'border-border-subtle hover:border-content-muted hover:-translate-y-px hover:bg-hover active:scale-[0.98]'
       } ${isFlashing ? 'animate-flash' : ''}`}
     >
-      {/* Row 1: priority + ticket ID ... assignee avatar */}
-      <div className="flex items-center justify-between gap-2 mb-0.5">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${priorityColor[ticket.priority]}`} />
-          <span className="text-xs text-content-muted font-medium">{shortId(ticket.id)}</span>
-        </div>
+      {/* Row 1: ticket ID ... assignee avatar */}
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <span className="text-xs text-content-muted font-medium">{shortId(ticket.id)}</span>
         {ticket.assignee && (
           <div className="flex-shrink-0">
             {ticket.assignee.avatar_url ? (
@@ -84,42 +80,55 @@ export function TicketCard({
         )}
       </div>
 
-      {/* Row 2: title */}
-      {onTicketClick ? (
-        <button
-          type="button"
-          className="text-sm leading-snug font-medium text-content-primary group-hover:text-content-primary block truncate text-left w-full focus-visible:text-blue-600"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTicketClick(ticket.id);
-          }}
-        >
-          {ticket.title}
-        </button>
-      ) : (
-        <Link
-          href={`/ticket/${ticket.id}`}
-          className="text-sm leading-snug font-medium text-content-primary group-hover:text-content-primary block truncate focus-visible:text-blue-600"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {ticket.title}
-        </Link>
-      )}
-
-      {/* Row 3: labels (only if present) */}
-      {ticket.labels && ticket.labels.length > 0 && (
-        <div className="flex gap-1 flex-wrap mt-1">
-          {ticket.labels.map((label) => (
-            <span
-              key={label.id}
-              className="px-1.5 py-px rounded text-[10px] font-medium leading-tight"
-              style={{ backgroundColor: label.color + '15', color: label.color }}
-            >
-              {label.name}
-            </span>
-          ))}
+      {/* Row 2: status circle + title */}
+      <div className="flex items-start gap-1.5 mb-1">
+        <div className="flex-shrink-0 mt-0.5">
+          <StatusCircle status={ticket.status} />
         </div>
-      )}
+        {onTicketClick ? (
+          <button
+            type="button"
+            className="text-sm leading-snug font-medium text-content-primary group-hover:text-content-primary block truncate text-left w-full focus-visible:text-blue-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTicketClick(ticket.id);
+            }}
+          >
+            {ticket.title}
+          </button>
+        ) : (
+          <Link
+            href={`/ticket/${ticket.id}`}
+            className="text-sm leading-snug font-medium text-content-primary group-hover:text-content-primary block truncate focus-visible:text-blue-600"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {ticket.title}
+          </Link>
+        )}
+      </div>
+
+      {/* Row 3: priority bars + labels */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <PriorityIcon priority={ticket.priority} />
+        {ticket.labels && ticket.labels.length > 0 && (
+          <>
+            {ticket.labels.map((label) => (
+              <span
+                key={label.id}
+                className="px-1.5 py-px rounded text-[10px] font-medium leading-tight"
+                style={{ backgroundColor: label.color + '15', color: label.color }}
+              >
+                {label.name}
+              </span>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* Row 4: created date */}
+      <p className="text-[10px] text-content-muted mt-1.5">
+        {formatCreatedDate(ticket.created_at)}
+      </p>
     </div>
   );
 }

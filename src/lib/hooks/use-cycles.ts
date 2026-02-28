@@ -68,7 +68,7 @@ export function useHydrateCycles(projectId: string | undefined) {
 
   // Handle cache hits
   if (query.data && hydratedRef.current !== projectId) {
-    hydratedRef.current = projectId;
+    hydratedRef.current = projectId ?? null;
     const store = useTicketStore.getState();
     store.setCycles(query.data.cycles);
     for (const cycle of query.data.cycles) {

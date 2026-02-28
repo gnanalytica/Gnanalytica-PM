@@ -12,7 +12,7 @@ import type { Ticket, TicketPriority, ViewFilters } from '@/types';
 
 // ── Visual maps ──
 
-const DEFAULT_STATUS_ICON: Record<string, { color: string; bg: string }> = {
+export const DEFAULT_STATUS_ICON: Record<string, { color: string; bg: string }> = {
   backlog: { color: 'text-[#6b7280]', bg: 'bg-[#6b7280]' },
   todo: { color: 'text-[#8b919a]', bg: 'bg-[#8b919a]' },
   in_progress: { color: 'text-[#6e9ade]', bg: 'bg-[#6e9ade]' },
@@ -22,13 +22,13 @@ const DEFAULT_STATUS_ICON: Record<string, { color: string; bg: string }> = {
 
 const FALLBACK_STATUS_ICON = { color: 'text-[#8b919a]', bg: 'bg-[#8b919a]' };
 
-function getStatusIcon(status: string): { color: string; bg: string } {
+export function getStatusIcon(status: string): { color: string; bg: string } {
   return DEFAULT_STATUS_ICON[status] ?? FALLBACK_STATUS_ICON;
 }
 
 // ── Linear-style priority bar icons ──
 
-function PriorityIcon({ priority }: { priority: TicketPriority }) {
+export function PriorityIcon({ priority }: { priority: TicketPriority }) {
   switch (priority) {
     case 'urgent':
       return (
@@ -59,7 +59,7 @@ function PriorityIcon({ priority }: { priority: TicketPriority }) {
 
 // ── Status circle component ──
 
-function StatusCircle({ status }: { status: string }) {
+export function StatusCircle({ status }: { status: string }) {
   const si = getStatusIcon(status);
   if (status === 'done') {
     return (
@@ -357,7 +357,8 @@ export function TicketListView({
   filters,
   sortKey: controlledSortKey,
   sortDir: controlledSortDir,
-  onSortChange: _onSortChange,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onSortChange,
   onFiltersChange,
   filterTicketIds,
   isFetchingMore,

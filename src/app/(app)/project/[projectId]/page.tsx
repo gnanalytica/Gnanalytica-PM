@@ -54,7 +54,7 @@ const VALID_SORT_KEYS: SortKey[] = ['id', 'title', 'status', 'priority', 'assign
 
 export default function ProjectPage() {
   const params = useParams<{ projectId: string }>();
-  const projectId = typeof params.projectId === 'string' ? params.projectId : undefined;
+  const projectId = typeof params.projectId === 'string' ? params.projectId : '';
   const router = useRouter();
   const searchString = useShallowSearch();
 

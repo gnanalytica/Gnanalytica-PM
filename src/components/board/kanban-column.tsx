@@ -6,6 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { motion, AnimatePresence } from 'framer-motion';
 import { TicketCard } from './ticket-card';
 import { useCreateTicket, useFlashIds } from '@/lib/hooks/use-tickets';
+import { StatusCircle } from '@/components/tickets/ticket-list-view';
 import type { Ticket, StatusCategory } from '@/types';
 
 export function KanbanColumn({
@@ -73,15 +74,40 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       className={`flex-shrink-0 w-64 bg-surface-secondary rounded-sm p-2 transition-all duration-200 ease-out ${
-        isOver ? 'bg-blue-500/10 ring-1 ring-blue-500/30 scale-[1.01]' : ''
+        isOver ? 'bg-accent-soft ring-1 ring-accent/30 scale-[1.01]' : ''
       }`}
     >
+      {/* Column header */}
       <div className="flex items-center justify-between mb-1.5">
-        <h3 className="text-xs font-medium text-content-secondary">{title}</h3>
-        <span className="text-[11px] text-content-muted bg-hover rounded-full px-1.5 py-px">
-          {tickets.length}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <StatusCircle status={id} />
+          <h3 className="text-xs font-medium text-content-secondary">{title}</h3>
+          <span className="text-[11px] text-content-muted flex items-center gap-0.5">
+            <svg className="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor" opacity="0.5">
+              <path d="M8 3l5 9H3z" />
+            </svg>
+            {tickets.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button className="w-5 h-5 flex items-center justify-center rounded hover:bg-hover text-content-muted hover:text-content-secondary transition-colors">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="3" r="1.2" />
+              <circle cx="8" cy="8" r="1.2" />
+              <circle cx="8" cy="13" r="1.2" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setIsCreating(true)}
+            className="w-5 h-5 flex items-center justify-center rounded hover:bg-hover text-content-muted hover:text-content-secondary transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
+
       <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-0.5 min-h-[32px]">
           <AnimatePresence initial={false} mode="popLayout">

@@ -71,6 +71,7 @@ export function useUpdateSavedView() {
       sort_key?: string;
       sort_dir?: string;
     }) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, project_id, ...updates } = params;
       const { data, error } = await supabase
         .from('saved_views')

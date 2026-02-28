@@ -641,6 +641,7 @@ export function useReorderTicket() {
       id,
       position,
       status,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       status_category,
     }: {
       id: string;
