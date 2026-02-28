@@ -7,13 +7,14 @@ import type { WorkflowStatus, ProjectWorkflow, StatusCategory } from '@/types';
 
 const supabase = createClient();
 
-/** The 5 built-in default statuses — used when a project has no custom workflow. */
+/** The 6 built-in default statuses — used when a project has no custom workflow. */
 export const DEFAULT_WORKFLOW: WorkflowStatus[] = [
   { key: 'backlog', label: 'Backlog', category: 'backlog', color: '#6b7280', position: 0 },
   { key: 'todo', label: 'Todo', category: 'unstarted', color: '#8b919a', position: 1 },
   { key: 'in_progress', label: 'In Progress', category: 'started', color: '#6e9ade', position: 2 },
-  { key: 'done', label: 'Done', category: 'completed', color: '#5fae7e', position: 3 },
-  { key: 'canceled', label: 'Canceled', category: 'canceled', color: '#c27070', position: 4 },
+  { key: 'in_review', label: 'In Review', category: 'started', color: '#a78bfa', position: 3 },
+  { key: 'done', label: 'Done', category: 'completed', color: '#5fae7e', position: 4 },
+  { key: 'canceled', label: 'Canceled', category: 'canceled', color: '#c27070', position: 5 },
 ];
 
 async function fetchWorkflow(projectId: string): Promise<ProjectWorkflow | null> {

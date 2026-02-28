@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Ticket, Cycle, StatusCategory } from '@/types';
+import type { Ticket, Cycle, Milestone, StatusCategory } from '@/types';
 
 // ── Normalized state ──
 
@@ -14,6 +14,10 @@ type TicketState = {
   cyclesById: Record<string, Cycle>;
   cycleTicketIds: Record<string, string[]>;
 
+  // Milestone state
+  milestonesById: Record<string, Milestone>;
+  milestoneIds: string[];
+
   // Ticket actions
   setTickets: (tickets: Ticket[]) => void;
   mergeTickets: (tickets: Ticket[]) => void;
@@ -26,9 +30,16 @@ type TicketState = {
   setActiveCycle: (cycleId: string | null) => void;
   setCycles: (cycles: Cycle[]) => void;
   addCycle: (cycle: Cycle) => void;
+  updateCycle: (id: string, fields: Partial<Cycle>) => void;
   assignIssueToCycle: (ticketId: string, cycleId: string) => void;
   removeIssueFromCycle: (ticketId: string, cycleId: string) => void;
   setCycleTickets: (cycleId: string, ticketIds: string[]) => void;
+
+  // Milestone actions
+  setMilestones: (milestones: Milestone[]) => void;
+  addMilestone: (milestone: Milestone) => void;
+  updateMilestone: (id: string, fields: Partial<Milestone>) => void;
+  removeMilestone: (id: string) => void;
 };
 
 // ── Getters (pure functions for use outside React — see NOTE at bottom) ──
@@ -58,6 +69,9 @@ export const useTicketStore = create<TicketState>()(
       activeCycleId: null,
       cyclesById: {},
       cycleTicketIds: {},
+
+      milestonesById: {},
+      milestoneIds: [],
 
       setTickets: (tickets) =>
         set((state) => {
@@ -195,6 +209,57 @@ export const useTicketStore = create<TicketState>()(
             [cycleId]: ticketIds,
           },
         })),
+
+      updateCycle: (id, fields) =>
+        set((state) => {
+          const existing = state.cyclesById[id];
+          if (!existing) return state;
+          return {
+            cyclesById: { ...state.cyclesById, [id]: { ...existing, ...fields } },
+          };
+        }),
+
+      // ── Milestone actions ──
+
+      setMilestones: (milestones) =>
+        set(() => {
+          const milestonesById: Record<string, Milestone> = {};
+          const milestoneIds: string[] = [];
+          for (const m of milestones) {
+            milestonesById[m.id] = m;
+            milestoneIds.push(m.id);
+          }
+          return { milestonesById, milestoneIds };
+        }),
+
+      addMilestone: (milestone) =>
+        set((state) => {
+          if (state.milestonesById[milestone.id]) return state;
+          return {
+            milestonesById: { ...state.milestonesById, [milestone.id]: milestone },
+            milestoneIds: [...state.milestoneIds, milestone.id],
+          };
+        }),
+
+      updateMilestone: (id, fields) =>
+        set((state) => {
+          const existing = state.milestonesById[id];
+          if (!existing) return state;
+          return {
+            milestonesById: { ...state.milestonesById, [id]: { ...existing, ...fields } },
+          };
+        }),
+
+      removeMilestone: (id) =>
+        set((state) => {
+          if (!state.milestonesById[id]) return state;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _removed, ...rest } = state.milestonesById;
+          return {
+            milestonesById: rest,
+            milestoneIds: state.milestoneIds.filter((i) => i !== id),
+          };
+        }),
     }),
     {
       name: 'pm-ticket-store',
@@ -204,6 +269,8 @@ export const useTicketStore = create<TicketState>()(
         activeCycleId: state.activeCycleId,
         cyclesById: state.cyclesById,
         cycleTicketIds: state.cycleTicketIds,
+        milestonesById: state.milestonesById,
+        milestoneIds: state.milestoneIds,
       }),
     },
   ),

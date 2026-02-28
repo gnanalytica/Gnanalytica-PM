@@ -3,10 +3,12 @@
 import { VelocityChart } from './velocity-chart';
 import { BurndownChart } from './burndown-chart';
 import { CompletionTrends } from './completion-trends';
+import { ProjectOverview } from './project-overview';
 
 export function AnalyticsDashboard({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-4">
+      <ProjectOverview projectId={projectId} />
       <div className="bg-surface-secondary rounded-lg p-4">
         <VelocityChart projectId={projectId} />
       </div>

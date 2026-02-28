@@ -10,6 +10,43 @@ const PRESET_COLORS = [
   '#c9a04e', '#9585c4', '#c47a9a', '#5ba8a0', '#c48a5a',
 ];
 
+const WORKFLOW_TEMPLATES: { name: string; statuses: WorkflowStatus[] }[] = [
+  {
+    name: 'Kanban',
+    statuses: [
+      { key: 'backlog', label: 'Backlog', category: 'backlog', color: '#6b7280', position: 0 },
+      { key: 'todo', label: 'To Do', category: 'unstarted', color: '#8b919a', position: 1 },
+      { key: 'in_progress', label: 'In Progress', category: 'started', color: '#6e9ade', position: 2 },
+      { key: 'done', label: 'Done', category: 'completed', color: '#5fae7e', position: 3 },
+      { key: 'canceled', label: 'Canceled', category: 'canceled', color: '#c27070', position: 4 },
+    ],
+  },
+  {
+    name: 'Scrum',
+    statuses: [
+      { key: 'backlog', label: 'Backlog', category: 'backlog', color: '#6b7280', position: 0 },
+      { key: 'todo', label: 'To Do', category: 'unstarted', color: '#8b919a', position: 1 },
+      { key: 'in_progress', label: 'In Progress', category: 'started', color: '#6e9ade', position: 2 },
+      { key: 'in_review', label: 'In Review', category: 'started', color: '#a78bfa', position: 3 },
+      { key: 'qa', label: 'QA', category: 'started', color: '#c9a04e', position: 4 },
+      { key: 'done', label: 'Done', category: 'completed', color: '#5fae7e', position: 5 },
+      { key: 'canceled', label: 'Canceled', category: 'canceled', color: '#c27070', position: 6 },
+    ],
+  },
+  {
+    name: 'Bug Tracking',
+    statuses: [
+      { key: 'reported', label: 'Reported', category: 'backlog', color: '#c27070', position: 0 },
+      { key: 'triaged', label: 'Triaged', category: 'unstarted', color: '#c9a04e', position: 1 },
+      { key: 'investigating', label: 'Investigating', category: 'started', color: '#6e9ade', position: 2 },
+      { key: 'fixing', label: 'Fixing', category: 'started', color: '#9585c4', position: 3 },
+      { key: 'testing', label: 'Testing', category: 'started', color: '#c48a5a', position: 4 },
+      { key: 'resolved', label: 'Resolved', category: 'completed', color: '#5fae7e', position: 5 },
+      { key: 'wont_fix', label: "Won't Fix", category: 'canceled', color: '#6b7280', position: 6 },
+    ],
+  },
+];
+
 function generateKey(label: string): string {
   return label
     .toLowerCase()
@@ -31,8 +68,17 @@ export function WorkflowEditor({ projectId }: { projectId: string }) {
   const [newColor, setNewColor] = useState(PRESET_COLORS[5]);
 
   const [isDirty, setIsDirty] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const markDirty = useCallback(() => setIsDirty(true), []);
+
+  const applyTemplate = (template: typeof WORKFLOW_TEMPLATES[number]) => {
+    setStatuses(template.statuses);
+    setTransitions(null);
+    setRestrictTransitions(false);
+    setShowTemplates(false);
+    setIsDirty(true);
+  };
 
   const handleAddStatus = () => {
     const label = newLabel.trim();
@@ -154,13 +200,42 @@ export function WorkflowEditor({ projectId }: { projectId: string }) {
     <div className="bg-surface-secondary rounded-sm p-3 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500">Workflow Configuration</h3>
-        <button
-          onClick={handleSave}
-          disabled={!isDirty || updateWorkflow.isPending}
-          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors duration-[120ms]"
-        >
-          {updateWorkflow.isPending ? 'Saving...' : 'Save'}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-hover transition-colors duration-[120ms]"
+            >
+              Templates
+            </button>
+            {showTemplates && (
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setShowTemplates(false)} />
+                <div className="absolute top-full right-0 mt-1 bg-white border border-border-subtle rounded-md shadow-lg z-30 py-1 min-w-[160px]">
+                  {WORKFLOW_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.name}
+                      onClick={() => applyTemplate(tmpl)}
+                      className="block w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-hover transition-colors"
+                    >
+                      {tmpl.name}
+                      <span className="text-[10px] text-gray-400 ml-1">
+                        ({tmpl.statuses.length} statuses)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={!isDirty || updateWorkflow.isPending}
+            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors duration-[120ms]"
+          >
+            {updateWorkflow.isPending ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
 
       {/* Current statuses grouped by category */}

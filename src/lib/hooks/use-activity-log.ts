@@ -22,6 +22,12 @@ type TicketSnapshot = {
   priority?: string;
   assignee_id?: string | null;
   label_ids?: string[];
+  issue_type?: string;
+  story_points?: number | null;
+  start_date?: string | null;
+  milestone_id?: string | null;
+  epic_id?: string | null;
+  parent_id?: string | null;
 };
 
 // ── Core logging helper ──
@@ -104,6 +110,17 @@ export async function logTicketChanges(
     });
   }
 
+  // Priority change
+  if (newState.priority !== undefined && newState.priority !== oldState.priority) {
+    entries.push({
+      ...base,
+      action: 'priority_changed',
+      field: 'priority',
+      old_value: oldState.priority ?? null,
+      new_value: newState.priority,
+    });
+  }
+
   // Assignee change
   if (newState.assignee_id !== undefined && newState.assignee_id !== oldState.assignee_id) {
     entries.push({
@@ -133,6 +150,72 @@ export async function logTicketChanges(
     }
   }
 
+  // Issue type change
+  if (newState.issue_type !== undefined && newState.issue_type !== oldState.issue_type) {
+    entries.push({
+      ...base,
+      action: 'issue_type_changed',
+      field: 'issue_type',
+      old_value: oldState.issue_type ?? null,
+      new_value: newState.issue_type,
+    });
+  }
+
+  // Story points change
+  if (newState.story_points !== undefined && newState.story_points !== oldState.story_points) {
+    entries.push({
+      ...base,
+      action: 'story_points_changed',
+      field: 'story_points',
+      old_value: oldState.story_points != null ? String(oldState.story_points) : null,
+      new_value: newState.story_points != null ? String(newState.story_points) : null,
+    });
+  }
+
+  // Start date change
+  if (newState.start_date !== undefined && newState.start_date !== oldState.start_date) {
+    entries.push({
+      ...base,
+      action: 'start_date_changed',
+      field: 'start_date',
+      old_value: oldState.start_date ?? null,
+      new_value: newState.start_date ?? null,
+    });
+  }
+
+  // Milestone change
+  if (newState.milestone_id !== undefined && newState.milestone_id !== oldState.milestone_id) {
+    entries.push({
+      ...base,
+      action: 'milestone_changed',
+      field: 'milestone_id',
+      old_value: oldState.milestone_id ?? null,
+      new_value: newState.milestone_id ?? null,
+    });
+  }
+
+  // Epic change
+  if (newState.epic_id !== undefined && newState.epic_id !== oldState.epic_id) {
+    entries.push({
+      ...base,
+      action: 'epic_changed',
+      field: 'epic_id',
+      old_value: oldState.epic_id ?? null,
+      new_value: newState.epic_id ?? null,
+    });
+  }
+
+  // Parent change
+  if (newState.parent_id !== undefined && newState.parent_id !== oldState.parent_id) {
+    entries.push({
+      ...base,
+      action: 'parent_changed',
+      field: 'parent_id',
+      old_value: oldState.parent_id ?? null,
+      new_value: newState.parent_id ?? null,
+    });
+  }
+
   await logActivities(entries);
 }
 
@@ -148,7 +231,7 @@ export async function fetchTicketSnapshot(
   const [{ data: ticket }, { data: labels }] = await Promise.all([
     supabase
       .from('tickets')
-      .select('status, priority, assignee_id')
+      .select('status, priority, assignee_id, issue_type, story_points, start_date, milestone_id, epic_id, parent_id')
       .eq('id', ticketId)
       .single(),
     supabase
@@ -162,6 +245,12 @@ export async function fetchTicketSnapshot(
     priority: ticket?.priority ?? undefined,
     assignee_id: ticket?.assignee_id ?? null,
     label_ids: labels?.map((l: { label_id: string }) => l.label_id) ?? [],
+    issue_type: ticket?.issue_type ?? undefined,
+    story_points: ticket?.story_points ?? null,
+    start_date: ticket?.start_date ?? null,
+    milestone_id: ticket?.milestone_id ?? null,
+    epic_id: ticket?.epic_id ?? null,
+    parent_id: ticket?.parent_id ?? null,
   };
 }
 

@@ -12,7 +12,16 @@ import { useProject } from '@/lib/hooks/use-projects';
 import { useRealtimeTickets } from '@/lib/hooks/use-realtime';
 import { useSavedViews, useCreateSavedView } from '@/lib/hooks/use-saved-views';
 import { useHydrateCycles, useCycleTickets, useActiveCycle } from '@/lib/hooks/use-cycles';
+import { useHydrateMilestones } from '@/lib/hooks/use-milestones';
 import { CycleBar } from '@/components/cycles/cycle-bar';
+import { MilestoneList } from '@/components/milestones/milestone-list';
+import { EpicList } from '@/components/epics/epic-list';
+import { TeamList } from '@/components/teams/team-list';
+import { RoadmapView } from '@/components/roadmap/roadmap-view';
+import { CalendarView } from '@/components/views/calendar-view';
+import { SpreadsheetView } from '@/components/views/spreadsheet-view';
+import { SprintPlanning } from '@/components/sprints/sprint-planning';
+import { BulkActionsBar } from '@/components/tickets/bulk-actions-bar';
 import {
   useWorkspaceNav,
   useShallowSearch,
@@ -29,7 +38,7 @@ const LazyAnalyticsDashboard = lazy(() =>
   })),
 );
 
-type Tab = 'board' | 'list' | 'workflow' | 'analytics';
+type Tab = 'board' | 'list' | 'calendar' | 'spreadsheet' | 'workflow' | 'analytics' | 'roadmap' | 'milestones' | 'epics' | 'teams' | 'sprints';
 
 function parseStatusParam(val: string | null): string[] | undefined {
   if (!val) return undefined;
@@ -70,6 +79,7 @@ export default function ProjectPage() {
   const [tab, setTab] = useState<Tab>('board');
   const [showCreate, setShowCreate] = useState(false);
   const [cycleFilter, setCycleFilter] = useState<'all' | 'active'>('all');
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
 
   // Filter/sort state
   const [filters, setFilters] = useState<ViewFilters>({});
@@ -230,6 +240,7 @@ export default function ProjectPage() {
   // Hydrate: React Query fetches → Zustand store populated
   const { isLoading, isError, isFetchingNextPage, totalCount, loadedCount } = useHydrateTickets(projectId);
   useHydrateCycles(projectId);
+  useHydrateMilestones(projectId);
 
   // Realtime subscription for ticket changes
   useRealtimeTickets(projectId);
@@ -269,7 +280,7 @@ export default function ProjectPage() {
 
       {/* Tab bar */}
       <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
-        {(['board', 'list', 'workflow', 'analytics'] as Tab[]).map((t) => (
+        {(['board', 'list', 'calendar', 'spreadsheet', 'sprints', 'roadmap', 'milestones', 'epics', 'teams', 'workflow', 'analytics'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -359,6 +370,20 @@ export default function ProjectPage() {
           <KanbanBoard projectId={projectId} onTicketClick={openTicket} filterTicketIds={cycleTicketIdSet} />
         ) : tab === 'workflow' ? (
           <WorkflowEditor projectId={projectId} />
+        ) : tab === 'roadmap' ? (
+          <RoadmapView projectId={projectId} />
+        ) : tab === 'milestones' ? (
+          <MilestoneList projectId={projectId} />
+        ) : tab === 'epics' ? (
+          <EpicList projectId={projectId} onTicketClick={openTicket} />
+        ) : tab === 'teams' ? (
+          <TeamList projectId={projectId} />
+        ) : tab === 'calendar' ? (
+          <CalendarView projectId={projectId} onTicketClick={openTicket} />
+        ) : tab === 'spreadsheet' ? (
+          <SpreadsheetView projectId={projectId} onTicketClick={openTicket} filters={filters} filterTicketIds={cycleTicketIdSet} />
+        ) : tab === 'sprints' ? (
+          <SprintPlanning projectId={projectId} onTicketClick={openTicket} />
         ) : (
           <TicketListView
             projectId={projectId}
@@ -383,6 +408,12 @@ export default function ProjectPage() {
       />
 
       <TicketSidePanel ticketId={selectedTicketId} onClose={closeTicket} />
+
+      <BulkActionsBar
+        selectedIds={bulkSelectedIds}
+        projectId={projectId}
+        onClear={() => setBulkSelectedIds([])}
+      />
     </div>
   );
 }

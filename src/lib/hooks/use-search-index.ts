@@ -51,10 +51,13 @@ export function useSearchIndex(): Fuse<SearchResultItem> | null {
         { name: 'item.name', weight: 2.0 },
         { name: 'item.description', weight: 0.8 },
         { name: 'item.assignee.name', weight: 0.6 },
+        { name: 'item.assignees.user.name', weight: 0.5 },
         { name: 'item.labels.name', weight: 0.5 },
         { name: 'projectName', weight: 0.4 },
+        { name: 'item.issue_type', weight: 0.4 },
         { name: 'item.status', weight: 0.3 },
         { name: 'item.priority', weight: 0.3 },
+        { name: 'item.story_points', weight: 0.2 },
       ],
     });
   }, [byId, ids, projects]);

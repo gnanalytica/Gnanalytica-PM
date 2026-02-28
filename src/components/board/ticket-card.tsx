@@ -4,6 +4,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Link from 'next/link';
 import { PriorityIcon, StatusCircle } from '@/components/tickets/ticket-list-view';
+import { IssueTypeIcon } from '@/components/tickets/issue-type-picker';
+import { StoryPointsBadge } from '@/components/tickets/story-points-picker';
 import type { Ticket } from '@/types';
 
 function shortId(id: string) {
@@ -107,9 +109,11 @@ export function TicketCard({
         )}
       </div>
 
-      {/* Row 3: priority bars + labels */}
+      {/* Row 3: issue type + priority bars + story points + labels */}
       <div className="flex items-center gap-1.5 flex-wrap">
+        <IssueTypeIcon type={ticket.issue_type ?? 'task'} />
         <PriorityIcon priority={ticket.priority} />
+        <StoryPointsBadge points={ticket.story_points ?? null} />
         {ticket.labels && ticket.labels.length > 0 && (
           <>
             {ticket.labels.map((label) => (

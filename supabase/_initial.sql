@@ -1,0 +1,12 @@
+-- Initial schema for Gnanalytica PM
+-- Run once on a fresh Supabase project (SQL Editor or: supabase db push)
+--
+-- Initial schema for Gnanalytica PM
+-- Run once on a fresh Supabase project (SQL Editor or: supabase db push)
+--
+-- Initial schema for Gnanalytica PM
+-- Run once on a fresh Supabase project (SQL Editor or: supabase db push)
+--
+-- Initial schema for Gnanalytica PM
+-- Run once on a fresh Supabase project (SQL Editor or: supabase db push)
+--

@@ -198,6 +198,91 @@ export function useRealtimeComments(ticketId: string) {
 }
 
 /**
+ * Subscribe to realtime changes for ticket relations.
+ */
+export function useRealtimeTicketRelations(ticketId: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!ticketId) return;
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket-relations', ticketId] });
+    };
+
+    const channel = supabase
+      .channel(`relations:${ticketId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_relations', filter: `source_ticket_id=eq.${ticketId}` }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_relations', filter: `target_ticket_id=eq.${ticketId}` }, invalidate)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [ticketId, queryClient]);
+}
+
+/**
+ * Subscribe to realtime changes for ticket assignees.
+ */
+export function useRealtimeTicketAssignees(ticketId: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!ticketId) return;
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] });
+    };
+
+    const channel = supabase
+      .channel(`assignees:${ticketId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_assignees', filter: `ticket_id=eq.${ticketId}` }, invalidate)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [ticketId, queryClient]);
+}
+
+/**
+ * Subscribe to realtime changes for ticket attachments.
+ */
+export function useRealtimeTicketAttachments(ticketId: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!ticketId) return;
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket-attachments', ticketId] });
+    };
+
+    const channel = supabase
+      .channel(`attachments:${ticketId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_attachments', filter: `ticket_id=eq.${ticketId}` }, invalidate)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [ticketId, queryClient]);
+}
+
+/**
+ * Subscribe to realtime changes for comment reactions.
+ */
+export function useRealtimeCommentReactions(ticketId: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!ticketId) return;
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', ticketId] });
+    };
+
+    const channel = supabase
+      .channel(`reactions:${ticketId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, invalidate)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [ticketId, queryClient]);
+}
+
+/**
  * Subscribe to realtime notification changes for the current user.
  */
 export function useRealtimeNotifications(userId: string | undefined) {

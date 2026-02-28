@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase-browser';
 // ── Types ──
 
 export type MutationDescriptor = {
-  table: 'tickets' | 'ticket_labels' | 'comments';
+  table: 'tickets' | 'ticket_labels' | 'comments' | 'ticket_relations' | 'ticket_assignees' | 'ticket_attachments' | 'milestones' | 'teams' | 'team_members' | 'ticket_custom_field_values' | 'comment_reactions';
   operation: 'insert' | 'update' | 'delete';
   payload: Record<string, unknown>;
 };
@@ -174,12 +174,25 @@ export function useSyncProcessor() {
         await executeMutation(item.descriptor);
         remove(item.id);
         // Invalidate related queries
-        if (item.descriptor.table === 'tickets') {
+        const table = item.descriptor.table;
+        if (table === 'tickets' || table === 'ticket_labels') {
           queryClient.invalidateQueries({ queryKey: ['tickets'] });
-        } else if (item.descriptor.table === 'comments') {
+        } else if (table === 'comments') {
           queryClient.invalidateQueries({ queryKey: ['comments'] });
-        } else if (item.descriptor.table === 'ticket_labels') {
+        } else if (table === 'ticket_relations') {
+          queryClient.invalidateQueries({ queryKey: ['ticket-relations'] });
+        } else if (table === 'ticket_assignees') {
           queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        } else if (table === 'ticket_attachments') {
+          queryClient.invalidateQueries({ queryKey: ['ticket-attachments'] });
+        } else if (table === 'milestones') {
+          queryClient.invalidateQueries({ queryKey: ['milestones'] });
+        } else if (table === 'teams' || table === 'team_members') {
+          queryClient.invalidateQueries({ queryKey: ['teams'] });
+        } else if (table === 'ticket_custom_field_values') {
+          queryClient.invalidateQueries({ queryKey: ['custom-field-values'] });
+        } else if (table === 'comment_reactions') {
+          queryClient.invalidateQueries({ queryKey: ['comment-reactions'] });
         }
       } catch {
         incrementRetry(item.id);

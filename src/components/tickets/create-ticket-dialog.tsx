@@ -5,8 +5,9 @@ import { useCreateTicket } from '@/lib/hooks/use-tickets';
 import { useLabels, useCreateLabel } from '@/lib/hooks/use-labels';
 import { useMembers } from '@/lib/hooks/use-members';
 import { useProjectWorkflow } from '@/lib/hooks/use-workflow';
-import { TICKET_PRIORITIES } from '@/types';
-import type { TicketPriority } from '@/types';
+import { useProjectMilestones } from '@/lib/hooks/use-milestones';
+import { TICKET_PRIORITIES, ISSUE_TYPES, STORY_POINTS } from '@/types';
+import type { TicketPriority, IssueType } from '@/types';
 
 const LABEL_COLORS = ['#c27070', '#c48a5a', '#c9a04e', '#5fae7e', '#6e9ade', '#9585c4', '#c47a9a', '#8b919a'];
 
@@ -29,11 +30,16 @@ export function CreateTicketDialog({
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
+  const [issueType, setIssueType] = useState<IssueType>('task');
+  const [storyPoints, setStoryPoints] = useState<string>('');
+  const [startDate, setStartDate] = useState('');
+  const [milestoneId, setMilestoneId] = useState('');
 
   const createTicket = useCreateTicket();
   const { data: labels } = useLabels(projectId);
   const { data: members } = useMembers();
   const createLabel = useCreateLabel();
+  const milestones = useProjectMilestones(projectId);
 
   if (!open) return null;
 
@@ -48,6 +54,10 @@ export function CreateTicketDialog({
       assignee_id: assigneeId || null,
       due_date: dueDate || null,
       label_ids: selectedLabels,
+      issue_type: issueType,
+      story_points: storyPoints ? Number(storyPoints) : null,
+      start_date: startDate || null,
+      milestone_id: milestoneId || null,
     });
     resetForm();
     onClose();
@@ -61,6 +71,10 @@ export function CreateTicketDialog({
     setAssigneeId('');
     setDueDate('');
     setSelectedLabels([]);
+    setIssueType('task');
+    setStoryPoints('');
+    setStartDate('');
+    setMilestoneId('');
   };
 
   const handleCreateLabel = async () => {
@@ -126,6 +140,57 @@ export function CreateTicketDialog({
               >
                 {TICKET_PRIORITIES.map((p) => (
                   <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Issue Type</label>
+              <select
+                value={issueType}
+                onChange={(e) => setIssueType(e.target.value as IssueType)}
+                className="w-full border rounded-md px-2.5 py-1.5 text-xs cursor-pointer"
+              >
+                {ISSUE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Story Points</label>
+              <select
+                value={storyPoints}
+                onChange={(e) => setStoryPoints(e.target.value)}
+                className="w-full border rounded-md px-2.5 py-1.5 text-xs cursor-pointer"
+              >
+                <option value="">None</option>
+                {STORY_POINTS.map((sp) => (
+                  <option key={sp} value={sp}>{sp}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full border rounded-md px-2.5 py-1.5 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Milestone</label>
+              <select
+                value={milestoneId}
+                onChange={(e) => setMilestoneId(e.target.value)}
+                className="w-full border rounded-md px-2.5 py-1.5 text-xs cursor-pointer"
+              >
+                <option value="">None</option>
+                {milestones.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>

@@ -8,7 +8,7 @@ import { logTicketChanges, fetchTicketSnapshot } from '@/lib/hooks/use-activity-
 import { ensureWatching, notifyWatchers } from '@/lib/hooks/use-watchers';
 import { useTicketStore } from '@/lib/store/ticket-store';
 import { toast } from '@/lib/hooks/use-toast';
-import type { Ticket, Label, TicketPriority, StatusCategory } from '@/types';
+import type { Ticket, Label, TicketPriority, IssueType, StatusCategory } from '@/types';
 import { getStatusCategory } from '@/types';
 import { getCycleIssues } from '@/lib/store/ticket-store';
 
@@ -28,7 +28,16 @@ type TicketPage = {
 export function normalizeTicket(t: any): Ticket {
   return {
     ...t,
+    issue_type: t.issue_type ?? 'task',
+    story_points: t.story_points ?? null,
+    start_date: t.start_date ?? null,
+    parent_id: t.parent_id ?? null,
+    epic_id: t.epic_id ?? null,
+    milestone_id: t.milestone_id ?? null,
     labels: t.labels?.map((tl: { label: unknown }) => tl.label) ?? [],
+    assignees: t.assignees ?? [],
+    parent: t.parent ?? null,
+    milestone: t.milestone ?? null,
   };
 }
 
@@ -36,7 +45,10 @@ export const TICKET_SELECT = `
   *,
   assignee:profiles!tickets_assignee_id_fkey(*),
   creator:profiles!tickets_created_by_fkey(*),
-  labels:ticket_labels(label:labels(*))
+  labels:ticket_labels(label:labels(*)),
+  assignees:ticket_assignees(user:profiles(*)),
+  milestone:milestones(id,name,target_date,status),
+  parent:tickets!tickets_parent_id_fkey(id,title,status)
 `;
 
 async function fetchProjectTicketsPage(projectId: string, page: number): Promise<TicketPage> {
@@ -422,6 +434,12 @@ export function useCreateTicket() {
       due_date?: string | null;
       label_ids?: string[];
       position?: number;
+      issue_type?: IssueType;
+      story_points?: number | null;
+      start_date?: string | null;
+      parent_id?: string | null;
+      epic_id?: string | null;
+      milestone_id?: string | null;
     }) => {
       const { label_ids, ...ticketData } = ticket;
       const { data: { user } } = await supabase.auth.getUser();
@@ -458,7 +476,14 @@ export function useCreateTicket() {
         updated_at: new Date().toISOString(),
         due_date: newTicket.due_date ?? null,
         position: newTicket.position ?? 0,
+        issue_type: newTicket.issue_type ?? 'task',
+        story_points: newTicket.story_points ?? null,
+        start_date: newTicket.start_date ?? null,
+        parent_id: newTicket.parent_id ?? null,
+        epic_id: newTicket.epic_id ?? null,
+        milestone_id: newTicket.milestone_id ?? null,
         labels: [],
+        assignees: [],
       };
 
       addTicket(optimistic);
@@ -510,6 +535,12 @@ export function useUpdateTicket() {
       due_date?: string | null;
       label_ids?: string[];
       position?: number;
+      issue_type?: IssueType;
+      story_points?: number | null;
+      start_date?: string | null;
+      parent_id?: string | null;
+      epic_id?: string | null;
+      milestone_id?: string | null;
     }) => {
       void project_id;
 
@@ -682,5 +713,48 @@ export function useReorderTicket() {
       }
     },
     // No onSettled invalidation — store is source of truth until next full refetch
+  });
+}
+
+export function useUpdateMultipleTickets() {
+  const queryClient = useQueryClient();
+  const storeUpdate = useTicketStore((s) => s.updateTicket);
+
+  return useMutation({
+    mutationKey: ['tickets', 'bulk'],
+    mutationFn: async ({
+      ids,
+      project_id,
+      updates,
+    }: {
+      ids: string[];
+      project_id: string;
+      updates: {
+        status?: string;
+        priority?: TicketPriority;
+        assignee_id?: string | null;
+        milestone_id?: string | null;
+        epic_id?: string | null;
+        issue_type?: IssueType;
+      };
+    }) => {
+      void project_id;
+      const { error } = await supabase
+        .from('tickets')
+        .update(updates)
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onMutate: ({ ids, updates }) => {
+      const categoryUpdate = updates.status
+        ? { status_category: getStatusCategory(updates.status) }
+        : {};
+      for (const id of ids) {
+        storeUpdate(id, { ...updates, ...categoryUpdate });
+      }
+    },
+    onSettled: (_data, _err, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tickets', variables.project_id] });
+    },
   });
 }

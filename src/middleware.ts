@@ -34,9 +34,24 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname === '/login' || pathname.startsWith('/auth/');
+  const isCustomerRoute = pathname.startsWith('/portal') || pathname.startsWith('/kb');
+  const isCustomerLogin = pathname === '/customer-login';
+  const isApiRoute = pathname.startsWith('/api/');
 
-  // Redirect unauthenticated users to /login (except auth routes)
-  if (!user && !isAuthRoute) {
+  // Allow API routes through (webhook endpoints handle their own auth)
+  if (isApiRoute) {
+    return response;
+  }
+
+  // Customer portal routes: redirect to customer login if unauthenticated
+  if (isCustomerRoute && !user && !isCustomerLogin) {
+    const loginUrl = new URL('/customer-login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Internal app routes: redirect unauthenticated users to /login
+  if (!user && !isAuthRoute && !isCustomerRoute) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }

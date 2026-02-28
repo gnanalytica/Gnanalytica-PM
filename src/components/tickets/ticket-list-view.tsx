@@ -16,6 +16,7 @@ export const DEFAULT_STATUS_ICON: Record<string, { color: string; bg: string }> 
   backlog: { color: 'text-[#6b7280]', bg: 'bg-[#6b7280]' },
   todo: { color: 'text-[#8b919a]', bg: 'bg-[#8b919a]' },
   in_progress: { color: 'text-[#6e9ade]', bg: 'bg-[#6e9ade]' },
+  in_review: { color: 'text-[#a78bfa]', bg: 'bg-[#a78bfa]' },
   done: { color: 'text-[#5fae7e]', bg: 'bg-[#5fae7e]' },
   canceled: { color: 'text-[#c27070]', bg: 'bg-[#c27070]' },
 };
@@ -82,6 +83,7 @@ export function StatusCircle({ status }: { status: string }) {
     backlog: '#6b7280',
     todo: '#8b919a',
     in_progress: '#6e9ade',
+    in_review: '#a78bfa',
   };
   const strokeColor = colorMap[status] ?? '#8b919a';
   const isDashed = status === 'backlog';
@@ -108,7 +110,7 @@ export type SortKey = 'id' | 'title' | 'status' | 'priority' | 'assignee' | 'upd
 export type SortDir = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<TicketPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
-const DEFAULT_STATUS_ORDER: Record<string, number> = { backlog: 0, todo: 1, in_progress: 2, done: 3, canceled: 4 };
+const DEFAULT_STATUS_ORDER: Record<string, number> = { backlog: 0, todo: 1, in_progress: 2, in_review: 3, done: 4, canceled: 5 };
 
 function compareTickets(a: Ticket, b: Ticket, key: SortKey, dir: SortDir): number {
   let cmp = 0;

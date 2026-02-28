@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTicketStore } from '@/lib/store/ticket-store';
 import { useProjectCycles, useActiveCycle, useCycleTickets } from '@/lib/hooks/use-cycles';
 import { CreateCycleDialog } from '@/components/cycles/create-cycle-dialog';
+import { RetrospectiveDialog } from '@/components/sprints/retrospective-dialog';
 import { getCycleProgress } from '@/types';
 import type { Cycle } from '@/types';
 
@@ -58,6 +59,7 @@ export function CycleBar({
   );
 
   const [showCreateCycle, setShowCreateCycle] = useState(false);
+  const [showRetro, setShowRetro] = useState(false);
   const addCycle = useTicketStore((s) => s.addCycle);
 
   const handleCycleCreated = (cycle: Cycle) => {
@@ -144,6 +146,17 @@ export function CycleBar({
               >
                 + New cycle
               </button>
+
+              {activeCycle && (
+                <button
+                  type="button"
+                  onClick={() => setShowRetro(true)}
+                  className="text-[11px] text-content-muted hover:text-content-secondary cursor-pointer rounded transition-colors duration-[120ms]"
+                  title="Sprint retrospective"
+                >
+                  Retrospective
+                </button>
+              )}
             </>
           )
         )}
@@ -155,6 +168,15 @@ export function CycleBar({
         projectId={projectId}
         onCreated={handleCycleCreated}
       />
+
+      {activeCycle && (
+        <RetrospectiveDialog
+          cycle={activeCycle}
+          projectId={projectId}
+          open={showRetro}
+          onClose={() => setShowRetro(false)}
+        />
+      )}
     </>
   );
 }

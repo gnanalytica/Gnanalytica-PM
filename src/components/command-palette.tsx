@@ -11,6 +11,8 @@ import { useCommentSearch } from '@/lib/hooks/use-comment-search';
 import { useUpdateTicket, useStoreTicket } from '@/lib/hooks/use-tickets';
 import { useProjectCycles, useAssignTicketToCycle } from '@/lib/hooks/use-cycles';
 import { useProjectWorkflow } from '@/lib/hooks/use-workflow';
+import { useProjectMilestones } from '@/lib/hooks/use-milestones';
+import { useRecentItems } from '@/lib/hooks/use-recent-items';
 import { useShallowSearch } from '@/lib/hooks/use-workspace-nav';
 import { useTicketStore } from '@/lib/store/ticket-store';
 import type { Ticket } from '@/types';
@@ -42,6 +44,8 @@ const ICONS = {
   cycle: 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182',
   myIssues: 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z',
   comment: 'M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z',
+  milestone: 'M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5',
+  clock: 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 } as const;
 
 function Icon({ d, className = 'w-4 h-4 text-gray-400' }: { d: string; className?: string }) {
@@ -60,6 +64,7 @@ type Page =
   | 'change-status'
   | 'assign-user'
   | 'move-to-cycle'
+  | 'assign-milestone'
   | 'pick-ticket';
 
 const PAGE_PLACEHOLDERS: Record<Page, string> = {
@@ -68,6 +73,7 @@ const PAGE_PLACEHOLDERS: Record<Page, string> = {
   'change-status': 'Pick a status...',
   'assign-user': 'Pick a user...',
   'move-to-cycle': 'Pick a cycle...',
+  'assign-milestone': 'Pick a milestone...',
   'pick-ticket': 'Search for a ticket...',
 };
 
@@ -103,9 +109,13 @@ export function CommandPalette() {
     ? pathname.split('/')[2]
     : activeTicket?.project_id ?? null;
 
-  // Workflow and cycles for the active ticket's project
+  // Workflow, cycles, milestones for the active ticket's project
   const workflow = useProjectWorkflow(activeTicket?.project_id);
   const cycles = useProjectCycles(activeTicket?.project_id ?? '');
+  const milestones = useProjectMilestones(activeTicket?.project_id ?? '');
+
+  // Recent items for quick access
+  const { data: recentItems } = useRecentItems(5);
 
   // Mutations
   const updateTicket = useUpdateTicket();
@@ -297,6 +307,15 @@ export function CommandPalette() {
                 )}
               </Command.Item>
 
+              {/* Assign Milestone */}
+              <Command.Item onSelect={() => pushTicketAction('assign-milestone')}>
+                <Icon d={ICONS.milestone} />
+                Assign Milestone
+                {activeTicketId && (
+                  <span className="ml-auto text-[11px] text-gray-500">active ticket</span>
+                )}
+              </Command.Item>
+
               {/* Open Project */}
               <Command.Item onSelect={() => pushPage('open-project')}>
                 <Icon d={ICONS.folder} />
@@ -344,6 +363,34 @@ export function CommandPalette() {
                   >
                     <Icon d={ICONS.folder} />
                     {project.name}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {recentItems && recentItems.length > 0 && (
+              <Command.Group heading="Recent">
+                {recentItems.map((item) => (
+                  <Command.Item
+                    key={item.id}
+                    value={`recent-${item.item_id}`}
+                    onSelect={() =>
+                      runAction(() => {
+                        if (item.item_type === 'ticket') {
+                          router.push(`/ticket/${item.item_id}`);
+                        } else if (item.item_type === 'project') {
+                          router.push(`/project/${item.item_id}`);
+                        }
+                      })
+                    }
+                  >
+                    <Icon d={ICONS.clock} />
+                    <span className="truncate">
+                      {item.item_type === 'ticket' ? ticketById[item.item_id]?.title ?? item.item_id.slice(0, 8) : ''}
+                      {item.item_type === 'project' ? projects?.find((p) => p.id === item.item_id)?.name ?? item.item_id.slice(0, 8) : ''}
+                      {item.item_type === 'milestone' ? item.item_id.slice(0, 8) : ''}
+                    </span>
+                    <span className="ml-auto text-[11px] text-gray-500">{item.item_type}</span>
                   </Command.Item>
                 ))}
               </Command.Group>
@@ -595,6 +642,60 @@ export function CommandPalette() {
                   <span className="ml-auto text-[11px] text-gray-500">
                     {cycle.start_date} — {cycle.end_date}
                   </span>
+                </Command.Item>
+              ))
+            )}
+          </Command.Group>
+        )}
+
+        {/* ── Assign Milestone ── */}
+        {page === 'assign-milestone' && activeTicket && (
+          <Command.Group heading={`Assign milestone — ${activeTicket.title}`}>
+            <Command.Item
+              value="No milestone"
+              onSelect={() =>
+                runAction(() => {
+                  updateTicket.mutate({
+                    id: activeTicket.id,
+                    project_id: activeTicket.project_id,
+                    milestone_id: null,
+                  });
+                })
+              }
+            >
+              <Icon d={ICONS.milestone} />
+              No milestone
+              {!activeTicket.milestone_id && (
+                <span className="ml-auto text-[11px] text-gray-500">current</span>
+              )}
+            </Command.Item>
+            {milestones.length === 0 ? (
+              <Command.Item disabled value="no-milestones">
+                No milestones in this project
+              </Command.Item>
+            ) : (
+              milestones.map((ms) => (
+                <Command.Item
+                  key={ms.id}
+                  value={ms.name}
+                  onSelect={() =>
+                    runAction(() => {
+                      updateTicket.mutate({
+                        id: activeTicket.id,
+                        project_id: activeTicket.project_id,
+                        milestone_id: ms.id,
+                      });
+                    })
+                  }
+                >
+                  <Icon d={ICONS.milestone} />
+                  {ms.name}
+                  {ms.target_date && (
+                    <span className="ml-auto text-[11px] text-gray-500">{ms.target_date}</span>
+                  )}
+                  {activeTicket.milestone_id === ms.id && (
+                    <span className="ml-1 text-[11px] text-gray-500">current</span>
+                  )}
                 </Command.Item>
               ))
             )}

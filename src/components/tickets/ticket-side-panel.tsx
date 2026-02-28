@@ -9,8 +9,15 @@ import { useLabels, useCreateLabel } from '@/lib/hooks/use-labels';
 import { ActivityTimeline } from '@/components/tickets/activity-timeline';
 import { CommentList } from '@/components/comments/comment-list';
 import { useProjectWorkflow } from '@/lib/hooks/use-workflow';
+import { IssueTypePicker } from '@/components/tickets/issue-type-picker';
+import { StoryPointsPicker } from '@/components/tickets/story-points-picker';
+import { SubTaskList } from '@/components/tickets/sub-task-list';
+import { RelationsPanel } from '@/components/tickets/relations-panel';
+import { AttachmentsPanel } from '@/components/tickets/attachments-panel';
+import { CustomFieldsPanel } from '@/components/tickets/custom-fields-panel';
+import { useProjectMilestones } from '@/lib/hooks/use-milestones';
 import { TICKET_PRIORITIES } from '@/types';
-import type { TicketPriority } from '@/types';
+import type { TicketPriority, IssueType } from '@/types';
 
 const PRIORITY_CHIP: Record<TicketPriority, string> = {
   urgent: 'bg-[#c27070]/10 text-[#c27070]',
@@ -34,7 +41,7 @@ function shortId(id: string) {
   return `PM-${id.slice(0, 4).toUpperCase()}`;
 }
 
-type DropdownType = null | 'status' | 'priority' | 'assignee' | 'duedate';
+type DropdownType = null | 'status' | 'priority' | 'assignee' | 'duedate' | 'milestone';
 
 export function TicketSidePanel({
   ticketId,
@@ -175,6 +182,43 @@ export function TicketSidePanel({
     });
   }, [ticket, updateTicket]);
 
+  const handleIssueTypeChange = useCallback((issueType: IssueType) => {
+    if (!ticket) return;
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      issue_type: issueType,
+    });
+  }, [ticket, updateTicket]);
+
+  const handleStoryPointsChange = useCallback((points: number | null) => {
+    if (!ticket) return;
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      story_points: points,
+    });
+  }, [ticket, updateTicket]);
+
+  const handleStartDateChange = useCallback((startDate: string) => {
+    if (!ticket) return;
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      start_date: startDate || null,
+    });
+  }, [ticket, updateTicket]);
+
+  const handleMilestoneChange = useCallback((milestoneId: string) => {
+    if (!ticket) return;
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      milestone_id: milestoneId || null,
+    });
+    setOpenDropdown(null);
+  }, [ticket, updateTicket]);
+
   const handleLabelToggle = useCallback((labelId: string) => {
     if (!ticket) return;
     const currentIds = ticket.labels?.map((l) => l.id) ?? [];
@@ -205,6 +249,7 @@ export function TicketSidePanel({
     setShowLabelInput(false);
   }, [ticket, newLabelName, newLabelColor, createLabel, updateTicket]);
 
+  const milestones = useProjectMilestones(ticket?.project_id ?? '');
   const selectedAssignee = members?.find((m) => m.id === ticket?.assignee_id);
 
   return (
@@ -541,6 +586,73 @@ export function TicketSidePanel({
                       </div>
                     </PropertyRow>
 
+                    {/* Issue Type */}
+                    <PropertyRow label="Type">
+                      <IssueTypePicker
+                        value={ticket.issue_type ?? 'task'}
+                        onChange={handleIssueTypeChange}
+                      />
+                    </PropertyRow>
+
+                    {/* Story Points */}
+                    <PropertyRow label="Points">
+                      <StoryPointsPicker
+                        value={ticket.story_points ?? null}
+                        onChange={handleStoryPointsChange}
+                      />
+                    </PropertyRow>
+
+                    {/* Start Date */}
+                    <PropertyRow label="Start date">
+                      <div className="relative" data-dropdown>
+                        <input
+                          type="date"
+                          value={ticket.start_date ?? ''}
+                          onChange={(e) => handleStartDateChange(e.target.value)}
+                          className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary"
+                        />
+                      </div>
+                    </PropertyRow>
+
+                    {/* Milestone */}
+                    <PropertyRow label="Milestone">
+                      <div className="relative" data-dropdown>
+                        <button
+                          onClick={() => setOpenDropdown(openDropdown === 'milestone' ? null : 'milestone')}
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs hover:bg-hover transition-colors"
+                        >
+                          {ticket.milestone ? (
+                            <span className="truncate">{ticket.milestone.name}</span>
+                          ) : (
+                            <span className="text-content-muted">None</span>
+                          )}
+                        </button>
+                        {openDropdown === 'milestone' && (
+                          <div className="absolute right-0 top-full mt-1 bg-surface-tertiary border border-border-subtle rounded-md z-10 min-w-[180px] max-h-48 overflow-y-auto py-1">
+                            <button
+                              onClick={() => handleMilestoneChange('')}
+                              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
+                                !ticket.milestone_id ? 'bg-accent-soft text-accent' : 'text-content-secondary hover:bg-hover'
+                              }`}
+                            >
+                              None
+                            </button>
+                            {milestones.map((m) => (
+                              <button
+                                key={m.id}
+                                onClick={() => handleMilestoneChange(m.id)}
+                                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
+                                  ticket.milestone_id === m.id ? 'bg-accent-soft text-accent' : 'text-content-secondary hover:bg-hover'
+                                }`}
+                              >
+                                {m.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </PropertyRow>
+
                     {/* Labels */}
                     <PropertyRow label="Labels">
                       <div className="flex items-center gap-1 flex-wrap justify-end">
@@ -631,6 +743,33 @@ export function TicketSidePanel({
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Sub-tasks */}
+                  <div className="px-4 py-2 border-t border-border-subtle">
+                    <SubTaskList parentId={ticket.id} projectId={ticket.project_id} onTicketClick={(id) => {
+                      onClose();
+                      // Re-open with new ticket — parent manages ticketId state
+                      setTimeout(() => {
+                        const event = new CustomEvent('open-ticket', { detail: id });
+                        window.dispatchEvent(event);
+                      }, 100);
+                    }} />
+                  </div>
+
+                  {/* Relations */}
+                  <div className="px-4 py-2 border-t border-border-subtle">
+                    <RelationsPanel ticketId={ticket.id} projectId={ticket.project_id} />
+                  </div>
+
+                  {/* Attachments */}
+                  <div className="px-4 py-2 border-t border-border-subtle">
+                    <AttachmentsPanel ticketId={ticket.id} />
+                  </div>
+
+                  {/* Custom Fields */}
+                  <div className="px-4 py-2 border-t border-border-subtle">
+                    <CustomFieldsPanel ticketId={ticket.id} projectId={ticket.project_id} />
                   </div>
 
                   {/* Creator info */}

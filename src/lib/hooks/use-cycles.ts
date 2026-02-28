@@ -179,3 +179,121 @@ export function useRemoveTicketFromCycle() {
     },
   });
 }
+
+export function useUpdateCycle() {
+  const queryClient = useQueryClient();
+  const storeUpdateCycle = useTicketStore((s) => s.updateCycle);
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      projectId,
+      ...updates
+    }: {
+      id: string;
+      projectId: string;
+      name?: string;
+      start_date?: string;
+      end_date?: string;
+      retrospective_notes?: string;
+      auto_rollover?: boolean;
+      status?: 'planned' | 'active' | 'completed';
+    }) => {
+      void projectId;
+      const { data, error } = await supabase
+        .from('cycles')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Cycle;
+    },
+    onMutate: ({ id, ...updates }) => {
+      storeUpdateCycle(id, updates);
+    },
+    onSettled: (_d, _e, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+    },
+  });
+}
+
+/**
+ * Complete a sprint and optionally roll over incomplete issues to the next cycle.
+ * Creates a new cycle if auto_rollover is enabled and no next cycle exists.
+ */
+export function useCompleteSprintWithRollover() {
+  const queryClient = useQueryClient();
+  const store = useTicketStore;
+
+  return useMutation({
+    mutationFn: async ({
+      cycleId,
+      projectId,
+      nextCycleId,
+    }: {
+      cycleId: string;
+      projectId: string;
+      nextCycleId?: string;
+    }) => {
+      // Mark cycle as completed
+      const { error: updateErr } = await supabase
+        .from('cycles')
+        .update({ status: 'completed' })
+        .eq('id', cycleId);
+      if (updateErr) throw updateErr;
+
+      // Get cycle config
+      const cycle = store.getState().cyclesById[cycleId];
+      if (!cycle?.auto_rollover) return { rolledOver: 0 };
+
+      // Find incomplete tickets
+      const ticketIds = store.getState().cycleTicketIds[cycleId] ?? [];
+      const byId = store.getState().byId;
+      const incompleteIds = ticketIds.filter((id) => {
+        const t = byId[id];
+        return t && t.status_category !== 'completed' && t.status_category !== 'canceled';
+      });
+
+      if (incompleteIds.length === 0) return { rolledOver: 0 };
+
+      let targetCycleId = nextCycleId;
+
+      // Create a new cycle if needed
+      if (!targetCycleId) {
+        const startDate = new Date(cycle.end_date);
+        startDate.setDate(startDate.getDate() + 1);
+        const endDate = new Date(startDate);
+        const duration = Math.round(
+          (new Date(cycle.end_date).getTime() - new Date(cycle.start_date).getTime()) / (1000 * 60 * 60 * 24),
+        );
+        endDate.setDate(endDate.getDate() + duration);
+
+        const { data: newCycle, error: createErr } = await supabase
+          .from('cycles')
+          .insert({
+            project_id: projectId,
+            name: `${cycle.name} (next)`,
+            start_date: startDate.toISOString().slice(0, 10),
+            end_date: endDate.toISOString().slice(0, 10),
+            auto_rollover: cycle.auto_rollover,
+          })
+          .select()
+          .single();
+        if (createErr) throw createErr;
+        targetCycleId = newCycle.id;
+      }
+
+      // Move incomplete tickets to next cycle
+      const { error: insertErr } = await supabase
+        .from('ticket_cycles')
+        .insert(incompleteIds.map((tid) => ({ ticket_id: tid, cycle_id: targetCycleId! })));
+      if (insertErr) throw insertErr;
+
+      return { rolledOver: incompleteIds.length, newCycleId: targetCycleId };
+    },
+    onSettled: (_d, _e, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+    },
+  });
+}

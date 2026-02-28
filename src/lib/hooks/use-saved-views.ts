@@ -12,11 +12,12 @@ export function useSavedViews(projectId: string | undefined) {
     queryFn: async (): Promise<SavedView[]> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
+      // Fetch own views + shared views from other users
       const { data, error } = await supabase
         .from('saved_views')
         .select('*')
         .eq('project_id', projectId!)
-        .eq('created_by', user.id)
+        .or(`created_by.eq.${user.id},is_shared.eq.true`)
         .order('name');
       if (error) throw error;
       return data;

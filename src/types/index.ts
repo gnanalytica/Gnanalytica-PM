@@ -14,8 +14,27 @@ export type Project = {
   created_at: string;
 };
 
-/** The 5 built-in default statuses. */
-export type TicketStatus = 'backlog' | 'todo' | 'in_progress' | 'done' | 'canceled';
+// ── Issue types ──
+
+export type IssueType = 'bug' | 'feature' | 'task' | 'improvement' | 'epic' | 'story' | 'sub_task';
+
+export const ISSUE_TYPES: { value: IssueType; label: string; icon: string }[] = [
+  { value: 'bug', label: 'Bug', icon: '🐛' },
+  { value: 'feature', label: 'Feature', icon: '✨' },
+  { value: 'task', label: 'Task', icon: '☑️' },
+  { value: 'improvement', label: 'Improvement', icon: '⬆️' },
+  { value: 'epic', label: 'Epic', icon: '⚡' },
+  { value: 'story', label: 'Story', icon: '📖' },
+  { value: 'sub_task', label: 'Sub-task', icon: '📋' },
+];
+
+export const STORY_POINTS = [1, 2, 3, 5, 8, 13, 21] as const;
+export type StoryPoint = (typeof STORY_POINTS)[number];
+
+// ── Statuses ──
+
+/** The 6 built-in default statuses. */
+export type TicketStatus = 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 /** Workflow category that groups statuses into pipeline phases. */
@@ -41,6 +60,7 @@ const STATUS_TO_CATEGORY: Record<TicketStatus, StatusCategory> = {
   backlog: 'backlog',
   todo: 'unstarted',
   in_progress: 'started',
+  in_review: 'started',
   done: 'completed',
   canceled: 'canceled',
 };
@@ -94,6 +114,8 @@ export function getDefaultStatusForCategory(category: StatusCategory): string {
   return CATEGORY_DEFAULT_STATUS[category];
 }
 
+// ── Ticket ──
+
 export type Ticket = {
   id: string;
   project_id: string;
@@ -108,10 +130,27 @@ export type Ticket = {
   updated_at: string;
   due_date: string | null;
   position: number;
+  // New core fields
+  issue_type: IssueType;
+  story_points: number | null;
+  start_date: string | null;
+  parent_id: string | null;
+  epic_id: string | null;
+  milestone_id: string | null;
   // Joined data
   assignee?: Profile | null;
   creator?: Profile | null;
   labels?: Label[];
+  assignees?: TicketAssignee[];
+  parent?: { id: string; title: string; status: string } | null;
+  milestone?: { id: string; name: string; target_date: string | null; status: string } | null;
+  relations?: TicketRelation[];
+  attachments?: TicketAttachment[];
+  sub_tasks?: { id: string; title: string; status: string; status_category: StatusCategory }[];
+};
+
+export type TicketAssignee = {
+  user: Profile;
 };
 
 export type Label = {
@@ -126,6 +165,142 @@ export type TicketLabel = {
   label_id: string;
 };
 
+// ── Relations ──
+
+export type RelationType = 'blocks' | 'blocked_by' | 'related_to' | 'duplicate_of';
+
+export type TicketRelation = {
+  id: string;
+  source_ticket_id: string;
+  target_ticket_id: string;
+  relation_type: RelationType;
+  created_at: string;
+  source_ticket?: { id: string; title: string; status: string };
+  target_ticket?: { id: string; title: string; status: string };
+};
+
+// ── Attachments ──
+
+export type TicketAttachment = {
+  id: string;
+  ticket_id: string;
+  uploaded_by: string;
+  file_name: string;
+  storage_path: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  uploader?: Profile;
+};
+
+// ── Milestones ──
+
+export type Milestone = {
+  id: string;
+  project_id: string;
+  name: string;
+  description: string | null;
+  target_date: string | null;
+  status: 'active' | 'completed' | 'canceled';
+  created_at: string;
+  updated_at: string;
+};
+
+// ── Teams ──
+
+export type Team = {
+  id: string;
+  project_id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  created_at: string;
+  updated_at: string;
+  members?: TeamMember[];
+};
+
+export type TeamMember = {
+  team_id: string;
+  user_id: string;
+  role: 'lead' | 'member';
+  created_at: string;
+  user?: Profile;
+};
+
+// ── Custom fields ──
+
+export type CustomFieldType = 'text' | 'number' | 'date' | 'select' | 'multi_select' | 'checkbox' | 'url';
+
+export type CustomFieldDefinition = {
+  id: string;
+  project_id: string;
+  name: string;
+  field_type: CustomFieldType;
+  options: string[] | null;
+  required: boolean;
+  position: number;
+  created_at: string;
+};
+
+export type CustomFieldValue = {
+  id: string;
+  ticket_id: string;
+  field_id: string;
+  value: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// ── Notification preferences ──
+
+export type NotificationPreferences = {
+  user_id: string;
+  email_enabled: boolean;
+  email_mode: 'instant' | 'digest' | 'off';
+  push_enabled: boolean;
+  digest_enabled: boolean;
+  digest_frequency: 'daily' | 'weekly';
+  notify_on_assign: boolean;
+  notify_on_mention: boolean;
+  notify_on_status_change: boolean;
+  notify_on_comment: boolean;
+  notify_on_due_date: boolean;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+  updated_at: string;
+};
+
+// ── Project members / roles ──
+
+export type ProjectRole = 'owner' | 'admin' | 'member' | 'viewer';
+
+export type ProjectMember = {
+  project_id: string;
+  user_id: string;
+  role: ProjectRole;
+  created_at: string;
+  user?: Profile;
+};
+
+// ── Knowledge base ──
+
+export type KBArticle = {
+  id: string;
+  project_id: string;
+  title: string;
+  body: string | null;
+  slug: string | null;
+  published: boolean;
+  author_id: string;
+  category: string | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  author?: Profile;
+};
+
+// ── Comments ──
+
 export type Comment = {
   id: string;
   ticket_id: string;
@@ -133,8 +308,18 @@ export type Comment = {
   body: string;
   parent_id: string | null;
   created_at: string;
+  updated_at?: string;
   user?: Profile;
   replies?: Comment[];
+  reactions?: CommentReaction[];
+};
+
+export type CommentReaction = {
+  id: string;
+  comment_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
 };
 
 export type Notification = {
@@ -167,11 +352,24 @@ export type ActivityLog = {
   user?: Profile;
 };
 
+// ── View filters ──
+
 export type ViewFilters = {
   status?: string[];
   priority?: TicketPriority[];
   assignee_ids?: string[];
+  label_ids?: string[];
+  issue_type?: IssueType[];
+  cycle_id?: string;
+  milestone_id?: string;
+  due_date_before?: string;
+  due_date_after?: string;
+  has_assignee?: boolean;
+  is_overdue?: boolean;
+  my_tickets?: boolean;
 };
+
+export type GroupByKey = 'status' | 'priority' | 'assignee' | 'issue_type' | 'milestone' | 'epic' | 'none';
 
 export type SavedView = {
   id: string;
@@ -181,6 +379,8 @@ export type SavedView = {
   filters: ViewFilters;
   sort_key: string;
   sort_dir: string;
+  is_shared: boolean;
+  share_token: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -192,6 +392,9 @@ export type Cycle = {
   end_date: string;
   project_id: string;
   created_at: string;
+  retrospective_notes: string | null;
+  auto_rollover: boolean;
+  status: 'planned' | 'active' | 'completed';
 };
 
 export type TicketCycle = {
@@ -207,10 +410,91 @@ export type OnboardingState = {
   updated_at: string;
 };
 
+// ── Integrations ──
+
+export type GithubIntegration = {
+  id: string;
+  project_id: string;
+  repo_owner: string;
+  repo_name: string;
+  installation_id: string | null;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TicketGithubLink = {
+  id: string;
+  ticket_id: string;
+  github_integration_id: string;
+  link_type: 'pr' | 'issue' | 'branch' | 'commit';
+  url: string;
+  title: string | null;
+  number: number | null;
+  state: string | null;
+  created_at: string;
+};
+
+export type Webhook = {
+  id: string;
+  project_id: string;
+  url: string;
+  secret: string | null;
+  events: string[];
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkflowAutomation = {
+  id: string;
+  project_id: string;
+  name: string;
+  enabled: boolean;
+  trigger_type: string;
+  trigger_config: Record<string, unknown>;
+  action_type: string;
+  action_config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+// ── Recent items ──
+
+export type RecentItem = {
+  id: string;
+  user_id: string;
+  item_type: 'ticket' | 'project' | 'milestone';
+  item_id: string;
+  accessed_at: string;
+};
+
+// ── Customer portal ──
+
+export type CustomerOrg = {
+  id: string;
+  project_id: string;
+  name: string;
+  domain: string | null;
+  created_at: string;
+};
+
+export type CustomerUser = {
+  id: string;
+  org_id: string;
+  email: string;
+  name: string | null;
+  auth_user_id: string | null;
+  created_at: string;
+};
+
+// ── Constants ──
+
 export const TICKET_STATUSES: { value: TicketStatus; label: string; category: StatusCategory }[] = [
   { value: 'backlog', label: 'Backlog', category: 'backlog' },
   { value: 'todo', label: 'Todo', category: 'unstarted' },
   { value: 'in_progress', label: 'In Progress', category: 'started' },
+  { value: 'in_review', label: 'In Review', category: 'started' },
   { value: 'done', label: 'Done', category: 'completed' },
   { value: 'canceled', label: 'Canceled', category: 'canceled' },
 ];
