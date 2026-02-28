@@ -23,8 +23,8 @@ const LABEL_COLORS = ['#c27070', '#c48a5a', '#c9a04e', '#5fae7e', '#6e9ade', '#9
 
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-1.5">
-      <span className="text-xs text-content-muted w-20 flex-shrink-0">{label}</span>
+    <div className="flex items-center justify-between py-1">
+      <span className="text-[12px] text-content-muted w-20 flex-shrink-0">{label}</span>
       <div className="flex-1 flex justify-end">{children}</div>
     </div>
   );
@@ -218,7 +218,7 @@ export function TicketSidePanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-black/20 z-40"
+            className="fixed inset-0 bg-black/40 z-40"
             onClick={onClose}
           />
 
@@ -230,19 +230,19 @@ export function TicketSidePanel({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed top-0 right-0 h-full w-[480px] max-w-full bg-surface-tertiary border-l border-border-subtle z-50 flex flex-col"
+            className="fixed top-0 right-0 h-full w-[440px] max-w-full bg-surface-tertiary border-l border-border-subtle z-50 flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle">
+            <div className="flex items-center justify-between px-4 h-10 border-b border-border-subtle flex-shrink-0">
               <div className="flex items-center gap-2">
                 {ticket && (
-                  <span className="text-xs font-mono text-content-muted">{shortId(ticket.id)}</span>
+                  <span className="text-[11px] font-mono text-content-muted">{shortId(ticket.id)}</span>
                 )}
                 <Link
                   href={`/ticket/${ticketId}`}
                   target="_blank"
                   rel="noopener"
-                  className="text-[11px] text-content-muted hover:text-blue-600 transition-colors duration-[120ms]"
+                  className="text-[11px] text-content-muted hover:text-accent transition-colors duration-[120ms]"
                 >
                   Open &rarr;
                 </Link>
@@ -269,7 +269,7 @@ export function TicketSidePanel({
                   </div>
                   <div className="border-t border-border-subtle pt-2 space-y-2">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="flex items-center justify-between py-1.5">
+                      <div key={i} className="flex items-center justify-between py-1">
                         <div className="h-3 bg-surface-secondary animate-shimmer rounded w-16" />
                         <div className="h-5 bg-surface-secondary animate-shimmer rounded w-24" />
                       </div>
@@ -298,7 +298,7 @@ export function TicketSidePanel({
                             setEditingTitle(false);
                           }
                         }}
-                        className="w-full text-base font-medium bg-transparent border-b-2 border-blue-500 outline-none py-0.5"
+                        className="w-full text-base font-medium bg-transparent border-b-2 border-accent outline-none py-0.5 text-content-primary"
                         autoFocus
                       />
                     ) : (
@@ -324,7 +324,7 @@ export function TicketSidePanel({
                             setEditingDesc(false);
                           }
                         }}
-                        className="w-full text-sm bg-transparent border-b-2 border-blue-500 outline-none resize-none py-0.5"
+                        className="w-full text-sm bg-transparent border-b-2 border-accent outline-none resize-none py-0.5 text-content-secondary"
                         rows={4}
                         autoFocus
                       />
@@ -365,7 +365,7 @@ export function TicketSidePanel({
                                   disabled={!allowed}
                                   className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
                                     isActive
-                                      ? 'bg-blue-500/[0.07] text-blue-600'
+                                      ? 'bg-accent-soft text-accent'
                                       : allowed
                                         ? 'text-content-secondary hover:bg-hover'
                                         : 'opacity-30 cursor-not-allowed'
@@ -377,7 +377,7 @@ export function TicketSidePanel({
                                   />
                                   {s.label}
                                   {isActive && (
-                                    <svg className="w-3.5 h-3.5 text-blue-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <svg className="w-3.5 h-3.5 text-accent ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                     </svg>
                                   )}
@@ -407,7 +407,7 @@ export function TicketSidePanel({
                                   key={p.value}
                                   onClick={() => handlePriorityChange(p.value)}
                                   className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
-                                    isActive ? 'bg-blue-500/[0.07] text-blue-600' : 'text-content-secondary hover:bg-hover'
+                                    isActive ? 'bg-accent-soft text-accent' : 'text-content-secondary hover:bg-hover'
                                   }`}
                                 >
                                   <span className={`w-4 text-center rounded px-0.5 text-[10px] font-medium ${PRIORITY_CHIP[p.value]}`}>
@@ -415,7 +415,7 @@ export function TicketSidePanel({
                                   </span>
                                   {p.label}
                                   {isActive && (
-                                    <svg className="w-3.5 h-3.5 text-blue-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <svg className="w-3.5 h-3.5 text-accent ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                     </svg>
                                   )}
@@ -456,7 +456,7 @@ export function TicketSidePanel({
                             <button
                               onClick={() => handleAssigneeChange('')}
                               className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
-                                !ticket.assignee_id ? 'bg-blue-500/[0.07] text-blue-600' : 'text-content-secondary hover:bg-hover'
+                                !ticket.assignee_id ? 'bg-accent-soft text-accent' : 'text-content-secondary hover:bg-hover'
                               }`}
                             >
                               <div className="w-4 h-4 rounded-full bg-surface-secondary flex items-center justify-center flex-shrink-0">
@@ -473,7 +473,7 @@ export function TicketSidePanel({
                                   key={m.id}
                                   onClick={() => handleAssigneeChange(m.id)}
                                   className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
-                                    isActive ? 'bg-blue-500/[0.07] text-blue-600' : 'text-content-secondary hover:bg-hover'
+                                    isActive ? 'bg-accent-soft text-accent' : 'text-content-secondary hover:bg-hover'
                                   }`}
                                 >
                                   {m.avatar_url ? (
@@ -487,7 +487,7 @@ export function TicketSidePanel({
                                   )}
                                   <span className="truncate">{m.name}</span>
                                   {isActive && (
-                                    <svg className="w-3.5 h-3.5 text-blue-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <svg className="w-3.5 h-3.5 text-accent ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                     </svg>
                                   )}
@@ -522,7 +522,7 @@ export function TicketSidePanel({
                               type="date"
                               value={ticket.due_date ?? ''}
                               onChange={(e) => handleDueDateChange(e.target.value)}
-                              className="border border-border-subtle rounded-md px-2 py-1 text-xs"
+                              className="border border-border-subtle rounded-md px-2 py-1 text-xs bg-surface-secondary text-content-primary"
                               autoFocus
                             />
                             {ticket.due_date && (
@@ -580,7 +580,7 @@ export function TicketSidePanel({
                                   onClick={() => handleLabelToggle(label.id)}
                                   className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-all duration-[120ms] ${
                                     isSelected
-                                      ? 'ring-1 ring-offset-1 ring-blue-500'
+                                      ? 'ring-1 ring-offset-1 ring-accent'
                                       : 'opacity-50 hover:opacity-80'
                                   }`}
                                   style={{
@@ -601,7 +601,7 @@ export function TicketSidePanel({
                             value={newLabelName}
                             onChange={(e) => setNewLabelName(e.target.value)}
                             placeholder="New label"
-                            className="flex-1 border border-border-subtle rounded-md px-2.5 py-1 text-xs"
+                            className="flex-1 border border-border-subtle rounded-md px-2.5 py-1 text-xs bg-surface-secondary text-content-primary"
                             autoFocus
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
@@ -613,7 +613,7 @@ export function TicketSidePanel({
                           <select
                             value={newLabelColor}
                             onChange={(e) => setNewLabelColor(e.target.value)}
-                            className="border border-border-subtle rounded-md px-1.5 py-1 text-xs cursor-pointer"
+                            className="border border-border-subtle rounded-md px-1.5 py-1 text-xs cursor-pointer bg-surface-secondary text-content-primary"
                           >
                             {LABEL_COLORS.map((c) => (
                               <option key={c} value={c} style={{ color: c }}>
@@ -624,7 +624,7 @@ export function TicketSidePanel({
                           <button
                             onClick={handleCreateLabel}
                             disabled={!newLabelName.trim() || createLabel.isPending}
-                            className="px-2.5 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors duration-[120ms]"
+                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity duration-[120ms]"
                           >
                             Add
                           </button>
@@ -643,7 +643,7 @@ export function TicketSidePanel({
 
                   {/* Activity */}
                   <div className="px-4 py-2 border-t border-border-subtle">
-                    <label className="block text-xs font-medium uppercase tracking-wide text-content-muted mb-2">Activity</label>
+                    <label className="block text-[12px] font-medium uppercase tracking-wide text-content-muted mb-2">Activity</label>
                     <ActivityTimeline ticketId={ticket.id} workflowStatuses={workflow.statuses} />
                   </div>
 

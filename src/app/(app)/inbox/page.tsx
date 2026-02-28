@@ -125,7 +125,7 @@ function NotificationTypeIcon({ type }: { type: string }) {
       );
     default:
       return (
-        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className="w-4 h-4 text-content-muted" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
         </svg>
       );
@@ -138,11 +138,11 @@ function InboxSkeleton() {
   return (
     <div className="animate-pulse space-y-1 py-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-2">
-          <div className="w-2 h-2 rounded-full bg-gray-200" />
-          <div className="w-4 h-4 rounded bg-gray-200" />
-          <div className="flex-1 h-3.5 rounded bg-gray-200" />
-          <div className="w-8 h-3 rounded bg-gray-200" />
+        <div key={i} className="flex items-center gap-3 px-6 py-2">
+          <div className="w-2 h-2 rounded-full bg-surface-tertiary" />
+          <div className="w-4 h-4 rounded bg-surface-tertiary" />
+          <div className="flex-1 h-3.5 rounded bg-surface-tertiary" />
+          <div className="w-8 h-3 rounded bg-surface-tertiary" />
         </div>
       ))}
     </div>
@@ -195,22 +195,15 @@ export default function InboxPage() {
   ];
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="mb-1.5 flex items-center justify-between">
-        <div>
-          <h1 className="text-xs font-medium uppercase tracking-wide text-gray-500">Inbox</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {unreadCount > 0
-              ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
-              : 'All caught up'}
-          </p>
-        </div>
+      <div className="h-11 flex items-center justify-between px-6 border-b border-border-subtle flex-shrink-0">
+        <h1 className="text-13 font-medium text-content-primary">Inbox</h1>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllRead.mutate()}
             disabled={markAllRead.isPending}
-            className="text-xs text-blue-600 hover:text-blue-700 active:text-blue-800 disabled:opacity-50 rounded transition-colors duration-[120ms] cursor-pointer"
+            className="text-[12px] text-accent hover:opacity-80 active:opacity-70 disabled:opacity-50 rounded transition-colors duration-[120ms] cursor-pointer"
           >
             Mark all as read
           </button>
@@ -218,24 +211,20 @@ export default function InboxPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b mb-1.5">
+      <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
+            className={`px-2.5 py-1 text-[12px] font-medium rounded-full transition-colors ${
               tab === t.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
+                ? 'bg-active text-content-primary'
+                : 'text-content-muted hover:text-content-secondary hover:bg-hover'
             }`}
           >
             {t.label}
             {t.count !== undefined && (
-              <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
-                tab === t.key
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-500'
-              }`}>
+              <span className="ml-1.5 text-[10px] text-content-muted tabular-nums">
                 {t.count}
               </span>
             )}
@@ -257,7 +246,7 @@ export default function InboxPage() {
           description={tab === 'unread' ? 'You\'re all caught up.' : 'Notifications will appear here when someone assigns you a ticket, comments, or mentions you.'}
         />
       ) : (
-        <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+        <div ref={scrollRef} className="overflow-y-auto flex-1">
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const row = rows[virtualRow.index];
@@ -276,7 +265,7 @@ export default function InboxPage() {
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wider px-1 pt-2 pb-1">
+                    <h3 className="text-[11px] font-medium text-content-muted uppercase tracking-wider px-6 pt-2 pb-1">
                       {row.label}
                     </h3>
                   </div>
@@ -300,13 +289,13 @@ export default function InboxPage() {
                 >
                   <button
                     onClick={() => handleNotificationClick(n)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms] ${
-                      !n.read ? 'bg-blue-50/40' : ''
+                    className={`w-full flex items-center gap-2.5 px-6 py-2 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms] ${
+                      !n.read ? 'bg-accent-soft' : ''
                     }`}
                   >
                     {/* Unread dot */}
                     <div className="w-2 flex-shrink-0 flex justify-center">
-                      {!n.read && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                      {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
                     </div>
 
                     {/* Type icon */}
@@ -316,18 +305,18 @@ export default function InboxPage() {
 
                     {/* Text */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 truncate">
+                      <p className="text-13 text-content-primary truncate">
                         {formatNotification(n)}
                       </p>
                       {n.ticket && (
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-[12px] text-content-muted truncate">
                           {(n.ticket as { title: string }).title}
                         </p>
                       )}
                     </div>
 
                     {/* Time */}
-                    <span className="text-[11px] text-gray-400 flex-shrink-0">
+                    <span className="text-[11px] text-content-muted flex-shrink-0">
                       {formatRelativeTime(n.created_at)}
                     </span>
 
@@ -338,7 +327,7 @@ export default function InboxPage() {
                           e.stopPropagation();
                           markRead.mutate(n.id);
                         }}
-                        className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 rounded-full transition-colors duration-[120ms] cursor-pointer"
+                        className="flex-shrink-0 p-1 text-content-muted hover:text-accent rounded-full transition-colors duration-[120ms] cursor-pointer"
                         title="Mark as read"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -355,6 +344,6 @@ export default function InboxPage() {
       )}
 
       <TicketSidePanel ticketId={selectedTicketId} onClose={closeTicket} />
-    </>
+    </div>
   );
 }

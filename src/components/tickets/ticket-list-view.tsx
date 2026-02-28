@@ -26,12 +26,81 @@ function getStatusIcon(status: string): { color: string; bg: string } {
   return DEFAULT_STATUS_ICON[status] ?? FALLBACK_STATUS_ICON;
 }
 
-const PRIORITY_ICON: Record<TicketPriority, { color: string; label: string }> = {
-  urgent: { color: 'text-[#c27070]', label: '!!!' },
-  high: { color: 'text-[#c48a5a]', label: '!!' },
-  medium: { color: 'text-[#c9a04e]', label: '!' },
-  low: { color: 'text-content-muted', label: '—' },
-};
+// ── Linear-style priority bar icons ──
+
+function PriorityIcon({ priority }: { priority: TicketPriority }) {
+  switch (priority) {
+    case 'urgent':
+      return (
+        <svg className="w-3.5 h-3.5 text-[#c27070]" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3 1.5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5Zm3 0a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5Zm3 0a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5Zm3 0a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5Z" />
+        </svg>
+      );
+    case 'high':
+      return (
+        <svg className="w-3.5 h-3.5 text-[#c48a5a]" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3 4.5a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Zm3-1a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5Zm3-2a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5Z" />
+        </svg>
+      );
+    case 'medium':
+      return (
+        <svg className="w-3.5 h-3.5 text-[#c9a04e]" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3 6.5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V7a.5.5 0 0 1 .5-.5Zm3-2a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z" />
+        </svg>
+      );
+    case 'low':
+      return (
+        <svg className="w-3.5 h-3.5 text-content-muted" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3 8.5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V9a.5.5 0 0 1 .5-.5Z" />
+        </svg>
+      );
+  }
+}
+
+// ── Status circle component ──
+
+function StatusCircle({ status }: { status: string }) {
+  const si = getStatusIcon(status);
+  if (status === 'done') {
+    return (
+      <svg className={`w-3.5 h-3.5 ${si.color}`} viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" fill="currentColor" />
+        <path d="M5.5 8l2 2 3-3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (status === 'canceled') {
+    return (
+      <svg className={`w-3.5 h-3.5 ${si.color}`} viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" fill="currentColor" />
+        <path d="M5.5 8h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  // Default: hollow circle with colored border
+  const colorMap: Record<string, string> = {
+    backlog: '#6b7280',
+    todo: '#8b919a',
+    in_progress: '#6e9ade',
+  };
+  const strokeColor = colorMap[status] ?? '#8b919a';
+  const isDashed = status === 'backlog';
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+      <circle
+        cx="8"
+        cy="8"
+        r="5.5"
+        stroke={strokeColor}
+        strokeWidth="1.5"
+        strokeDasharray={isDashed ? '3 2' : undefined}
+      />
+      {status === 'in_progress' && (
+        <path d="M8 2.5A5.5 5.5 0 0 1 13.5 8" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+}
 
 // ── Sorting ──
 
@@ -170,7 +239,7 @@ function FilterBar({
           onClick={() => toggleDropdown('status')}
           className={`px-2 py-0.5 rounded border text-[11px] transition-colors ${
             filters.status?.length
-              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              ? 'bg-accent-soft border-accent/30 text-accent'
               : 'bg-surface-tertiary border-border-subtle text-content-secondary hover:border-content-muted'
           }`}
         >
@@ -186,7 +255,7 @@ function FilterBar({
                     type="checkbox"
                     checked={filters.status?.includes(s.key) ?? false}
                     onChange={() => toggleStatus(s.key)}
-                    className="rounded border-border-subtle text-blue-600 w-3 h-3"
+                    className="rounded border-border-subtle text-accent w-3 h-3"
                   />
                   <span className="text-[11px] text-content-secondary">{s.label}</span>
                 </label>
@@ -202,7 +271,7 @@ function FilterBar({
           onClick={() => toggleDropdown('priority')}
           className={`px-2 py-0.5 rounded border text-[11px] transition-colors ${
             filters.priority?.length
-              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              ? 'bg-accent-soft border-accent/30 text-accent'
               : 'bg-surface-tertiary border-border-subtle text-content-secondary hover:border-content-muted'
           }`}
         >
@@ -218,7 +287,7 @@ function FilterBar({
                     type="checkbox"
                     checked={filters.priority?.includes(p.value) ?? false}
                     onChange={() => togglePriority(p.value)}
-                    className="rounded border-border-subtle text-blue-600 w-3 h-3"
+                    className="rounded border-border-subtle text-accent w-3 h-3"
                   />
                   <span className="text-[11px] text-content-secondary">{p.label}</span>
                 </label>
@@ -234,7 +303,7 @@ function FilterBar({
           onClick={() => toggleDropdown('assignee')}
           className={`px-2 py-0.5 rounded border text-[11px] transition-colors ${
             filters.assignee_ids?.length
-              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              ? 'bg-accent-soft border-accent/30 text-accent'
               : 'bg-surface-tertiary border-border-subtle text-content-secondary hover:border-content-muted'
           }`}
         >
@@ -250,7 +319,7 @@ function FilterBar({
                     type="checkbox"
                     checked={filters.assignee_ids?.includes(m.id) ?? false}
                     onChange={() => toggleAssignee(m.id)}
-                    className="rounded border-border-subtle text-blue-600 w-3 h-3"
+                    className="rounded border-border-subtle text-accent w-3 h-3"
                   />
                   <span className="text-[11px] text-content-secondary truncate">{m.name}</span>
                 </label>
@@ -400,9 +469,9 @@ export function TicketListView({
                     onMouseEnter={() => prefetchTicket(ticket.id)}
                     className={`flex items-center border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms] ${flashIds[ticket.id] ? 'animate-flash' : ''}`}
                   >
-                    {/* Status dot */}
+                    {/* Status circle */}
                     <div className="pl-3 pr-2 flex-shrink-0">
-                      <span className={`inline-block w-2 h-2 rounded-full ${getStatusIcon(ticket.status).bg}`} />
+                      <StatusCircle status={ticket.status} />
                     </div>
 
                     {/* ID */}
@@ -411,15 +480,15 @@ export function TicketListView({
                     {/* Title */}
                     <button
                       onClick={() => onTicketClick?.(ticket.id)}
-                      className="text-sm text-content-primary hover:text-blue-600 font-medium truncate flex-1 min-w-0 text-left transition-colors focus-visible:text-blue-600"
+                      className="text-[13px] text-content-primary font-medium truncate flex-1 min-w-0 text-left transition-colors focus-visible:text-accent"
                     >
                       {ticket.title}
                     </button>
 
                     {/* Priority */}
-                    <span className={`text-[11px] flex-shrink-0 ml-3 ${PRIORITY_ICON[ticket.priority].color}`}>
-                      {PRIORITY_ICON[ticket.priority].label}
-                    </span>
+                    <div className="flex-shrink-0 ml-3">
+                      <PriorityIcon priority={ticket.priority} />
+                    </div>
 
                     {/* Assignee avatar */}
                     <div className="flex-shrink-0 ml-2.5">

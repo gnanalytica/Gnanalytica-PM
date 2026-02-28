@@ -25,9 +25,18 @@ const config: Config = {
           secondary: "var(--text-secondary)",
           muted: "var(--text-muted)",
         },
+        sidebar: "var(--bg-sidebar)",
+        active: "var(--bg-active)",
+        accent: {
+          DEFAULT: "var(--accent-blue)",
+          soft: "var(--accent-blue-soft)",
+        },
       },
       backgroundColor: {
         hover: "var(--hover-bg)",
+      },
+      fontSize: {
+        '13': ['13px', '20px'],
       },
     },
   },

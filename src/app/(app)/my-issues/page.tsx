@@ -122,8 +122,6 @@ function LoadingSkeleton() {
   return <MyIssueListSkeleton />;
 }
 
-// EmptyState imported from @/components/empty-state
-
 // ── Helpers ──
 
 function shortId(id: string) {
@@ -165,7 +163,7 @@ function VirtualizedTicketList({
   if (tickets.length === 0) return null;
 
   return (
-    <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+    <div ref={scrollRef} className="overflow-y-auto flex-1">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
@@ -184,7 +182,7 @@ function VirtualizedTicketList({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wider px-1 pt-2 pb-1">
+                <h3 className="text-[11px] font-medium text-content-muted uppercase tracking-wider px-6 pt-2 pb-1">
                   {row.label}
                 </h3>
               </div>
@@ -209,13 +207,13 @@ function VirtualizedTicketList({
             >
               <button
                 onClick={() => onTicketClick(ticket.id)}
-                className="w-full flex items-center px-3 py-1.5 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
+                className="w-full flex items-center px-6 py-1.5 text-left border-b border-border-subtle hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
               >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_COLORS[ticket.status] ?? 'bg-gray-400'}`} />
-                <span className="text-[11px] text-gray-400 font-mono flex-shrink-0 ml-2 mr-2">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_COLORS[ticket.status] ?? 'bg-content-muted'}`} />
+                <span className="text-[11px] text-content-muted font-mono flex-shrink-0 ml-2 mr-2">
                   {shortId(ticket.id)}
                 </span>
-                <span className="text-sm text-gray-800 font-medium truncate flex-1">
+                <span className="text-[13px] text-content-primary font-medium truncate flex-1">
                   {ticket.title}
                 </span>
                 <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ml-3 ${badge.className}`}>
@@ -226,8 +224,8 @@ function VirtualizedTicketList({
                     ticket.assignee.avatar_url ? (
                       <img src={ticket.assignee.avatar_url} alt="" className="w-5 h-5 rounded-full" />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-[9px] font-medium text-gray-500">
+                      <div className="w-5 h-5 rounded-full bg-surface-tertiary flex items-center justify-center">
+                        <span className="text-[9px] font-medium text-content-muted">
                           {(ticket.assignee.name ?? '?')[0].toUpperCase()}
                         </span>
                       </div>
@@ -236,7 +234,7 @@ function VirtualizedTicketList({
                     <div className="w-5 h-5" />
                   )}
                 </div>
-                <span className="text-[11px] text-gray-400 flex-shrink-0 w-12 text-right ml-2">
+                <span className="text-[11px] text-content-muted flex-shrink-0 w-12 text-right ml-2">
                   {formatRelativeTime(ticket.updated_at)}
                 </span>
               </button>
@@ -271,7 +269,7 @@ function VirtualizedActivityList({
   if (entries.length === 0) return null;
 
   return (
-    <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+    <div ref={scrollRef} className="overflow-y-auto flex-1">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
@@ -290,7 +288,7 @@ function VirtualizedActivityList({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <h3 className="text-[11px] font-medium text-gray-500 uppercase tracking-wider px-1 pt-2 pb-1">
+                <h3 className="text-[11px] font-medium text-content-muted uppercase tracking-wider px-6 pt-2 pb-1">
                   {row.label}
                 </h3>
               </div>
@@ -315,21 +313,21 @@ function VirtualizedActivityList({
             >
               <button
                 onClick={() => entry.ticket && onEntryClick(entry.ticket.id)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
+                className="w-full flex items-center gap-2 px-6 py-1.5 text-left hover:bg-hover active:bg-hover transition-colors duration-[120ms]"
               >
-                <span className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300" />
-                <span className="text-sm text-gray-600 truncate flex-1">
-                  <span className="text-gray-800">{actionLabel}</span>
+                <span className="w-2 h-2 rounded-full flex-shrink-0 bg-surface-tertiary" />
+                <span className="text-[13px] text-content-secondary truncate flex-1">
+                  <span className="text-content-primary">{actionLabel}</span>
                   {entry.ticket && (
-                    <span className="text-gray-500"> &middot; {entry.ticket.title}</span>
+                    <span className="text-content-muted"> &middot; {entry.ticket.title}</span>
                   )}
                   {entry.field === 'status' && entry.old_value && entry.new_value && (
-                    <span className="text-gray-400">
+                    <span className="text-content-muted">
                       {' '}({entry.old_value} &rarr; {entry.new_value})
                     </span>
                   )}
                 </span>
-                <span className="text-[11px] text-gray-400 flex-shrink-0">
+                <span className="text-[11px] text-content-muted flex-shrink-0">
                   {formatRelativeTime(entry.created_at)}
                 </span>
               </button>
@@ -374,34 +372,27 @@ export default function MyIssuesPage() {
   const handleTicketClick = useCallback((id: string) => openTicket(id), [openTicket]);
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="mb-1.5">
-        <h1 className="text-xs font-medium uppercase tracking-wide text-gray-500">My Issues</h1>
-        <p className="text-xs text-gray-500 mt-0.5">
-          All tickets across your projects
-        </p>
+      <div className="h-11 flex items-center px-6 border-b border-border-subtle flex-shrink-0">
+        <h1 className="text-13 font-medium text-content-primary">My Issues</h1>
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b mb-1.5">
+      <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
+            className={`px-2.5 py-1 text-[12px] font-medium rounded-full transition-colors ${
               tab === t.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
+                ? 'bg-active text-content-primary'
+                : 'text-content-muted hover:text-content-secondary hover:bg-hover'
             }`}
           >
             {t.label}
             {t.count !== undefined && (
-              <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
-                tab === t.key
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-500'
-              }`}>
+              <span className="ml-1.5 text-[10px] text-content-muted tabular-nums">
                 {t.count}
               </span>
             )}
@@ -459,12 +450,12 @@ export default function MyIssuesPage() {
       )}
 
       {isFetchingNextPage && (
-        <p className="text-center py-2 text-[11px] text-gray-400">
+        <p className="text-center py-2 text-[11px] text-content-muted">
           Loading more ({loadedCount}{totalCount != null ? ` of ~${totalCount}` : ''})...
         </p>
       )}
 
       <TicketSidePanel ticketId={selectedTicketId} onClose={closeTicket} />
-    </>
+    </div>
   );
 }

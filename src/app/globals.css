@@ -12,18 +12,26 @@
   --text-muted: #9ca3af;
   --hover-bg: rgba(0, 0, 0, 0.04);
   --focus-ring: rgba(0, 0, 0, 0.15);
+  --bg-sidebar: #f3f4f6;
+  --bg-active: rgba(0, 0, 0, 0.06);
+  --accent-blue: #5e6ad2;
+  --accent-blue-soft: rgba(94, 106, 210, 0.12);
 }
 
 .dark {
-  --bg-primary: #0f1115;
-  --bg-secondary: #15181e;
-  --bg-tertiary: #1c1f26;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --text-primary: rgba(235, 237, 240, 0.9);
+  --bg-primary: #1f2023;
+  --bg-secondary: #28292d;
+  --bg-tertiary: #2e2f33;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(235, 237, 240, 0.6);
   --text-muted: rgba(235, 237, 240, 0.45);
-  --hover-bg: rgba(255, 255, 255, 0.04);
+  --hover-bg: rgba(255, 255, 255, 0.06);
   --focus-ring: rgba(255, 255, 255, 0.12);
+  --bg-sidebar: #1e1f22;
+  --bg-active: rgba(255, 255, 255, 0.08);
+  --accent-blue: #5e6ad2;
+  --accent-blue-soft: rgba(94, 106, 210, 0.15);
 }
 
 html, body {
@@ -33,6 +41,22 @@ html, body {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+/* Slim scrollbars for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* Interactive elements — hover transition + focus outline */
@@ -136,7 +160,7 @@ body {
 
 /* Flash highlight after ticket update */
 @keyframes flash-update {
-  0%, 15% { background-color: rgb(191 219 254 / 0.5); }
+  0%, 15% { background-color: rgba(94, 106, 210, 0.15); }
   100% { background-color: transparent; }
 }
 .animate-flash {
@@ -158,8 +182,7 @@ body {
   100% { background-position: 200% 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%) no-repeat;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%) no-repeat;
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
-

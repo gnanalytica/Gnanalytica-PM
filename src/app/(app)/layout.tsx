@@ -28,7 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </ErrorBoundary>
       <main className="flex-1 overflow-y-auto bg-surface-primary">
-        <div className="max-w-7xl mx-auto px-4 py-1.5 animate-fade-in">
+        <div className="h-full animate-fade-in">
           <ErrorBoundary onError={handleError}>
             {children}
           </ErrorBoundary>

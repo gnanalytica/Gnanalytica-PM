@@ -104,15 +104,15 @@ export function EmptyState({ icon, title, description, action, compact }: EmptyS
   if (compact) {
     return (
       <div className="flex flex-col items-center gap-1 py-3 px-3">
-        {icon && <div className="text-gray-300 dark:text-gray-600 mb-0.5">{icon}</div>}
-        <h3 className="text-xs font-medium text-gray-400 dark:text-gray-500">{title}</h3>
+        {icon && <div className="text-content-muted mb-0.5">{icon}</div>}
+        <h3 className="text-xs font-medium text-content-muted">{title}</h3>
         {description && (
-          <p className="text-[11px] text-gray-400 dark:text-gray-500">{description}</p>
+          <p className="text-[11px] text-content-muted">{description}</p>
         )}
         {action && (
           <button
             onClick={action.onClick}
-            className="mt-1.5 text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-[120ms] cursor-pointer"
+            className="mt-1.5 text-[11px] text-accent hover:opacity-80 transition-opacity duration-[120ms] cursor-pointer"
           >
             {action.label}
           </button>
@@ -124,18 +124,18 @@ export function EmptyState({ icon, title, description, action, compact }: EmptyS
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4">
       {icon && (
-        <div className="text-gray-300 dark:text-gray-600 mb-3">{icon}</div>
+        <div className="text-content-muted mb-3">{icon}</div>
       )}
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
+      <h3 className="text-sm font-medium text-content-secondary">{title}</h3>
       {description && (
-        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 max-w-xs text-center">
+        <p className="mt-1 text-xs text-content-muted max-w-xs text-center">
           {description}
         </p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-3 px-4 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-[120ms] cursor-pointer"
+          className="mt-3 px-4 py-1.5 text-xs bg-accent text-white rounded hover:opacity-90 active:opacity-80 transition-opacity duration-[120ms] cursor-pointer"
         >
           {action.label}
         </button>

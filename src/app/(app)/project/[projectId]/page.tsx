@@ -252,67 +252,40 @@ export default function ProjectPage() {
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-1.5">
-        <div>
-          <h1 className="text-sm font-medium text-gray-900">{project?.name ?? 'Loading...'}</h1>
-          {project?.description && (
-            <p className="text-xs text-gray-500 mt-0.5">{project.description}</p>
-          )}
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="h-11 flex items-center justify-between px-6 border-b border-border-subtle flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
+          <h1 className="text-13 font-medium text-content-primary truncate">{project?.name ?? 'Loading...'}</h1>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors duration-[120ms]"
+          className="px-3 py-1 text-[12px] bg-accent text-white rounded hover:opacity-90 active:opacity-80 transition-opacity duration-[120ms]"
         >
-          New Ticket
+          New Issue
         </button>
       </div>
 
-      <div className="flex items-center gap-1 border-b mb-1.5">
-        <button
-          onClick={() => setTab('board')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
-            tab === 'board'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
-          }`}
-        >
-          Board
-        </button>
-        <button
-          onClick={() => setTab('list')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
-            tab === 'list'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
-          }`}
-        >
-          List
-        </button>
-        <button
-          onClick={() => setTab('workflow')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
-            tab === 'workflow'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
-          }`}
-        >
-          Workflow
-        </button>
-        <button
-          onClick={() => setTab('analytics')}
-          className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
-            tab === 'analytics'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 active:text-gray-900'
-          }`}
-        >
-          Analytics
-        </button>
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
+        {(['board', 'list', 'workflow', 'analytics'] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-2.5 py-1 text-[12px] font-medium rounded-full transition-colors capitalize ${
+              tab === t
+                ? 'bg-active text-content-primary'
+                : 'text-content-muted hover:text-content-secondary hover:bg-hover'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
 
         {/* Active view name */}
         {tab === 'list' && activeViewName && (
-          <span className="ml-2 text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded">
+          <span className="ml-2 text-[12px] text-content-muted font-medium bg-surface-tertiary px-2 py-0.5 rounded">
             {activeViewName}
           </span>
         )}
@@ -321,7 +294,7 @@ export default function ProjectPage() {
         {tab === 'list' && !showSaveForm && (
           <button
             onClick={() => setShowSaveForm(true)}
-            className="ml-auto text-[11px] text-gray-400 hover:text-gray-600 active:text-gray-800 rounded transition-colors px-2 py-0.5"
+            className="ml-auto text-[11px] text-content-muted hover:text-content-secondary rounded transition-colors px-2 py-0.5"
           >
             Save View
           </button>
@@ -342,13 +315,13 @@ export default function ProjectPage() {
                 }
               }}
               placeholder="View name..."
-              className="text-xs border border-border-subtle rounded px-2 py-0.5 w-36"
+              className="text-xs border border-border-subtle rounded px-2 py-0.5 w-36 bg-surface-secondary text-content-primary"
               autoFocus
             />
             <button
               onClick={handleSaveView}
               disabled={!saveViewName.trim() || createSavedView.isPending}
-              className="text-[11px] bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
+              className="text-[11px] bg-accent text-white px-2 py-0.5 rounded hover:opacity-90 disabled:opacity-50"
             >
               {createSavedView.isPending ? '...' : 'Save'}
             </button>
@@ -357,7 +330,7 @@ export default function ProjectPage() {
                 setShowSaveForm(false);
                 setSaveViewName('');
               }}
-              className="text-[11px] text-gray-400 hover:text-gray-600 active:text-gray-800 rounded px-1"
+              className="text-[11px] text-content-muted hover:text-content-secondary rounded px-1"
             >
               Cancel
             </button>
@@ -365,41 +338,43 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <CycleBar
-        projectId={projectId}
-        cycleFilter={cycleFilter}
-        onCycleFilterChange={setCycleFilter}
-      />
-
-      {isLoading ? (
-        tab === 'list' ? <IssueListSkeleton /> : <BoardSkeleton />
-      ) : isError ? (
-        <div className="text-center py-4 text-red-500 text-sm">
-          <p>Failed to load tickets. Check your connection and try again.</p>
-        </div>
-      ) : tab === 'analytics' ? (
-        <Suspense fallback={<BoardSkeleton />}>
-          <LazyAnalyticsDashboard projectId={projectId} />
-        </Suspense>
-      ) : tab === 'board' ? (
-        <KanbanBoard projectId={projectId} onTicketClick={openTicket} filterTicketIds={cycleTicketIdSet} />
-      ) : tab === 'workflow' ? (
-        <WorkflowEditor projectId={projectId} />
-      ) : (
-        <TicketListView
+      <div className="flex-1 overflow-y-auto px-6 py-2">
+        <CycleBar
           projectId={projectId}
-          onTicketClick={openTicket}
-          filters={filters}
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onSortChange={handleSortChange}
-          onFiltersChange={handleFiltersChange}
-          filterTicketIds={cycleTicketIdSet}
-          isFetchingMore={isFetchingNextPage}
-          totalCount={totalCount}
-          loadedCount={loadedCount}
+          cycleFilter={cycleFilter}
+          onCycleFilterChange={setCycleFilter}
         />
-      )}
+
+        {isLoading ? (
+          tab === 'list' ? <IssueListSkeleton /> : <BoardSkeleton />
+        ) : isError ? (
+          <div className="text-center py-4 text-red-500 text-sm">
+            <p>Failed to load tickets. Check your connection and try again.</p>
+          </div>
+        ) : tab === 'analytics' ? (
+          <Suspense fallback={<BoardSkeleton />}>
+            <LazyAnalyticsDashboard projectId={projectId} />
+          </Suspense>
+        ) : tab === 'board' ? (
+          <KanbanBoard projectId={projectId} onTicketClick={openTicket} filterTicketIds={cycleTicketIdSet} />
+        ) : tab === 'workflow' ? (
+          <WorkflowEditor projectId={projectId} />
+        ) : (
+          <TicketListView
+            projectId={projectId}
+            onTicketClick={openTicket}
+            filters={filters}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
+            onFiltersChange={handleFiltersChange}
+            filterTicketIds={cycleTicketIdSet}
+            isFetchingMore={isFetchingNextPage}
+            totalCount={totalCount}
+            loadedCount={loadedCount}
+          />
+        )}
+      </div>
 
       <CreateTicketDialog
         open={showCreate}
@@ -408,6 +383,6 @@ export default function ProjectPage() {
       />
 
       <TicketSidePanel ticketId={selectedTicketId} onClose={closeTicket} />
-    </>
+    </div>
   );
 }
