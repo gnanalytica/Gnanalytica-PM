@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useShallow } from 'zustand/react/shallow';
 import { createClient } from '@/lib/supabase-browser';
 import { useTicketStore } from '@/lib/store/ticket-store';
 import type { Milestone } from '@/types';
@@ -30,10 +31,12 @@ export function useHydrateMilestones(projectId: string | undefined) {
     enabled: !!projectId,
   });
 
-  if (query.data && hydratedRef.current !== projectId) {
+  // Sync cache hits into the store via effect (not during render)
+  useEffect(() => {
+    if (!query.data || hydratedRef.current === projectId) return;
     hydratedRef.current = projectId ?? null;
     useTicketStore.getState().setMilestones(query.data);
-  }
+  }, [query.data, projectId]);
 
   return { isLoading: query.isLoading, isError: query.isError };
 }
@@ -41,10 +44,9 @@ export function useHydrateMilestones(projectId: string | undefined) {
 // ── Selectors ──
 
 export function useProjectMilestones(projectId: string): Milestone[] {
-  const { milestonesById, milestoneIds } = useTicketStore((s) => ({
-    milestonesById: s.milestonesById,
-    milestoneIds: s.milestoneIds,
-  }));
+  const { milestonesById, milestoneIds } = useTicketStore(
+    useShallow((s) => ({ milestonesById: s.milestonesById, milestoneIds: s.milestoneIds })),
+  );
 
   return useMemo(
     () =>

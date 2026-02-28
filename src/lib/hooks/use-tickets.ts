@@ -48,7 +48,7 @@ export const TICKET_SELECT = `
   labels:ticket_labels(label:labels(*)),
   assignees:ticket_assignees(user:profiles(*)),
   milestone:milestones(id,name,target_date,status),
-  parent:tickets!tickets_parent_id_fkey(id,title,status)
+  parent:tickets!parent_id(id,title,status)
 `;
 
 async function fetchProjectTicketsPage(projectId: string, page: number): Promise<TicketPage> {
@@ -88,7 +88,10 @@ async function fetchTicketById(ticketId: string): Promise<Ticket> {
 
 function upsertTicketInStore(ticket: Ticket) {
   const { byId, addTicket, updateTicket } = useTicketStore.getState();
-  if (byId[ticket.id]) {
+  const existing = byId[ticket.id];
+  if (existing) {
+    // Skip update if same reference (avoids unnecessary re-renders and flash)
+    if (existing === ticket) return;
     updateTicket(ticket.id, ticket);
   } else {
     addTicket(ticket);

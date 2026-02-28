@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useShallow } from 'zustand/react/shallow';
 import { createClient } from '@/lib/supabase-browser';
@@ -66,15 +66,16 @@ export function useHydrateCycles(projectId: string | undefined) {
     enabled: !!projectId,
   });
 
-  // Handle cache hits
-  if (query.data && hydratedRef.current !== projectId) {
+  // Sync cache hits into the store via effect (not during render)
+  useEffect(() => {
+    if (!query.data || hydratedRef.current === projectId) return;
     hydratedRef.current = projectId ?? null;
     const store = useTicketStore.getState();
     store.setCycles(query.data.cycles);
     for (const cycle of query.data.cycles) {
       store.setCycleTickets(cycle.id, query.data.ticketMap[cycle.id] ?? []);
     }
-  }
+  }, [query.data, projectId]);
 
   return { isLoading: query.isLoading, isError: query.isError };
 }
