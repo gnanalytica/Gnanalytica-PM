@@ -1,24 +1,26 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import type { SavedView, ViewFilters } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import type { SavedView, ViewFilters } from "@/types";
 
 const supabase = createClient();
 
 export function useSavedViews(projectId: string | undefined) {
   return useQuery({
-    queryKey: ['saved-views', projectId],
+    queryKey: ["saved-views", projectId],
     queryFn: async (): Promise<SavedView[]> => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return [];
       // Fetch own views + shared views from other users
       const { data, error } = await supabase
-        .from('saved_views')
-        .select('*')
-        .eq('project_id', projectId!)
+        .from("saved_views")
+        .select("*")
+        .eq("project_id", projectId!)
         .or(`created_by.eq.${user.id},is_shared.eq.true`)
-        .order('name');
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -37,10 +39,12 @@ export function useCreateSavedView() {
       sort_key: string;
       sort_dir: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
       const { data, error } = await supabase
-        .from('saved_views')
+        .from("saved_views")
         .insert({
           project_id: params.project_id,
           created_by: user.id,
@@ -55,7 +59,9 @@ export function useCreateSavedView() {
       return data as SavedView;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['saved-views', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-views", variables.project_id],
+      });
     },
   });
 }
@@ -72,19 +78,20 @@ export function useUpdateSavedView() {
       sort_key?: string;
       sort_dir?: string;
     }) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, project_id, ...updates } = params;
       const { data, error } = await supabase
-        .from('saved_views')
+        .from("saved_views")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
       return data as SavedView;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['saved-views', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-views", variables.project_id],
+      });
     },
   });
 }
@@ -95,13 +102,15 @@ export function useDeleteSavedView() {
   return useMutation({
     mutationFn: async (params: { id: string; project_id: string }) => {
       const { error } = await supabase
-        .from('saved_views')
+        .from("saved_views")
         .delete()
-        .eq('id', params.id);
+        .eq("id", params.id);
       if (error) throw error;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['saved-views', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-views", variables.project_id],
+      });
     },
   });
 }

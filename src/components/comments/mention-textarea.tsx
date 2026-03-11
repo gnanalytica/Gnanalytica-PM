@@ -1,14 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
-import type { Profile } from '@/types';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type KeyboardEvent,
+} from "react";
+import type { Profile } from "@/types";
+import { avatarColor } from "@/components/tickets/assignee-picker";
 
 export function MentionTextarea({
   value,
   onChange,
   onSubmit,
   members,
-  placeholder = 'Write a comment...',
+  placeholder = "Write a comment...",
   autoFocus = false,
 }: {
   value: string;
@@ -21,7 +28,7 @@ export function MentionTextarea({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
 
@@ -36,7 +43,7 @@ export function MentionTextarea({
     const cursor = el.selectionStart;
     const textBefore = value.slice(0, cursor);
     // Find the last @ that isn't preceded by a word char
-    const atIndex = textBefore.lastIndexOf('@');
+    const atIndex = textBefore.lastIndexOf("@");
 
     if (atIndex === -1) {
       setShowDropdown(false);
@@ -51,7 +58,7 @@ export function MentionTextarea({
 
     const query = textBefore.slice(atIndex + 1);
     // No newlines in the query
-    if (query.includes('\n')) {
+    if (query.includes("\n")) {
       setShowDropdown(false);
       return;
     }
@@ -90,22 +97,22 @@ export function MentionTextarea({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showDropdown && filtered.length > 0) {
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((i) => (i + 1) % filtered.length);
         return;
       }
-      if (e.key === 'ArrowUp') {
+      if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((i) => (i - 1 + filtered.length) % filtered.length);
         return;
       }
-      if (e.key === 'Enter' || e.key === 'Tab') {
+      if (e.key === "Enter" || e.key === "Tab") {
         e.preventDefault();
         insertMention(filtered[selectedIndex]);
         return;
       }
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         setShowDropdown(false);
         return;
@@ -113,7 +120,7 @@ export function MentionTextarea({
     }
 
     // Ctrl/Cmd+Enter to submit
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       onSubmit();
     }
@@ -146,7 +153,7 @@ export function MentionTextarea({
                 insertMention(member);
               }}
               className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left text-content-primary hover:bg-hover ${
-                i === selectedIndex ? 'bg-blue-500/10 text-blue-400' : ''
+                i === selectedIndex ? "bg-blue-500/10 text-blue-400" : ""
               }`}
             >
               {member.avatar_url ? (
@@ -156,8 +163,8 @@ export function MentionTextarea({
                   className="w-5 h-5 rounded-full"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full bg-surface-secondary flex items-center justify-center text-[9px] text-content-muted">
-                  {member.name?.[0] ?? '?'}
+                <div className={`w-5 h-5 rounded-full ${avatarColor(member.id)} flex items-center justify-center text-[9px] font-semibold text-white drop-shadow-sm`}>
+                  {member.name?.[0] ?? "?"}
                 </div>
               )}
               <span className="truncate">{member.name}</span>

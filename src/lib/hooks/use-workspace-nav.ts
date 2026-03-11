@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from "react";
 
 // ── Shallow URL subscription ──
 //
@@ -7,8 +7,8 @@ import { useCallback, useSyncExternalStore } from 'react';
 // WITHOUT causing Next.js RSC navigations (truly shallow routing).
 
 function subscribe(callback: () => void) {
-  window.addEventListener('popstate', callback);
-  return () => window.removeEventListener('popstate', callback);
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
 }
 
 function getSnapshot() {
@@ -16,7 +16,7 @@ function getSnapshot() {
 }
 
 function getServerSnapshot() {
-  return '';
+  return "";
 }
 
 /**
@@ -30,7 +30,7 @@ export function useShallowSearch(): string {
 // ── Internal helper ──
 
 function notifyUrlChange() {
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 // ── Shallow URL mutation helpers ──
@@ -48,7 +48,7 @@ export function shallowReplace(updates: Record<string, string | null>) {
       url.searchParams.set(key, value);
     }
   }
-  window.history.replaceState(null, '', url.toString());
+  window.history.replaceState(null, "", url.toString());
   notifyUrlChange();
 }
 
@@ -66,14 +66,14 @@ export function shallowReplaceAll(
     const val = url.searchParams.get(key);
     if (val !== null) preserved[key] = val;
   }
-  url.search = '';
+  url.search = "";
   for (const [key, value] of Object.entries(preserved)) {
     url.searchParams.set(key, value);
   }
   for (const [key, value] of Object.entries(params)) {
     if (value) url.searchParams.set(key, value);
   }
-  window.history.replaceState(null, '', url.toString());
+  window.history.replaceState(null, "", url.toString());
   notifyUrlChange();
 }
 
@@ -85,21 +85,29 @@ export function shallowReplaceAll(
 
 export function useWorkspaceNav() {
   const search = useShallowSearch();
-  const ticketId = new URLSearchParams(search).get('ticket');
+  const ticketId = new URLSearchParams(search).get("ticket");
 
   const openTicket = useCallback((id: string) => {
     const url = new URL(window.location.href);
-    url.searchParams.set('ticket', id);
-    window.history.pushState(null, '', url.toString());
+    url.searchParams.set("ticket", id);
+    window.history.pushState(null, "", url.toString());
     notifyUrlChange();
   }, []);
 
   const closeTicket = useCallback(() => {
     const url = new URL(window.location.href);
-    url.searchParams.delete('ticket');
-    window.history.pushState(null, '', url.toString());
+    url.searchParams.delete("ticket");
+    window.history.pushState(null, "", url.toString());
     notifyUrlChange();
   }, []);
 
-  return { ticketId, openTicket, closeTicket } as const;
+  /** Navigate to a different ticket without adding a history entry (replaceState). */
+  const replaceTicket = useCallback((id: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("ticket", id);
+    window.history.replaceState(null, "", url.toString());
+    notifyUrlChange();
+  }, []);
+
+  return { ticketId, openTicket, closeTicket, replaceTicket } as const;
 }

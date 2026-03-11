@@ -1,24 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { TicketCountWidget } from './widgets/ticket-count-widget';
-import { OverdueWidget } from './widgets/overdue-widget';
-import { CycleProgressWidget } from './widgets/cycle-progress-widget';
-import { RecentActivityWidget } from './widgets/recent-activity-widget';
+import { useState, useEffect } from "react";
+import { TicketCountWidget } from "./widgets/ticket-count-widget";
+import { OverdueWidget } from "./widgets/overdue-widget";
+import { CycleProgressWidget } from "./widgets/cycle-progress-widget";
+import { RecentActivityWidget } from "./widgets/recent-activity-widget";
 
-type WidgetKey = 'ticket-count' | 'overdue' | 'cycle-progress' | 'recent-activity';
+type WidgetKey =
+  | "ticket-count"
+  | "overdue"
+  | "cycle-progress"
+  | "recent-activity";
 
 const ALL_WIDGETS: { key: WidgetKey; label: string }[] = [
-  { key: 'ticket-count', label: 'Ticket Count' },
-  { key: 'overdue', label: 'Overdue Issues' },
-  { key: 'cycle-progress', label: 'Cycle Progress' },
-  { key: 'recent-activity', label: 'Recent Activity' },
+  { key: "ticket-count", label: "Ticket Count" },
+  { key: "overdue", label: "Overdue Issues" },
+  { key: "cycle-progress", label: "Cycle Progress" },
+  { key: "recent-activity", label: "Recent Activity" },
 ];
 
-const STORAGE_KEY = 'dashboard-widgets';
+const STORAGE_KEY = "dashboard-widgets";
 
 function loadWidgets(): WidgetKey[] {
-  if (typeof window === 'undefined') return ALL_WIDGETS.map((w) => w.key);
+  if (typeof window === "undefined") return ALL_WIDGETS.map((w) => w.key);
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
@@ -46,13 +50,13 @@ export function WidgetGrid({ projectId }: { projectId: string }) {
 
   const renderWidget = (key: WidgetKey) => {
     switch (key) {
-      case 'ticket-count':
+      case "ticket-count":
         return <TicketCountWidget projectId={projectId} />;
-      case 'overdue':
+      case "overdue":
         return <OverdueWidget projectId={projectId} />;
-      case 'cycle-progress':
+      case "cycle-progress":
         return <CycleProgressWidget projectId={projectId} />;
-      case 'recent-activity':
+      case "recent-activity":
         return <RecentActivityWidget projectId={projectId} />;
     }
   };
@@ -65,7 +69,7 @@ export function WidgetGrid({ projectId }: { projectId: string }) {
           onClick={() => setShowConfig(!showConfig)}
           className="text-[11px] text-content-muted hover:text-content-secondary transition-colors"
         >
-          {showConfig ? 'Done' : 'Customize'}
+          {showConfig ? "Done" : "Customize"}
         </button>
       </div>
 
@@ -77,8 +81,8 @@ export function WidgetGrid({ projectId }: { projectId: string }) {
               onClick={() => toggleWidget(w.key)}
               className={`px-2.5 py-1 text-[11px] rounded-full transition-colors ${
                 activeWidgets.includes(w.key)
-                  ? 'bg-accent text-white'
-                  : 'bg-surface-tertiary text-content-muted hover:text-content-secondary'
+                  ? "bg-accent text-white"
+                  : "bg-surface-tertiary text-content-muted hover:text-content-secondary"
               }`}
             >
               {w.label}

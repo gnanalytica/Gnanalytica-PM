@@ -1,16 +1,27 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
 
 // ── Types ──
 
 export type MutationDescriptor = {
-  table: 'tickets' | 'ticket_labels' | 'comments' | 'ticket_relations' | 'ticket_assignees' | 'ticket_attachments' | 'milestones' | 'teams' | 'team_members' | 'ticket_custom_field_values' | 'comment_reactions';
-  operation: 'insert' | 'update' | 'delete';
+  table:
+    | "tickets"
+    | "ticket_labels"
+    | "comments"
+    | "ticket_relations"
+    | "ticket_assignees"
+    | "ticket_attachments"
+    | "milestones"
+    | "teams"
+    | "team_members"
+    | "ticket_custom_field_values"
+    | "comment_reactions";
+  operation: "insert" | "update" | "delete";
   payload: Record<string, unknown>;
 };
 
@@ -56,13 +67,15 @@ export const useSyncQueueStore = create<SyncQueueState>()(
   persist(
     (set) => ({
       items: [],
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+      isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
       processing: false,
 
       add: (item) =>
         set((state) => {
           // Dedup: replace existing item with same key
-          const filtered = state.items.filter((i) => i.dedupeKey !== item.dedupeKey);
+          const filtered = state.items.filter(
+            (i) => i.dedupeKey !== item.dedupeKey,
+          );
           return {
             items: [
               ...filtered,
@@ -113,7 +126,7 @@ export const useSyncQueueStore = create<SyncQueueState>()(
         })),
     }),
     {
-      name: 'pm-sync-queue',
+      name: "pm-sync-queue",
       partialize: (state) => ({
         items: state.items,
       }),
@@ -128,20 +141,26 @@ async function executeMutation(descriptor: MutationDescriptor): Promise<void> {
   const { table, operation, payload } = descriptor;
 
   switch (operation) {
-    case 'insert': {
+    case "insert": {
       const { error } = await supabase.from(table).insert(payload);
       if (error) throw error;
       break;
     }
-    case 'update': {
+    case "update": {
       const { id, ...fields } = payload;
-      const { error } = await supabase.from(table).update(fields).eq('id', id as string);
+      const { error } = await supabase
+        .from(table)
+        .update(fields)
+        .eq("id", id as string);
       if (error) throw error;
       break;
     }
-    case 'delete': {
+    case "delete": {
       const { id } = payload;
-      const { error } = await supabase.from(table).delete().eq('id', id as string);
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq("id", id as string);
       if (error) throw error;
       break;
     }
@@ -175,24 +194,24 @@ export function useSyncProcessor() {
         remove(item.id);
         // Invalidate related queries
         const table = item.descriptor.table;
-        if (table === 'tickets' || table === 'ticket_labels') {
-          queryClient.invalidateQueries({ queryKey: ['tickets'] });
-        } else if (table === 'comments') {
-          queryClient.invalidateQueries({ queryKey: ['comments'] });
-        } else if (table === 'ticket_relations') {
-          queryClient.invalidateQueries({ queryKey: ['ticket-relations'] });
-        } else if (table === 'ticket_assignees') {
-          queryClient.invalidateQueries({ queryKey: ['tickets'] });
-        } else if (table === 'ticket_attachments') {
-          queryClient.invalidateQueries({ queryKey: ['ticket-attachments'] });
-        } else if (table === 'milestones') {
-          queryClient.invalidateQueries({ queryKey: ['milestones'] });
-        } else if (table === 'teams' || table === 'team_members') {
-          queryClient.invalidateQueries({ queryKey: ['teams'] });
-        } else if (table === 'ticket_custom_field_values') {
-          queryClient.invalidateQueries({ queryKey: ['custom-field-values'] });
-        } else if (table === 'comment_reactions') {
-          queryClient.invalidateQueries({ queryKey: ['comment-reactions'] });
+        if (table === "tickets" || table === "ticket_labels") {
+          queryClient.invalidateQueries({ queryKey: ["tickets"] });
+        } else if (table === "comments") {
+          queryClient.invalidateQueries({ queryKey: ["comments"] });
+        } else if (table === "ticket_relations") {
+          queryClient.invalidateQueries({ queryKey: ["ticket-relations"] });
+        } else if (table === "ticket_assignees") {
+          queryClient.invalidateQueries({ queryKey: ["tickets"] });
+        } else if (table === "ticket_attachments") {
+          queryClient.invalidateQueries({ queryKey: ["ticket-attachments"] });
+        } else if (table === "milestones") {
+          queryClient.invalidateQueries({ queryKey: ["milestones"] });
+        } else if (table === "teams" || table === "team_members") {
+          queryClient.invalidateQueries({ queryKey: ["teams"] });
+        } else if (table === "ticket_custom_field_values") {
+          queryClient.invalidateQueries({ queryKey: ["custom-field-values"] });
+        } else if (table === "comment_reactions") {
+          queryClient.invalidateQueries({ queryKey: ["comment-reactions"] });
         }
       } catch {
         incrementRetry(item.id);
@@ -208,26 +227,33 @@ export function useSyncProcessor() {
     const setOnline = useSyncQueueStore.getState().setOnline;
     const onOnline = () => {
       setOnline(true);
-      // Re-sync: invalidate all queries so hydration hooks refetch server data
-      queryClient.invalidateQueries();
+      // Re-sync: invalidate only data queries (not everything) so hydration hooks refetch
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["comments"] });
+      queryClient.invalidateQueries({ queryKey: ["milestones"] });
+      queryClient.invalidateQueries({ queryKey: ["cycles"] });
       processQueue();
     };
     const onOffline = () => setOnline(false);
 
-    window.addEventListener('online', onOnline);
-    window.addEventListener('offline', onOffline);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
     return () => {
-      window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
   }, [processQueue, queryClient]);
 
-  // Process on mount (pick up persisted items)
+  // Process on mount (pick up persisted items). Defer so we don't update the store
+  // during the same commit phase (avoids "Maximum update depth exceeded").
   useEffect(() => {
-    const { items, isOnline } = useSyncQueueStore.getState();
-    if (isOnline && items.length > 0) {
-      processQueue();
-    }
+    const id = setTimeout(() => {
+      const { items, isOnline } = useSyncQueueStore.getState();
+      if (isOnline && items.length > 0) {
+        processQueue();
+      }
+    }, 0);
+    return () => clearTimeout(id);
   }, [processQueue]);
 
   // Periodic retry every 5s
@@ -268,7 +294,9 @@ export function SyncStatus() {
       {!isOnline && (
         <div className="flex items-center gap-1.5 rounded-full bg-yellow-50 border border-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/20 px-2.5 py-1">
           <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-          <span className="text-[11px] font-medium text-yellow-700">Offline</span>
+          <span className="text-[11px] font-medium text-yellow-700">
+            Offline
+          </span>
         </div>
       )}
 
@@ -294,7 +322,9 @@ export function SyncStatus() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <span className="text-[11px] font-medium text-blue-700">Syncing...</span>
+          <span className="text-[11px] font-medium text-blue-700">
+            Syncing...
+          </span>
         </div>
       )}
 
@@ -346,7 +376,9 @@ function PendingPill({ items }: { items: SyncItem[] }) {
       <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
       <span className="text-[11px] font-medium text-gray-600">
         {items.length} pending
-        {secsLeft > 0 && <span className="text-gray-400 ml-0.5">({secsLeft}s)</span>}
+        {secsLeft > 0 && (
+          <span className="text-gray-400 ml-0.5">({secsLeft}s)</span>
+        )}
       </span>
     </div>
   );

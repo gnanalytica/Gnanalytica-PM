@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { useProjects } from '@/lib/hooks/use-projects';
-import type { OnboardingState } from '@/types';
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useProjects } from "@/lib/hooks/use-projects";
+import type { OnboardingState, Project } from "@/types";
 
 const supabase = createClient();
 
@@ -18,32 +19,36 @@ const TOTAL_STEPS = 5;
 export function useOnboarding() {
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id;
-  const { data: projects, isLoading: projectsLoading } = useProjects();
+  const { isLoading: projectsLoading } = useProjects();
   const queryClient = useQueryClient();
 
   const { data: onboarding, isLoading: onboardingLoading } = useQuery({
-    queryKey: ['onboarding', userId],
+    queryKey: ["onboarding", userId],
     queryFn: async (): Promise<OnboardingState> => {
       // Try to fetch existing row
       const { data, error } = await supabase
-        .from('onboarding_state')
-        .select('*')
-        .eq('user_id', userId!)
+        .from("onboarding_state")
+        .select("*")
+        .eq("user_id", userId!)
         .single();
 
       if (data) return data;
 
       // No row exists — this is a first login. Create one.
-      if (error && error.code === 'PGRST116') {
-        // If user already has projects, mark onboarding as completed
-        const hasProjects = (projects?.length ?? 0) > 0;
-        const initial: Pick<OnboardingState, 'user_id' | 'step' | 'completed'> = {
-          user_id: userId!,
-          step: 1,
-          completed: hasProjects,
-        };
+      if (error && error.code === "PGRST116") {
+        // Read projects from cache inside queryFn to avoid stale closure / refetch loops
+        const projectsFromCache = queryClient.getQueryData<Project[]>([
+          "projects",
+        ]);
+        const hasProjects = (projectsFromCache?.length ?? 0) > 0;
+        const initial: Pick<OnboardingState, "user_id" | "step" | "completed"> =
+          {
+            user_id: userId!,
+            step: 1,
+            completed: hasProjects,
+          };
         const { data: created, error: insertError } = await supabase
-          .from('onboarding_state')
+          .from("onboarding_state")
           .insert(initial)
           .select()
           .single();
@@ -54,24 +59,30 @@ export function useOnboarding() {
       throw error;
     },
     enabled: !!userId && !projectsLoading,
+    staleTime: 60 * 1000,
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (updates: Partial<Pick<OnboardingState, 'step' | 'completed'>>) => {
+    mutationFn: async (
+      updates: Partial<Pick<OnboardingState, "step" | "completed">>,
+    ) => {
       const { data, error } = await supabase
-        .from('onboarding_state')
+        .from("onboarding_state")
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('user_id', userId!)
+        .eq("user_id", userId!)
         .select()
         .single();
       if (error) throw error;
       return data as OnboardingState;
     },
     onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: ['onboarding', userId] });
-      const previous = queryClient.getQueryData<OnboardingState>(['onboarding', userId]);
+      await queryClient.cancelQueries({ queryKey: ["onboarding", userId] });
+      const previous = queryClient.getQueryData<OnboardingState>([
+        "onboarding",
+        userId,
+      ]);
       if (previous) {
-        queryClient.setQueryData<OnboardingState>(['onboarding', userId], {
+        queryClient.setQueryData<OnboardingState>(["onboarding", userId], {
           ...previous,
           ...updates,
         });
@@ -80,11 +91,11 @@ export function useOnboarding() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(['onboarding', userId], context.previous);
+        queryClient.setQueryData(["onboarding", userId], context.previous);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['onboarding', userId] });
+      queryClient.invalidateQueries({ queryKey: ["onboarding", userId] });
     },
   });
 
@@ -92,17 +103,20 @@ export function useOnboarding() {
   const isActive = !isLoading && !!onboarding && !onboarding.completed;
   const step = onboarding?.step ?? 1;
 
-  const goToStep = (nextStep: number) => {
-    updateMutation.mutate({ step: nextStep });
-  };
+  const goToStep = useCallback(
+    (nextStep: number) => {
+      updateMutation.mutate({ step: nextStep });
+    },
+    [updateMutation],
+  );
 
-  const completeOnboarding = () => {
+  const completeOnboarding = useCallback(() => {
     updateMutation.mutate({ step: TOTAL_STEPS, completed: true });
-  };
+  }, [updateMutation]);
 
-  const skipOnboarding = () => {
+  const skipOnboarding = useCallback(() => {
     updateMutation.mutate({ completed: true });
-  };
+  }, [updateMutation]);
 
   return {
     isLoading,

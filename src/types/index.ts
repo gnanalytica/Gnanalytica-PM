@@ -16,17 +16,25 @@ export type Project = {
 
 // ── Issue types ──
 
-export type IssueType = 'bug' | 'feature' | 'task' | 'improvement' | 'epic' | 'story' | 'sub_task';
+export type IssueType =
+  | "bug"
+  | "feature"
+  | "task"
+  | "improvement"
+  | "epic"
+  | "story"
+  | "sub_task";
 
-export const ISSUE_TYPES: { value: IssueType; label: string; icon: string }[] = [
-  { value: 'bug', label: 'Bug', icon: '🐛' },
-  { value: 'feature', label: 'Feature', icon: '✨' },
-  { value: 'task', label: 'Task', icon: '☑️' },
-  { value: 'improvement', label: 'Improvement', icon: '⬆️' },
-  { value: 'epic', label: 'Epic', icon: '⚡' },
-  { value: 'story', label: 'Story', icon: '📖' },
-  { value: 'sub_task', label: 'Sub-task', icon: '📋' },
-];
+export const ISSUE_TYPES: { value: IssueType; label: string; icon: string }[] =
+  [
+    { value: "bug", label: "Bug", icon: "🐛" },
+    { value: "feature", label: "Feature", icon: "✨" },
+    { value: "task", label: "Task", icon: "☑️" },
+    { value: "improvement", label: "Improvement", icon: "⬆️" },
+    { value: "epic", label: "Epic", icon: "⚡" },
+    { value: "story", label: "Story", icon: "📖" },
+    { value: "sub_task", label: "Sub-task", icon: "📋" },
+  ];
 
 export const STORY_POINTS = [1, 2, 3, 5, 8, 13, 21] as const;
 export type StoryPoint = (typeof STORY_POINTS)[number];
@@ -34,11 +42,22 @@ export type StoryPoint = (typeof STORY_POINTS)[number];
 // ── Statuses ──
 
 /** The 6 built-in default statuses. */
-export type TicketStatus = 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
-export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TicketStatus =
+  | "backlog"
+  | "todo"
+  | "in_progress"
+  | "in_review"
+  | "done"
+  | "canceled";
+export type TicketPriority = "low" | "medium" | "high" | "urgent";
 
 /** Workflow category that groups statuses into pipeline phases. */
-export type StatusCategory = 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled';
+export type StatusCategory =
+  | "backlog"
+  | "unstarted"
+  | "started"
+  | "completed"
+  | "canceled";
 
 /** A single status definition in a project workflow. */
 export type WorkflowStatus = {
@@ -57,31 +76,33 @@ export type ProjectWorkflow = {
 };
 
 const STATUS_TO_CATEGORY: Record<TicketStatus, StatusCategory> = {
-  backlog: 'backlog',
-  todo: 'unstarted',
-  in_progress: 'started',
-  in_review: 'started',
-  done: 'completed',
-  canceled: 'canceled',
+  backlog: "backlog",
+  todo: "unstarted",
+  in_progress: "started",
+  in_review: "started",
+  done: "completed",
+  canceled: "canceled",
 };
 
 export function getStatusCategory(status: string): StatusCategory {
-  return STATUS_TO_CATEGORY[status as TicketStatus] ?? 'unstarted';
+  return STATUS_TO_CATEGORY[status as TicketStatus] ?? "unstarted";
 }
 
 export function isStatusCompleted(status: string): boolean {
-  return getStatusCategory(status) === 'completed';
+  return getStatusCategory(status) === "completed";
 }
 
 export function isStatusClosed(status: string): boolean {
   const cat = getStatusCategory(status);
-  return cat === 'completed' || cat === 'canceled';
+  return cat === "completed" || cat === "canceled";
 }
 
 /** Cycle progress: completed = issues with status_category = completed, percentage = completed / total */
-export function getCycleProgress(
-  issues: { status: string }[],
-): { completed: number; total: number; percentage: number } {
+export function getCycleProgress(issues: { status: string }[]): {
+  completed: number;
+  total: number;
+  percentage: number;
+} {
   const total = issues.length;
   const completed = issues.filter((t) => isStatusCompleted(t.status)).length;
   const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
@@ -89,25 +110,29 @@ export function getCycleProgress(
 }
 
 export const STATUS_CATEGORIES: { value: StatusCategory; label: string }[] = [
-  { value: 'backlog', label: 'Backlog' },
-  { value: 'unstarted', label: 'Unstarted' },
-  { value: 'started', label: 'Started' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'canceled', label: 'Canceled' },
+  { value: "backlog", label: "Backlog" },
+  { value: "unstarted", label: "Unstarted" },
+  { value: "started", label: "Started" },
+  { value: "completed", label: "Completed" },
+  { value: "canceled", label: "Canceled" },
 ];
 
 /** All default statuses that belong to a given category. */
-export function getStatusesForCategory(category: StatusCategory): TicketStatus[] {
-  return TICKET_STATUSES.filter((s) => s.category === category).map((s) => s.value);
+export function getStatusesForCategory(
+  category: StatusCategory,
+): TicketStatus[] {
+  return TICKET_STATUSES.filter((s) => s.category === category).map(
+    (s) => s.value,
+  );
 }
 
 /** The default status to assign when a ticket enters a category (e.g. via board drag). */
 const CATEGORY_DEFAULT_STATUS: Record<StatusCategory, TicketStatus> = {
-  backlog: 'backlog',
-  unstarted: 'todo',
-  started: 'in_progress',
-  completed: 'done',
-  canceled: 'canceled',
+  backlog: "backlog",
+  unstarted: "todo",
+  started: "in_progress",
+  completed: "done",
+  canceled: "canceled",
 };
 
 export function getDefaultStatusForCategory(category: StatusCategory): string {
@@ -137,16 +162,31 @@ export type Ticket = {
   parent_id: string | null;
   epic_id: string | null;
   milestone_id: string | null;
+  // SLA fields
+  first_response_at: string | null;
+  resolved_at: string | null;
+  sla_response_breached: boolean;
+  sla_resolution_breached: boolean;
   // Joined data
   assignee?: Profile | null;
   creator?: Profile | null;
   labels?: Label[];
   assignees?: TicketAssignee[];
   parent?: { id: string; title: string; status: string } | null;
-  milestone?: { id: string; name: string; target_date: string | null; status: string } | null;
+  milestone?: {
+    id: string;
+    name: string;
+    target_date: string | null;
+    status: string;
+  } | null;
   relations?: TicketRelation[];
   attachments?: TicketAttachment[];
-  sub_tasks?: { id: string; title: string; status: string; status_category: StatusCategory }[];
+  sub_tasks?: {
+    id: string;
+    title: string;
+    status: string;
+    status_category: StatusCategory;
+  }[];
 };
 
 export type TicketAssignee = {
@@ -167,7 +207,11 @@ export type TicketLabel = {
 
 // ── Relations ──
 
-export type RelationType = 'blocks' | 'blocked_by' | 'related_to' | 'duplicate_of';
+export type RelationType =
+  | "blocks"
+  | "blocked_by"
+  | "related_to"
+  | "duplicate_of";
 
 export type TicketRelation = {
   id: string;
@@ -201,7 +245,7 @@ export type Milestone = {
   name: string;
   description: string | null;
   target_date: string | null;
-  status: 'active' | 'completed' | 'canceled';
+  status: "active" | "completed" | "canceled";
   created_at: string;
   updated_at: string;
 };
@@ -222,14 +266,21 @@ export type Team = {
 export type TeamMember = {
   team_id: string;
   user_id: string;
-  role: 'lead' | 'member';
+  role: "lead" | "member";
   created_at: string;
   user?: Profile;
 };
 
 // ── Custom fields ──
 
-export type CustomFieldType = 'text' | 'number' | 'date' | 'select' | 'multi_select' | 'checkbox' | 'url';
+export type CustomFieldType =
+  | "text"
+  | "number"
+  | "date"
+  | "select"
+  | "multi_select"
+  | "checkbox"
+  | "url";
 
 export type CustomFieldDefinition = {
   id: string;
@@ -256,10 +307,10 @@ export type CustomFieldValue = {
 export type NotificationPreferences = {
   user_id: string;
   email_enabled: boolean;
-  email_mode: 'instant' | 'digest' | 'off';
+  email_mode: "instant" | "digest" | "off";
   push_enabled: boolean;
   digest_enabled: boolean;
-  digest_frequency: 'daily' | 'weekly';
+  digest_frequency: "daily" | "weekly";
   notify_on_assign: boolean;
   notify_on_mention: boolean;
   notify_on_status_change: boolean;
@@ -272,7 +323,7 @@ export type NotificationPreferences = {
 
 // ── Project members / roles ──
 
-export type ProjectRole = 'owner' | 'admin' | 'member' | 'viewer';
+export type ProjectRole = "owner" | "admin" | "member" | "viewer";
 
 export type ProjectMember = {
   project_id: string;
@@ -369,7 +420,14 @@ export type ViewFilters = {
   my_tickets?: boolean;
 };
 
-export type GroupByKey = 'status' | 'priority' | 'assignee' | 'issue_type' | 'milestone' | 'epic' | 'none';
+export type GroupByKey =
+  | "status"
+  | "priority"
+  | "assignee"
+  | "issue_type"
+  | "milestone"
+  | "epic"
+  | "none";
 
 export type SavedView = {
   id: string;
@@ -394,7 +452,7 @@ export type Cycle = {
   created_at: string;
   retrospective_notes: string | null;
   auto_rollover: boolean;
-  status: 'planned' | 'active' | 'completed';
+  status: "planned" | "active" | "completed";
 };
 
 export type TicketCycle = {
@@ -427,7 +485,7 @@ export type TicketGithubLink = {
   id: string;
   ticket_id: string;
   github_integration_id: string;
-  link_type: 'pr' | 'issue' | 'branch' | 'commit';
+  link_type: "pr" | "issue" | "branch" | "commit";
   url: string;
   title: string | null;
   number: number | null;
@@ -464,7 +522,7 @@ export type WorkflowAutomation = {
 export type RecentItem = {
   id: string;
   user_id: string;
-  item_type: 'ticket' | 'project' | 'milestone';
+  item_type: "ticket" | "project" | "milestone";
   item_id: string;
   accessed_at: string;
 };
@@ -490,18 +548,89 @@ export type CustomerUser = {
 
 // ── Constants ──
 
-export const TICKET_STATUSES: { value: TicketStatus; label: string; category: StatusCategory }[] = [
-  { value: 'backlog', label: 'Backlog', category: 'backlog' },
-  { value: 'todo', label: 'Todo', category: 'unstarted' },
-  { value: 'in_progress', label: 'In Progress', category: 'started' },
-  { value: 'in_review', label: 'In Review', category: 'started' },
-  { value: 'done', label: 'Done', category: 'completed' },
-  { value: 'canceled', label: 'Canceled', category: 'canceled' },
+// ── SLA Policies ──
+
+export type SLAPolicy = {
+  id: string;
+  project_id: string;
+  priority: TicketPriority;
+  response_time_minutes: number;
+  resolution_time_minutes: number;
+  created_at: string;
+  updated_at: string;
+};
+
+// ── Time Entries ──
+
+export type TimeEntry = {
+  id: string;
+  ticket_id: string;
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_minutes: number | null;
+  description: string | null;
+  is_running: boolean;
+  created_at: string;
+  updated_at: string;
+  user?: Profile;
+};
+
+// ── Favorites ──
+
+export type Favorite = {
+  id: string;
+  user_id: string;
+  item_type: "project" | "ticket";
+  item_id: string;
+  position: number;
+  created_at: string;
+};
+
+export const TICKET_STATUSES: {
+  value: TicketStatus;
+  label: string;
+  category: StatusCategory;
+}[] = [
+  { value: "backlog", label: "Backlog", category: "backlog" },
+  { value: "todo", label: "Todo", category: "unstarted" },
+  { value: "in_progress", label: "In Progress", category: "started" },
+  { value: "in_review", label: "In Review", category: "started" },
+  { value: "done", label: "Done", category: "completed" },
+  { value: "canceled", label: "Canceled", category: "canceled" },
 ];
 
 export const TICKET_PRIORITIES: { value: TicketPriority; label: string }[] = [
-  { value: 'urgent', label: 'Urgent' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
+  { value: "urgent", label: "Urgent" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
 ];
+
+// ── Shared emoji maps ──
+
+export const STATUS_EMOJI: Record<string, string> = {
+  backlog: "\u{1F4CB}",
+  todo: "\u{1F4DD}",
+  in_progress: "\u{1F504}",
+  in_review: "\u{1F440}",
+  done: "\u2705",
+  canceled: "\u{1F6AB}",
+};
+
+export const PRIORITY_EMOJI: Record<string, string> = {
+  urgent: "\u{1F534}",
+  high: "\u{1F7E0}",
+  medium: "\u{1F7E1}",
+  low: "\u{1F535}",
+};
+
+export const ISSUE_TYPE_EMOJI: Record<string, string> = {
+  task: "\u{1F4CC}",
+  bug: "\u{1F41B}",
+  feature: "\u2728",
+  improvement: "\u{1F4A1}",
+  story: "\u{1F4D6}",
+  epic: "\u{1F3AF}",
+  sub_task: "\u{1F4CE}",
+};

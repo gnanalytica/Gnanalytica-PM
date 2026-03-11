@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useOnboarding } from '@/lib/hooks/use-onboarding';
-import { useCreateProject } from '@/lib/hooks/use-projects';
-import { useCreateTicket } from '@/lib/hooks/use-tickets';
-import type { Project } from '@/types';
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useOnboarding } from "@/lib/hooks/use-onboarding";
+import { useCreateProject } from "@/lib/hooks/use-projects";
+import { useCreateTicket } from "@/lib/hooks/use-tickets";
+import type { Project } from "@/types";
 
 // ── Progress bar ──
 
@@ -20,7 +20,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
           <div key={n} className="flex items-center gap-2 flex-1">
             <div
               className={`w-full h-1 rounded-full transition-colors duration-300 ${
-                done ? 'bg-blue-500' : active ? 'bg-blue-300' : 'bg-gray-200'
+                done ? "bg-blue-500" : active ? "bg-blue-300" : "bg-gray-200"
               }`}
             />
           </div>
@@ -39,17 +39,30 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
   return (
     <div className="text-center">
       <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        <svg
+          className="w-7 h-7 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+          />
         </svg>
       </div>
-      <h2 className="text-sm font-medium text-gray-900 mb-1.5">Welcome to Internal PM</h2>
+      <h2 className="text-sm font-medium text-gray-900 mb-1.5">
+        Welcome to Internal PM
+      </h2>
       <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
-        Let&apos;s get you set up. We&apos;ll walk you through creating your first project and issue.
+        Let&apos;s get you set up. We&apos;ll walk you through creating your
+        first project and issue.
       </p>
       <button
         onClick={onNext}
-        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors"
+        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 active:scale-[0.97] transition-all duration-150"
       >
         Get started
       </button>
@@ -59,9 +72,13 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 2: Create Project ──
 
-function CreateProjectStep({ onCreated }: { onCreated: (project: Project) => void }) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+function CreateProjectStep({
+  onCreated,
+}: {
+  onCreated: (project: Project) => void;
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const createProject = useCreateProject();
 
@@ -75,22 +92,28 @@ function CreateProjectStep({ onCreated }: { onCreated: (project: Project) => voi
       });
       onCreated(project);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create project');
+      setError(err instanceof Error ? err.message : "Failed to create project");
     }
   };
 
   return (
     <div>
-      <h2 className="text-sm font-medium text-gray-900 mb-1.5">Create your first project</h2>
+      <h2 className="text-sm font-medium text-gray-900 mb-1.5">
+        Create your first project
+      </h2>
       <p className="text-sm text-gray-500 mb-4">
         Projects hold all your issues, workflows, and cycles.
       </p>
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded mb-3">{error}</p>
+        <p className="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded mb-3">
+          {error}
+        </p>
       )}
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-0.5">Project name</label>
+          <label className="block text-xs font-medium text-gray-700 mb-0.5">
+            Project name
+          </label>
           <input
             type="text"
             value={name}
@@ -102,7 +125,9 @@ function CreateProjectStep({ onCreated }: { onCreated: (project: Project) => voi
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-0.5">Description</label>
+          <label className="block text-xs font-medium text-gray-700 mb-0.5">
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -114,9 +139,9 @@ function CreateProjectStep({ onCreated }: { onCreated: (project: Project) => voi
         <button
           type="submit"
           disabled={createProject.isPending || !name.trim()}
-          className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors"
+          className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 active:scale-[0.97] disabled:opacity-50 transition-all duration-150"
         >
-          {createProject.isPending ? 'Creating...' : 'Create project'}
+          {createProject.isPending ? "Creating..." : "Create project"}
         </button>
       </form>
     </div>
@@ -132,7 +157,7 @@ function CreateIssueStep({
   projectId: string;
   onCreated: (ticketId: string) => void;
 }) {
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const createTicket = useCreateTicket();
 
@@ -143,27 +168,33 @@ function CreateIssueStep({
       const ticket = await createTicket.mutateAsync({
         project_id: projectId,
         title,
-        status: 'todo',
-        priority: 'medium',
+        status: "todo",
+        priority: "medium",
       });
       onCreated(ticket.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create issue');
+      setError(err instanceof Error ? err.message : "Failed to create issue");
     }
   };
 
   return (
     <div>
-      <h2 className="text-sm font-medium text-gray-900 mb-1.5">Create your first issue</h2>
+      <h2 className="text-sm font-medium text-gray-900 mb-1.5">
+        Create your first issue
+      </h2>
       <p className="text-sm text-gray-500 mb-4">
         Issues track individual tasks, bugs, or feature requests.
       </p>
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded mb-3">{error}</p>
+        <p className="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded mb-3">
+          {error}
+        </p>
       )}
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-0.5">Issue title</label>
+          <label className="block text-xs font-medium text-gray-700 mb-0.5">
+            Issue title
+          </label>
           <input
             type="text"
             value={title}
@@ -177,9 +208,9 @@ function CreateIssueStep({
         <button
           type="submit"
           disabled={createTicket.isPending || !title.trim()}
-          className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors"
+          className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 active:scale-[0.97] disabled:opacity-50 transition-all duration-150"
         >
-          {createTicket.isPending ? 'Creating...' : 'Create issue'}
+          {createTicket.isPending ? "Creating..." : "Create issue"}
         </button>
       </form>
     </div>
@@ -208,17 +239,30 @@ function OpenSidePanelStep({
   return (
     <div className="text-center">
       <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+        <svg
+          className="w-7 h-7 text-green-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+          />
         </svg>
       </div>
-      <h2 className="text-sm font-medium text-gray-900 mb-1.5">View your issue</h2>
+      <h2 className="text-sm font-medium text-gray-900 mb-1.5">
+        View your issue
+      </h2>
       <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
-        Click below to open the issue detail panel where you can add descriptions, assignees, labels, and comments.
+        Click below to open the issue detail panel where you can add
+        descriptions, assignees, labels, and comments.
       </p>
       <button
         onClick={handleOpen}
-        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors"
+        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 active:scale-[0.97] transition-all duration-150"
       >
         Open issue
       </button>
@@ -232,17 +276,30 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
   return (
     <div className="text-center">
       <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-7 h-7 text-green-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
-      <h2 className="text-sm font-medium text-gray-900 mb-1.5">You&apos;re all set!</h2>
+      <h2 className="text-sm font-medium text-gray-900 mb-1.5">
+        You&apos;re all set!
+      </h2>
       <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
-        You&apos;ve created your first project and issue. Explore the board view, add team members, and set up cycles.
+        You&apos;ve created your first project and issue. Explore the board
+        view, add team members, and set up cycles.
       </p>
       <button
         onClick={onFinish}
-        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors"
+        className="px-5 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 active:scale-[0.97] transition-all duration-150"
       >
         Start using PM
       </button>
@@ -253,8 +310,15 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
 // ── Main overlay ──
 
 export function OnboardingOverlay() {
-  const { isLoading, isActive, step, totalSteps, goToStep, completeOnboarding, skipOnboarding } =
-    useOnboarding();
+  const {
+    isLoading,
+    isActive,
+    step,
+    totalSteps,
+    goToStep,
+    completeOnboarding,
+    skipOnboarding,
+  } = useOnboarding();
 
   // Track created entities across steps
   const [createdProject, setCreatedProject] = useState<Project | null>(null);
@@ -283,14 +347,17 @@ export function OnboardingOverlay() {
   if (isLoading || !isActive) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-surface-secondary rounded-lg border border-border-subtle w-full max-w-md p-6 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-overlay-in">
+      <div className="bg-surface-secondary rounded-lg border border-border-subtle w-full max-w-md p-6 animate-modal-in shadow-overlay">
         <ProgressBar step={step} total={totalSteps} />
 
         {step === 1 && <WelcomeStep onNext={() => goToStep(2)} />}
         {step === 2 && <CreateProjectStep onCreated={handleProjectCreated} />}
         {step === 3 && createdProject && (
-          <CreateIssueStep projectId={createdProject.id} onCreated={handleIssueCreated} />
+          <CreateIssueStep
+            projectId={createdProject.id}
+            onCreated={handleIssueCreated}
+          />
         )}
         {step === 4 && createdProject && createdTicketId && (
           <OpenSidePanelStep
@@ -305,7 +372,7 @@ export function OnboardingOverlay() {
         {step < 5 && (
           <button
             onClick={skipOnboarding}
-            className="mt-4 w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors duration-[120ms] cursor-pointer"
+            className="mt-4 w-full text-center text-xs text-gray-400 hover:text-gray-600 active:scale-[0.96] transition-all duration-150 cursor-pointer"
           >
             Skip onboarding
           </button>

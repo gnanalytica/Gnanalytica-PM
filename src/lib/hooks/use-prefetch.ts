@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useCallback, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import { TICKET_SELECT, normalizeTicket } from '@/lib/hooks/use-tickets';
+import { useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import { TICKET_SELECT, normalizeTicket } from "@/lib/hooks/use-tickets";
 
 const supabase = createClient();
 
@@ -37,11 +37,11 @@ export function usePrefetch() {
     inflightProjects.current.add(projectId);
 
     supabase
-      .from('tickets')
+      .from("tickets")
       .select(TICKET_SELECT)
-      .eq('project_id', projectId)
-      .order('position', { ascending: true })
-      .order('created_at', { ascending: false })
+      .eq("project_id", projectId)
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
         inflightProjects.current.delete(projectId);
@@ -60,12 +60,12 @@ export function usePrefetch() {
   const prefetchTicket = useCallback(
     (ticketId: string) => {
       queryClient.prefetchQuery({
-        queryKey: ['ticket', ticketId],
+        queryKey: ["ticket", ticketId],
         queryFn: async () => {
           const { data, error } = await supabase
-            .from('tickets')
+            .from("tickets")
             .select(TICKET_SELECT)
-            .eq('id', ticketId)
+            .eq("id", ticketId)
             .single();
           if (error) throw error;
           const ticket = normalizeTicket(data);

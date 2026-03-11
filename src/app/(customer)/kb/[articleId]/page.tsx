@@ -1,24 +1,25 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import Link from 'next/link';
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import Link from "next/link";
 
 const supabase = createClient();
 
 export default function KBArticlePage() {
   const params = useParams<{ articleId: string }>();
-  const articleId = typeof params.articleId === 'string' ? params.articleId : '';
+  const articleId =
+    typeof params.articleId === "string" ? params.articleId : "";
 
   const { data: article, isLoading } = useQuery({
-    queryKey: ['kb-article', articleId],
+    queryKey: ["kb-article", articleId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('kb_articles')
-        .select('*')
-        .eq('id', articleId)
-        .eq('published', true)
+        .from("kb_articles")
+        .select("*")
+        .eq("id", articleId)
+        .eq("published", true)
         .single();
       if (error) throw error;
       return data;
@@ -43,7 +44,10 @@ export default function KBArticlePage() {
 
   return (
     <div>
-      <Link href="/kb" className="text-[12px] text-content-muted hover:text-content-secondary mb-4 block">
+      <Link
+        href="/kb"
+        className="text-[12px] text-content-muted hover:text-content-secondary mb-4 block"
+      >
         &larr; Back to Knowledge Base
       </Link>
 
@@ -52,11 +56,14 @@ export default function KBArticlePage() {
           {article.title}
         </h1>
         <p className="text-[11px] text-content-muted mb-6">
-          Last updated: {new Date(article.updated_at ?? article.created_at).toLocaleDateString()}
+          Last updated:{" "}
+          {new Date(
+            article.updated_at ?? article.created_at,
+          ).toLocaleDateString()}
         </p>
         <div
           className="text-[13px] text-content-secondary leading-relaxed whitespace-pre-wrap"
-          dangerouslySetInnerHTML={{ __html: article.content ?? '' }}
+          dangerouslySetInnerHTML={{ __html: article.content ?? "" }}
         />
       </article>
     </div>

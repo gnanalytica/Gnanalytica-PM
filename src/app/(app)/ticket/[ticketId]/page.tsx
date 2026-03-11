@@ -1,16 +1,21 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { CommentList } from '@/components/comments/comment-list';
-import { WatchButton } from '@/components/tickets/watch-button';
-import { useHydrateTicket, useUpdateTicket, useDeleteTicket, useStoreTicket } from '@/lib/hooks/use-tickets';
-import { useMembers } from '@/lib/hooks/use-members';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { ensureWatching } from '@/lib/hooks/use-watchers';
-import { useProjectWorkflow } from '@/lib/hooks/use-workflow';
-import { TICKET_PRIORITIES } from '@/types';
-import type { TicketPriority } from '@/types';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { CommentList } from "@/components/comments/comment-list";
+import { WatchButton } from "@/components/tickets/watch-button";
+import {
+  useHydrateTicket,
+  useUpdateTicket,
+  useDeleteTicket,
+  useStoreTicket,
+} from "@/lib/hooks/use-tickets";
+import { useMembers } from "@/lib/hooks/use-members";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { ensureWatching } from "@/lib/hooks/use-watchers";
+import { useProjectWorkflow } from "@/lib/hooks/use-workflow";
+import { TICKET_PRIORITIES } from "@/types";
+import type { TicketPriority } from "@/types";
 
 export default function TicketPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -25,8 +30,8 @@ export default function TicketPage() {
   const workflow = useProjectWorkflow(ticket?.project_id);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   if (isLoading) {
     return (
@@ -64,7 +69,7 @@ export default function TicketPage() {
 
   const startEditing = () => {
     setEditTitle(ticket.title);
-    setEditDescription(ticket.description ?? '');
+    setEditDescription(ticket.description ?? "");
     setIsEditing(true);
   };
 
@@ -79,27 +84,39 @@ export default function TicketPage() {
   };
 
   const handleStatusChange = (status: string) => {
-    updateTicket.mutate({ id: ticket.id, project_id: ticket.project_id, status });
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      status,
+    });
   };
 
   const handlePriorityChange = (priority: TicketPriority) => {
-    updateTicket.mutate({ id: ticket.id, project_id: ticket.project_id, priority });
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      priority,
+    });
   };
 
   const handleAssigneeChange = (assigneeId: string) => {
     const newAssigneeId = assigneeId || null;
-    updateTicket.mutate({ id: ticket.id, project_id: ticket.project_id, assignee_id: newAssigneeId });
+    updateTicket.mutate({
+      id: ticket.id,
+      project_id: ticket.project_id,
+      assignee_id: newAssigneeId,
+    });
 
     // Create notification for new assignee + auto-watch
     if (newAssigneeId) {
-      import('@/lib/supabase-browser').then(({ createClient }) => {
+      import("@/lib/supabase-browser").then(({ createClient }) => {
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
           if (currentUser && newAssigneeId !== currentUser.id) {
-            supabase.from('notifications').insert({
+            supabase.from("notifications").insert({
               user_id: newAssigneeId,
               ticket_id: ticket.id,
-              type: 'ticket_assigned',
+              type: "ticket_assigned",
               actor_id: currentUser.id,
             });
           }
@@ -119,8 +136,11 @@ export default function TicketPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this ticket?')) return;
-    await deleteTicket.mutateAsync({ id: ticket.id, project_id: ticket.project_id });
+    if (!confirm("Delete this ticket?")) return;
+    await deleteTicket.mutateAsync({
+      id: ticket.id,
+      project_id: ticket.project_id,
+    });
     router.push(`/project/${ticket.project_id}`);
   };
 
@@ -169,7 +189,9 @@ export default function TicketPage() {
             ) : (
               <>
                 <div className="flex justify-between items-start">
-                  <h1 className="text-sm font-medium text-content-primary">{ticket.title}</h1>
+                  <h1 className="text-sm font-medium text-content-primary">
+                    {ticket.title}
+                  </h1>
                   <div className="flex gap-2">
                     <button
                       onClick={startEditing}
@@ -186,9 +208,13 @@ export default function TicketPage() {
                   </div>
                 </div>
                 {ticket.description ? (
-                  <p className="mt-2 text-sm text-content-secondary whitespace-pre-wrap">{ticket.description}</p>
+                  <p className="mt-2 text-sm text-content-secondary whitespace-pre-wrap">
+                    {ticket.description}
+                  </p>
                 ) : (
-                  <p className="mt-2 text-sm text-content-muted">No description.</p>
+                  <p className="mt-2 text-sm text-content-muted">
+                    No description.
+                  </p>
                 )}
               </>
             )}
@@ -200,7 +226,10 @@ export default function TicketPage() {
                   <span
                     key={label.id}
                     className="px-1.5 py-px rounded text-[11px] font-medium"
-                    style={{ backgroundColor: label.color + '15', color: label.color }}
+                    style={{
+                      backgroundColor: label.color + "15",
+                      color: label.color,
+                    }}
                   >
                     {label.name}
                   </span>
@@ -209,7 +238,7 @@ export default function TicketPage() {
             )}
 
             <div className="mt-2 text-[11px] text-content-muted">
-              Created by {ticket.creator?.name ?? 'Unknown'} on{' '}
+              Created by {ticket.creator?.name ?? "Unknown"} on{" "}
               {new Date(ticket.created_at).toLocaleString()}
             </div>
           </div>
@@ -224,50 +253,66 @@ export default function TicketPage() {
         <div className="space-y-3">
           <div className="bg-surface-secondary rounded-md p-3 space-y-3">
             <div>
-              <label className="block text-[11px] font-medium text-content-muted mb-0.5">Status</label>
+              <label className="block text-[11px] font-medium text-content-muted mb-0.5">
+                Status
+              </label>
               <select
                 value={ticket.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 className="w-full border rounded-md px-2.5 py-1 text-xs"
               >
                 {workflow.statuses.map((s) => (
-                  <option key={s.key} value={s.key}>{s.label}</option>
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-content-muted mb-0.5">Priority</label>
+              <label className="block text-[11px] font-medium text-content-muted mb-0.5">
+                Priority
+              </label>
               <select
                 value={ticket.priority}
-                onChange={(e) => handlePriorityChange(e.target.value as TicketPriority)}
+                onChange={(e) =>
+                  handlePriorityChange(e.target.value as TicketPriority)
+                }
                 className="w-full border rounded-md px-2.5 py-1 text-xs"
               >
                 {TICKET_PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-content-muted mb-0.5">Assignee</label>
+              <label className="block text-[11px] font-medium text-content-muted mb-0.5">
+                Assignee
+              </label>
               <select
-                value={ticket.assignee_id ?? ''}
+                value={ticket.assignee_id ?? ""}
                 onChange={(e) => handleAssigneeChange(e.target.value)}
                 className="w-full border rounded-md px-2.5 py-1 text-xs"
               >
                 <option value="">Unassigned</option>
                 {members?.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-content-muted mb-0.5">Due Date</label>
+              <label className="block text-[11px] font-medium text-content-muted mb-0.5">
+                Due Date
+              </label>
               <input
                 type="date"
-                value={ticket.due_date ?? ''}
+                value={ticket.due_date ?? ""}
                 onChange={(e) => handleDueDateChange(e.target.value)}
                 className="w-full border rounded-md px-2.5 py-1 text-xs"
               />
@@ -275,7 +320,9 @@ export default function TicketPage() {
 
             {user && (
               <div>
-                <label className="block text-[11px] font-medium text-content-muted mb-0.5">Watch</label>
+                <label className="block text-[11px] font-medium text-content-muted mb-0.5">
+                  Watch
+                </label>
                 <WatchButton ticketId={ticketId} userId={user.id} />
               </div>
             )}

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 function getSupabase() {
   return createClient(
@@ -22,26 +22,26 @@ function getSupabase() {
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabase();
-    const event = req.headers.get('x-github-event');
+    const event = req.headers.get("x-github-event");
     const payload = await req.json();
 
-    if (event === 'ping') {
-      return NextResponse.json({ message: 'pong' }, { status: 200 });
+    if (event === "ping") {
+      return NextResponse.json({ message: "pong" }, { status: 200 });
     }
 
-    if (event === 'pull_request') {
+    if (event === "pull_request") {
       const pr = payload.pull_request;
       const action = payload.action;
 
       // Extract ticket IDs from PR title/body (format: T-XXXX or #XXXX)
-      const ticketIds = extractTicketIds(pr.title + ' ' + (pr.body ?? ''));
+      const ticketIds = extractTicketIds(pr.title + " " + (pr.body ?? ""));
 
       for (const ticketId of ticketIds) {
         // Create or update link
-        await supabase.from('ticket_github_links').upsert(
+        await supabase.from("ticket_github_links").upsert(
           {
             ticket_id: ticketId,
-            github_type: 'pull_request',
+            github_type: "pull_request",
             github_id: String(pr.id),
             github_number: pr.number,
             github_url: pr.html_url,
@@ -49,27 +49,27 @@ export async function POST(req: NextRequest) {
             status: pr.state,
             merged: pr.merged ?? false,
           },
-          { onConflict: 'ticket_id,github_type,github_id' },
+          { onConflict: "ticket_id,github_type,github_id" },
         );
 
         // Auto-transition: PR merged → move ticket to "done"
-        if (action === 'closed' && pr.merged) {
+        if (action === "closed" && pr.merged) {
           await supabase
-            .from('tickets')
+            .from("tickets")
             .update({
-              status: 'done',
-              status_category: 'completed',
+              status: "done",
+              status_category: "completed",
               updated_at: new Date().toISOString(),
             })
-            .eq('id', ticketId)
-            .in('status_category', ['started', 'unstarted', 'backlog']);
+            .eq("id", ticketId)
+            .in("status_category", ["started", "unstarted", "backlog"]);
         }
       }
 
       return NextResponse.json({ linked: ticketIds.length }, { status: 200 });
     }
 
-    if (event === 'push') {
+    if (event === "push") {
       const commits = payload.commits ?? [];
       const linkedTickets = new Set<string>();
 
@@ -77,17 +77,17 @@ export async function POST(req: NextRequest) {
         const ticketIds = extractTicketIds(commit.message);
         for (const ticketId of ticketIds) {
           linkedTickets.add(ticketId);
-          await supabase.from('ticket_github_links').upsert(
+          await supabase.from("ticket_github_links").upsert(
             {
               ticket_id: ticketId,
-              github_type: 'commit',
+              github_type: "commit",
               github_id: commit.id,
               github_url: commit.url,
-              title: commit.message.split('\n')[0].slice(0, 200),
-              status: 'committed',
+              title: commit.message.split("\n")[0].slice(0, 200),
+              status: "committed",
               merged: false,
             },
-            { onConflict: 'ticket_id,github_type,github_id' },
+            { onConflict: "ticket_id,github_type,github_id" },
           );
         }
       }
@@ -95,9 +95,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ linked: linkedTickets.size }, { status: 200 });
     }
 
-    return NextResponse.json({ message: 'Event not handled' }, { status: 200 });
+    return NextResponse.json({ message: "Event not handled" }, { status: 200 });
   } catch (err) {
-    console.error('GitHub webhook error:', err);
+    console.error("GitHub webhook error:", err);
     return NextResponse.json(
       { error: (err as Error).message },
       { status: 500 },
@@ -120,7 +120,8 @@ function extractTicketIds(text: string): string[] {
   }
 
   // Match UUID pattern
-  const uuidPattern = /\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/gi;
+  const uuidPattern =
+    /\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/gi;
   while ((match = uuidPattern.exec(text)) !== null) {
     ids.push(match[1]);
   }

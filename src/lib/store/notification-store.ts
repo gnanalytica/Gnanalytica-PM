@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Notification } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Notification } from "@/types";
 
 // ── Normalized state ──
 
@@ -35,7 +35,9 @@ export const useNotificationStore = create<NotificationState>()(
         set((state) => {
           if (
             state.ids.length === notifications.length &&
-            notifications.every((n, i) => state.ids[i] === n.id && state.byId[n.id] === n)
+            notifications.every(
+              (n, i) => state.ids[i] === n.id && state.byId[n.id] === n,
+            )
           ) {
             return state;
           }
@@ -84,7 +86,7 @@ export const useNotificationStore = create<NotificationState>()(
         }),
     }),
     {
-      name: 'pm-notification-store',
+      name: "pm-notification-store",
       partialize: (state) => ({
         byId: state.byId,
         ids: state.ids,

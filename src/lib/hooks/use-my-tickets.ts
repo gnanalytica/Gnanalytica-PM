@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useMemo } from 'react';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import type { Ticket, ActivityLog } from '@/types';
+import { useEffect, useRef, useMemo } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import type { Ticket, ActivityLog } from "@/types";
 
 const supabase = createClient();
 
@@ -22,7 +22,9 @@ const MY_TICKETS_PAGE_SIZE = 50;
 function normalizeTicket(t: Record<string, unknown>): Ticket {
   return {
     ...t,
-    labels: (t.labels as { label: unknown }[] | undefined)?.map((tl) => tl.label) ?? [],
+    labels:
+      (t.labels as { label: unknown }[] | undefined)?.map((tl) => tl.label) ??
+      [],
   } as Ticket;
 }
 
@@ -34,23 +36,26 @@ type MyTicketsPage = {
   page: number;
 };
 
-async function fetchMyTicketsPage(userId: string, page: number): Promise<MyTicketsPage> {
+async function fetchMyTicketsPage(
+  userId: string,
+  page: number,
+): Promise<MyTicketsPage> {
   const from = page * MY_TICKETS_PAGE_SIZE;
   const to = from + MY_TICKETS_PAGE_SIZE - 1;
 
   // Fetch assigned + created in parallel, both with same range
   const [assignedRes, createdRes] = await Promise.all([
     supabase
-      .from('tickets')
-      .select(TICKET_SELECT, { count: 'exact' })
-      .eq('assignee_id', userId)
-      .order('updated_at', { ascending: false })
+      .from("tickets")
+      .select(TICKET_SELECT, { count: "exact" })
+      .eq("assignee_id", userId)
+      .order("updated_at", { ascending: false })
       .range(from, to),
     supabase
-      .from('tickets')
-      .select(TICKET_SELECT, { count: 'exact' })
-      .eq('created_by', userId)
-      .order('updated_at', { ascending: false })
+      .from("tickets")
+      .select(TICKET_SELECT, { count: "exact" })
+      .eq("created_by", userId)
+      .order("updated_at", { ascending: false })
       .range(from, to),
   ]);
 
@@ -84,7 +89,7 @@ export function useHydrateMyTickets(userId: string) {
   const syncedUserRef = useRef<string | null>(null);
 
   const query = useInfiniteQuery({
-    queryKey: ['my-tickets', userId],
+    queryKey: ["my-tickets", userId],
     queryFn: async ({ pageParam }) => {
       return fetchMyTicketsPage(userId, pageParam);
     },
@@ -92,7 +97,8 @@ export function useHydrateMyTickets(userId: string) {
     getNextPageParam: (lastPage) => {
       const fetched = (lastPage.page + 1) * MY_TICKETS_PAGE_SIZE;
       // Stop when this page returned fewer tickets than the page size
-      return lastPage.tickets.length >= MY_TICKETS_PAGE_SIZE && fetched < lastPage.total
+      return lastPage.tickets.length >= MY_TICKETS_PAGE_SIZE &&
+        fetched < lastPage.total
         ? lastPage.page + 1
         : undefined;
     },
@@ -161,13 +167,15 @@ export function useHydrateMyTickets(userId: string) {
  */
 export function useUserActivity(userId: string) {
   return useQuery({
-    queryKey: ['user-activity', userId],
-    queryFn: async (): Promise<(ActivityLog & { ticket?: { id: string; title: string } })[]> => {
+    queryKey: ["user-activity", userId],
+    queryFn: async (): Promise<
+      (ActivityLog & { ticket?: { id: string; title: string } })[]
+    > => {
       const { data, error } = await supabase
-        .from('activity_log')
-        .select('*, user:profiles(*), ticket:tickets(id, title)')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("activity_log")
+        .select("*, user:profiles(*), ticket:tickets(id, title)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
       return data ?? [];

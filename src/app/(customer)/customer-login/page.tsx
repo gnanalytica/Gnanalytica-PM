@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase-browser';
+import { useState } from "react";
+import { createClient } from "@/lib/supabase-browser";
 
 const supabase = createClient();
 
 export default function CustomerLoginPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
@@ -60,9 +60,7 @@ export default function CustomerLoginPage() {
               />
             </div>
 
-            {error && (
-              <p className="text-[12px] text-red-500">{error}</p>
-            )}
+            {error && <p className="text-[12px] text-red-500">{error}</p>}
 
             <button
               type="submit"

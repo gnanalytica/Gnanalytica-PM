@@ -1,6 +1,40 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Ticket, Cycle, Milestone, StatusCategory } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Ticket, Cycle, Milestone, StatusCategory } from "@/types";
+
+// ── Flash cleanup batching ──
+// Instead of one setTimeout per updateTicket call, batch flash ID cleanup
+// into a single timer that drains all pending flash IDs at once.
+let pendingFlashCleanup: Set<string> | null = null;
+let flashTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleFlashCleanup(id: string) {
+  if (!pendingFlashCleanup) pendingFlashCleanup = new Set();
+  pendingFlashCleanup.add(id);
+
+  if (flashTimer) return; // timer already scheduled
+  flashTimer = setTimeout(() => {
+    const ids = pendingFlashCleanup;
+    pendingFlashCleanup = null;
+    flashTimer = null;
+    if (!ids || ids.size === 0) return;
+    useTicketStore.setState((state) => {
+      let changed = false;
+      for (const fid of ids) {
+        if (state.flashIds[fid]) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) return state;
+      const next: Record<string, true> = {};
+      for (const key of Object.keys(state.flashIds)) {
+        if (!ids.has(key)) next[key] = true;
+      }
+      return { flashIds: next };
+    });
+  }, 600);
+}
 
 // ── Normalized state ──
 
@@ -23,7 +57,12 @@ type TicketState = {
   mergeTickets: (tickets: Ticket[]) => void;
   addTicket: (ticket: Ticket) => void;
   updateTicket: (id: string, fields: Partial<Ticket>) => void;
-  moveTicket: (id: string, status: string, statusCategory: StatusCategory, position: number) => void;
+  moveTicket: (
+    id: string,
+    status: string,
+    statusCategory: StatusCategory,
+    position: number,
+  ) => void;
   removeTicket: (id: string) => void;
 
   // Cycle actions
@@ -78,7 +117,9 @@ export const useTicketStore = create<TicketState>()(
           // Skip update if same tickets in same order with same references
           if (
             state.ids.length === tickets.length &&
-            tickets.every((t, i) => state.ids[i] === t.id && state.byId[t.id] === t)
+            tickets.every(
+              (t, i) => state.ids[i] === t.id && state.byId[t.id] === t,
+            )
           ) {
             return state;
           }
@@ -129,14 +170,7 @@ export const useTicketStore = create<TicketState>()(
             flashIds: { ...state.flashIds, [id]: true as const },
           };
         });
-        setTimeout(() => {
-          set((state) => {
-            if (!state.flashIds[id]) return state;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _flash, ...rest } = state.flashIds;
-            return { flashIds: rest };
-          });
-        }, 600);
+        scheduleFlashCleanup(id);
       },
 
       moveTicket: (id, status, statusCategory, position) =>
@@ -144,14 +178,22 @@ export const useTicketStore = create<TicketState>()(
           const existing = state.byId[id];
           if (!existing) return state;
           return {
-            byId: { ...state.byId, [id]: { ...existing, status, status_category: statusCategory, position } },
+            byId: {
+              ...state.byId,
+              [id]: {
+                ...existing,
+                status,
+                status_category: statusCategory,
+                position,
+              },
+            },
           };
         }),
 
       removeTicket: (id) =>
         set((state) => {
           if (!state.byId[id]) return state;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           const { [id]: _ticket, ...rest } = state.byId;
           return {
             byId: rest,
@@ -175,7 +217,10 @@ export const useTicketStore = create<TicketState>()(
       addCycle: (cycle) =>
         set((state) => ({
           cyclesById: { ...state.cyclesById, [cycle.id]: cycle },
-          cycleTicketIds: { ...state.cycleTicketIds, [cycle.id]: state.cycleTicketIds[cycle.id] ?? [] },
+          cycleTicketIds: {
+            ...state.cycleTicketIds,
+            [cycle.id]: state.cycleTicketIds[cycle.id] ?? [],
+          },
         })),
 
       assignIssueToCycle: (ticketId, cycleId) =>
@@ -215,7 +260,10 @@ export const useTicketStore = create<TicketState>()(
           const existing = state.cyclesById[id];
           if (!existing) return state;
           return {
-            cyclesById: { ...state.cyclesById, [id]: { ...existing, ...fields } },
+            cyclesById: {
+              ...state.cyclesById,
+              [id]: { ...existing, ...fields },
+            },
           };
         }),
 
@@ -236,7 +284,10 @@ export const useTicketStore = create<TicketState>()(
         set((state) => {
           if (state.milestonesById[milestone.id]) return state;
           return {
-            milestonesById: { ...state.milestonesById, [milestone.id]: milestone },
+            milestonesById: {
+              ...state.milestonesById,
+              [milestone.id]: milestone,
+            },
             milestoneIds: [...state.milestoneIds, milestone.id],
           };
         }),
@@ -246,14 +297,17 @@ export const useTicketStore = create<TicketState>()(
           const existing = state.milestonesById[id];
           if (!existing) return state;
           return {
-            milestonesById: { ...state.milestonesById, [id]: { ...existing, ...fields } },
+            milestonesById: {
+              ...state.milestonesById,
+              [id]: { ...existing, ...fields },
+            },
           };
         }),
 
       removeMilestone: (id) =>
         set((state) => {
           if (!state.milestonesById[id]) return state;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           const { [id]: _removed, ...rest } = state.milestonesById;
           return {
             milestonesById: rest,
@@ -262,7 +316,7 @@ export const useTicketStore = create<TicketState>()(
         }),
     }),
     {
-      name: 'pm-ticket-store',
+      name: "pm-ticket-store",
       partialize: (state) => ({
         byId: state.byId,
         ids: state.ids,

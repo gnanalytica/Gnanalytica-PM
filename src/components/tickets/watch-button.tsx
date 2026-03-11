@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useIsWatching, useToggleWatch } from '@/lib/hooks/use-watchers';
+import { useIsWatching, useToggleWatch } from "@/lib/hooks/use-watchers";
 
 export function WatchButton({
   ticketId,
@@ -14,16 +14,14 @@ export function WatchButton({
 
   return (
     <button
-      onClick={() =>
-        toggleWatch.mutate({ ticketId, userId, watching })
-      }
+      onClick={() => toggleWatch.mutate({ ticketId, userId, watching })}
       disabled={toggleWatch.isPending}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors duration-[120ms] ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-all duration-150 active:scale-[0.96] ${
         watching
-          ? 'text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100'
-          : 'text-content-muted border-border-subtle hover:bg-hover'
+          ? "text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:shadow-xs"
+          : "text-content-muted border-border-subtle hover:bg-hover hover:shadow-xs"
       }`}
-      title={watching ? 'Stop watching' : 'Watch this ticket'}
+      title={watching ? "Stop watching" : "Watch this ticket"}
     >
       <svg
         className="w-3.5 h-3.5"
@@ -53,7 +51,7 @@ export function WatchButton({
           />
         )}
       </svg>
-      {watching ? 'Watching' : 'Watch'}
+      {watching ? "Watching" : "Watch"}
     </button>
   );
 }

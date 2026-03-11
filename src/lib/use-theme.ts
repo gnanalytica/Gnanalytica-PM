@@ -1,30 +1,43 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-type Theme = 'light' | 'dark';
+type Theme = "light" | "dark";
 
-const STORAGE_KEY = 'theme';
-
-function getStoredTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark';
-  return (localStorage.getItem(STORAGE_KEY) as Theme) || 'dark';
-}
+const STORAGE_KEY = "theme";
 
 function applyTheme(theme: Theme) {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
   } else {
-    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove("dark");
   }
 }
 
+function triggerThemeTransition() {
+  document.documentElement.classList.add("theme-transition");
+  setTimeout(() => {
+    document.documentElement.classList.remove("theme-transition");
+  }, 350);
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
+  // Always start with 'dark' for SSR consistency.
+  // The real value is read from localStorage in the mount effect.
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
+
+  // Hydrate from localStorage after mount
+  useEffect(() => {
+    const stored = (localStorage.getItem(STORAGE_KEY) as Theme) || "dark";
+    setThemeState(stored);
+    applyTheme(stored);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    if (mounted) applyTheme(theme);
+  }, [theme, mounted]);
 
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
@@ -34,8 +47,8 @@ export function useTheme() {
         applyTheme(newTheme);
       }
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const setTheme = useCallback((t: Theme) => {
@@ -44,8 +57,9 @@ export function useTheme() {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    triggerThemeTransition();
+    setTheme(theme === "dark" ? "light" : "dark");
   }, [theme, setTheme]);
 
-  return { theme, toggleTheme, setTheme } as const;
+  return { theme, toggleTheme, setTheme, mounted } as const;
 }

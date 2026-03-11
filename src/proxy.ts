@@ -1,7 +1,7 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -26,17 +26,20 @@ export async function middleware(request: NextRequest) {
           });
         },
       },
-    }
+    },
   );
 
   // Refresh the session so cookies stay valid
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname === '/login' || pathname.startsWith('/auth/');
-  const isCustomerRoute = pathname.startsWith('/portal') || pathname.startsWith('/kb');
-  const isCustomerLogin = pathname === '/customer-login';
-  const isApiRoute = pathname.startsWith('/api/');
+  const isAuthRoute = pathname === "/login" || pathname.startsWith("/auth/");
+  const isCustomerRoute =
+    pathname.startsWith("/portal") || pathname.startsWith("/kb");
+  const isCustomerLogin = pathname === "/customer-login";
+  const isApiRoute = pathname.startsWith("/api/");
 
   // Allow API routes through (webhook endpoints handle their own auth)
   if (isApiRoute) {
@@ -45,20 +48,20 @@ export async function middleware(request: NextRequest) {
 
   // Customer portal routes: redirect to customer login if unauthenticated
   if (isCustomerRoute && !user && !isCustomerLogin) {
-    const loginUrl = new URL('/customer-login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    const loginUrl = new URL("/customer-login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Internal app routes: redirect unauthenticated users to /login
   if (!user && !isAuthRoute && !isCustomerRoute) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect authenticated users away from /login
-  if (user && pathname === '/login') {
-    const dashboardUrl = new URL('/dashboard', request.url);
+  if (user && pathname === "/login") {
+    const dashboardUrl = new URL("/dashboard", request.url);
     return NextResponse.redirect(dashboardUrl);
   }
 
@@ -66,5 +69,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

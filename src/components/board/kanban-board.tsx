@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -11,20 +11,37 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
-} from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
-import { LayoutGroup } from 'framer-motion';
-import { useReorderTicket, useProjectTickets } from '@/lib/hooks/use-tickets';
-import { useProjectWorkflow } from '@/lib/hooks/use-workflow';
-import { KanbanColumn } from './kanban-column';
-import { TicketCard } from './ticket-card';
-import type { Ticket, StatusCategory } from '@/types';
-import { STATUS_CATEGORIES } from '@/types';
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { LayoutGroup } from "motion/react";
+import { useReorderTicket, useProjectTickets } from "@/lib/hooks/use-tickets";
+import { useProjectWorkflow } from "@/lib/hooks/use-workflow";
+import { useMembers } from "@/lib/hooks/use-members";
+import { useProjectMilestones } from "@/lib/hooks/use-milestones";
+import { KanbanColumn } from "./kanban-column";
+import { TicketCard } from "./ticket-card";
+import type { Ticket, StatusCategory, ViewFilters, GroupByKey } from "@/types";
+import {
+  STATUS_CATEGORIES,
+  TICKET_PRIORITIES,
+  ISSUE_TYPES,
+  STATUS_EMOJI,
+  PRIORITY_EMOJI,
+  ISSUE_TYPE_EMOJI,
+} from "@/types";
 
-const COLUMNS: { id: StatusCategory; title: string }[] = STATUS_CATEGORIES.map((c) => ({
-  id: c.value,
-  title: c.label,
-}));
+type ColumnDef = {
+  key: string;
+  title: string;
+  tickets: Ticket[];
+  emoji?: string;
+};
+
+const STATUS_COLUMNS: { id: StatusCategory; title: string }[] =
+  STATUS_CATEGORIES.map((c) => ({
+    id: c.value,
+    title: c.label,
+  }));
 
 const POSITION_GAP = 1000;
 
@@ -47,25 +64,65 @@ function calculatePosition(
   return Math.round((prev + next) / 2);
 }
 
+function applyFilters(tickets: Ticket[], filters?: ViewFilters): Ticket[] {
+  if (!filters) return tickets;
+  let result = tickets;
+
+  if (filters.status && filters.status.length > 0) {
+    const statusSet = new Set(filters.status);
+    result = result.filter((t) => statusSet.has(t.status));
+  }
+  if (filters.priority && filters.priority.length > 0) {
+    const prioritySet = new Set(filters.priority);
+    result = result.filter((t) => t.priority && prioritySet.has(t.priority));
+  }
+  if (filters.assignee_ids && filters.assignee_ids.length > 0) {
+    const assigneeSet = new Set(filters.assignee_ids);
+    result = result.filter(
+      (t) => t.assignee_id && assigneeSet.has(t.assignee_id),
+    );
+  }
+  if (filters.issue_type && filters.issue_type.length > 0) {
+    const typeSet = new Set(filters.issue_type);
+    result = result.filter(
+      (t) => t.issue_type && typeSet.has(t.issue_type),
+    );
+  }
+
+  return result;
+}
+
 export function KanbanBoard({
   projectId,
   onTicketClick,
   filterTicketIds,
+  filters,
+  groupBy,
 }: {
   projectId: string;
   onTicketClick?: (ticketId: string) => void;
   /** When set, only show tickets whose ids are in this set. */
   filterTicketIds?: Set<string> | null;
+  filters?: ViewFilters;
+  groupBy?: GroupByKey;
 }) {
   const allTickets = useProjectTickets(projectId);
-  const tickets = filterTicketIds
+  const filteredByIds = filterTicketIds
     ? allTickets.filter((t) => filterTicketIds.has(t.id))
     : allTickets;
+  const tickets = applyFilters(filteredByIds, filters);
   const reorderTicket = useReorderTicket();
   const workflow = useProjectWorkflow(projectId);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
 
-  const columns = useMemo<Record<StatusCategory, Ticket[]>>(() => {
+  const { data: members } = useMembers();
+  const milestones = useProjectMilestones(projectId);
+
+  const isStatusGrouping =
+    !groupBy || groupBy === "status" || groupBy === "none";
+
+  // Status-based columns (used for drag-and-drop)
+  const statusColumns = useMemo<Record<StatusCategory, Ticket[]>>(() => {
     const sorted = [...tickets].sort((a, b) => a.position - b.position);
     const grouped: Record<StatusCategory, Ticket[]> = {
       backlog: [],
@@ -79,11 +136,91 @@ export function KanbanBoard({
       grouped[cat].push(t);
     }
     return grouped;
-  }, [tickets]);
+  }, [tickets, workflow]);
+
+  // Dynamic columns based on groupBy
+  const dynamicColumns = useMemo<ColumnDef[]>(() => {
+    if (isStatusGrouping) {
+      return STATUS_COLUMNS.map((col) => ({
+        key: col.id,
+        title: col.title,
+        tickets: statusColumns[col.id],
+        emoji: undefined,
+      }));
+    }
+
+    const sorted = [...tickets].sort((a, b) => a.position - b.position);
+
+    if (groupBy === "priority") {
+      return TICKET_PRIORITIES.map((p) => ({
+        key: p.value,
+        title: p.label,
+        tickets: sorted.filter((t) => t.priority === p.value),
+        emoji: PRIORITY_EMOJI[p.value],
+      }));
+    }
+
+    if (groupBy === "assignee") {
+      const memberList = members ?? [];
+      const cols: ColumnDef[] = memberList.map((m) => ({
+        key: m.id,
+        title: m.name,
+        tickets: sorted.filter((t) => t.assignee_id === m.id),
+        emoji: undefined,
+      }));
+      cols.push({
+        key: "__unassigned__",
+        title: "Unassigned",
+        tickets: sorted.filter((t) => !t.assignee_id),
+        emoji: undefined,
+      });
+      return cols;
+    }
+
+    if (groupBy === "issue_type") {
+      return ISSUE_TYPES.map((it) => ({
+        key: it.value,
+        title: it.label,
+        tickets: sorted.filter((t) => t.issue_type === it.value),
+        emoji: ISSUE_TYPE_EMOJI[it.value],
+      }));
+    }
+
+    if (groupBy === "milestone") {
+      const cols: ColumnDef[] = milestones.map((m) => ({
+        key: m.id,
+        title: m.name,
+        tickets: sorted.filter((t) => t.milestone_id === m.id),
+        emoji: undefined,
+      }));
+      cols.push({
+        key: "__no_milestone__",
+        title: "No milestone",
+        tickets: sorted.filter((t) => !t.milestone_id),
+        emoji: undefined,
+      });
+      return cols;
+    }
+
+    // Fallback: status grouping
+    return STATUS_COLUMNS.map((col) => ({
+      key: col.id,
+      title: col.title,
+      tickets: statusColumns[col.id],
+      emoji: undefined,
+    }));
+  }, [
+    isStatusGrouping,
+    groupBy,
+    tickets,
+    statusColumns,
+    members,
+    milestones,
+  ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -93,6 +230,8 @@ export function KanbanBoard({
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveTicket(null);
+    if (!isStatusGrouping) return; // No drag between columns for non-status groupings
+
     const { active, over } = event;
     if (!over) return;
 
@@ -104,13 +243,13 @@ export function KanbanBoard({
     let targetCategory: StatusCategory | undefined;
     let overTicketId: string | undefined;
 
-    if (COLUMNS.some((c) => c.id === over.id)) {
+    if (STATUS_COLUMNS.some((c) => c.id === over.id)) {
       targetCategory = over.id as StatusCategory;
     } else {
       overTicketId = over.id as string;
       // Dropped over a ticket — find which category column it belongs to
-      for (const col of COLUMNS) {
-        if (columns[col.id].some((t) => t.id === over.id)) {
+      for (const col of STATUS_COLUMNS) {
+        if (statusColumns[col.id].some((t) => t.id === over.id)) {
           targetCategory = col.id;
           break;
         }
@@ -119,9 +258,11 @@ export function KanbanBoard({
 
     if (!targetCategory) return;
 
-    const currentCategory = currentTicket.status_category ?? workflow.getStatusCategory(currentTicket.status);
+    const currentCategory =
+      currentTicket.status_category ??
+      workflow.getStatusCategory(currentTicket.status);
     const isSameColumn = currentCategory === targetCategory;
-    const targetColumn = columns[targetCategory];
+    const targetColumn = statusColumns[targetCategory];
 
     if (isSameColumn) {
       // Same-column reorder
@@ -174,22 +315,30 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <LayoutGroup>
-        <div className="flex gap-2.5 overflow-x-auto pb-2">
-          {COLUMNS.map((col) => (
+        <div className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory sm:snap-none">
+          {dynamicColumns.map((col) => (
             <KanbanColumn
-              key={col.id}
-              id={col.id}
+              key={col.key}
+              id={col.key}
               title={col.title}
-              tickets={columns[col.id]}
+              tickets={col.tickets}
               projectId={projectId}
-              defaultStatus={workflow.getDefaultStatusForCategory(col.id)}
+              defaultStatus={
+                isStatusGrouping
+                  ? workflow.getDefaultStatusForCategory(
+                      col.key as StatusCategory,
+                    )
+                  : undefined
+              }
               onTicketClick={onTicketClick}
               isDragging={activeTicket !== null}
+              emoji={col.emoji}
+              readOnly={!isStatusGrouping}
             />
           ))}
         </div>
       </LayoutGroup>
-      <DragOverlay dropAnimation={{ duration: 200, easing: 'ease-out' }}>
+      <DragOverlay dropAnimation={{ duration: 200, easing: "ease-out" }}>
         {activeTicket ? <TicketCard ticket={activeTicket} isDragging /> : null}
       </DragOverlay>
     </DndContext>

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useRef, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useShallow } from 'zustand/react/shallow';
-import { createClient } from '@/lib/supabase-browser';
-import { useTicketStore, getCycleIssues } from '@/lib/store/ticket-store';
-import type { Cycle, Ticket } from '@/types';
+import { useRef, useMemo, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
+import { createClient } from "@/lib/supabase-browser";
+import { useTicketStore, getCycleIssues } from "@/lib/store/ticket-store";
+import type { Cycle, Ticket } from "@/types";
 
 const supabase = createClient();
 
@@ -19,20 +19,22 @@ export function useHydrateCycles(projectId: string | undefined) {
   const hydratedRef = useRef<string | null>(null);
 
   const query = useQuery({
-    queryKey: ['cycles', projectId],
+    queryKey: ["cycles", projectId],
     queryFn: async () => {
-      const [{ data: cycles, error: cyclesErr }, { data: junctions, error: juncErr }] =
-        await Promise.all([
-          supabase
-            .from('cycles')
-            .select('*')
-            .eq('project_id', projectId)
-            .order('start_date', { ascending: false }),
-          supabase
-            .from('ticket_cycles')
-            .select('ticket_id, cycle_id, cycle:cycles!inner(project_id)')
-            .eq('cycle.project_id', projectId),
-        ]);
+      const [
+        { data: cycles, error: cyclesErr },
+        { data: junctions, error: juncErr },
+      ] = await Promise.all([
+        supabase
+          .from("cycles")
+          .select("*")
+          .eq("project_id", projectId)
+          .order("start_date", { ascending: false }),
+        supabase
+          .from("ticket_cycles")
+          .select("ticket_id, cycle_id, cycle:cycles!inner(project_id)")
+          .eq("cycle.project_id", projectId),
+      ]);
 
       if (cyclesErr) throw cyclesErr;
       if (juncErr) throw juncErr;
@@ -66,15 +68,17 @@ export function useHydrateCycles(projectId: string | undefined) {
     enabled: !!projectId,
   });
 
-  // Handle cache hits
-  if (query.data && hydratedRef.current !== projectId) {
-    hydratedRef.current = projectId ?? null;
-    const store = useTicketStore.getState();
-    store.setCycles(query.data.cycles);
-    for (const cycle of query.data.cycles) {
-      store.setCycleTickets(cycle.id, query.data.ticketMap[cycle.id] ?? []);
+  // Handle cache hits — must run in an effect to avoid setState-during-render
+  useEffect(() => {
+    if (query.data && hydratedRef.current !== projectId) {
+      hydratedRef.current = projectId ?? null;
+      const store = useTicketStore.getState();
+      store.setCycles(query.data.cycles);
+      for (const cycle of query.data.cycles) {
+        store.setCycleTickets(cycle.id, query.data.ticketMap[cycle.id] ?? []);
+      }
     }
-  }
+  }, [query.data, projectId]);
 
   return { isLoading: query.isLoading, isError: query.isError };
 }
@@ -95,9 +99,12 @@ export function useProjectCycles(projectId: string): Cycle[] {
 
 export function useActiveCycle(): Cycle | null {
   const { activeCycleId, cyclesById } = useTicketStore(
-    useShallow((s) => ({ activeCycleId: s.activeCycleId, cyclesById: s.cyclesById })),
+    useShallow((s) => ({
+      activeCycleId: s.activeCycleId,
+      cyclesById: s.cyclesById,
+    })),
   );
-  return activeCycleId ? cyclesById[activeCycleId] ?? null : null;
+  return activeCycleId ? (cyclesById[activeCycleId] ?? null) : null;
 }
 
 /**
@@ -111,7 +118,10 @@ export function useCycleTickets(cycleId: string | null): Ticket[] {
 
   return useMemo(() => {
     if (!cycleId) return [];
-    return getCycleIssues({ byId, cycleTicketIds } as Parameters<typeof getCycleIssues>[0], cycleId);
+    return getCycleIssues(
+      { byId, cycleTicketIds } as Parameters<typeof getCycleIssues>[0],
+      cycleId,
+    );
   }, [byId, cycleTicketIds, cycleId]);
 }
 
@@ -121,9 +131,14 @@ export function useCreateCycle() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (cycle: { name: string; start_date: string; end_date: string; project_id: string }) => {
+    mutationFn: async (cycle: {
+      name: string;
+      start_date: string;
+      end_date: string;
+      project_id: string;
+    }) => {
       const { data, error } = await supabase
-        .from('cycles')
+        .from("cycles")
         .insert(cycle)
         .select()
         .single();
@@ -131,7 +146,9 @@ export function useCreateCycle() {
       return data as Cycle;
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cycles', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["cycles", variables.project_id],
+      });
     },
   });
 }
@@ -141,10 +158,18 @@ export function useAssignTicketToCycle() {
   const storeAssign = useTicketStore((s) => s.assignIssueToCycle);
 
   return useMutation({
-    mutationFn: async ({ ticketId, cycleId, projectId }: { ticketId: string; cycleId: string; projectId: string }) => {
+    mutationFn: async ({
+      ticketId,
+      cycleId,
+      projectId,
+    }: {
+      ticketId: string;
+      cycleId: string;
+      projectId: string;
+    }) => {
       void projectId;
       const { error } = await supabase
-        .from('ticket_cycles')
+        .from("ticket_cycles")
         .insert({ ticket_id: ticketId, cycle_id: cycleId });
       if (error) throw error;
     },
@@ -152,7 +177,9 @@ export function useAssignTicketToCycle() {
       storeAssign(ticketId, cycleId);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["cycles", variables.projectId],
+      });
     },
   });
 }
@@ -162,20 +189,30 @@ export function useRemoveTicketFromCycle() {
   const storeRemove = useTicketStore((s) => s.removeIssueFromCycle);
 
   return useMutation({
-    mutationFn: async ({ ticketId, cycleId, projectId }: { ticketId: string; cycleId: string; projectId: string }) => {
+    mutationFn: async ({
+      ticketId,
+      cycleId,
+      projectId,
+    }: {
+      ticketId: string;
+      cycleId: string;
+      projectId: string;
+    }) => {
       void projectId;
       const { error } = await supabase
-        .from('ticket_cycles')
+        .from("ticket_cycles")
         .delete()
-        .eq('ticket_id', ticketId)
-        .eq('cycle_id', cycleId);
+        .eq("ticket_id", ticketId)
+        .eq("cycle_id", cycleId);
       if (error) throw error;
     },
     onMutate: ({ ticketId, cycleId }) => {
       storeRemove(ticketId, cycleId);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["cycles", variables.projectId],
+      });
     },
   });
 }
@@ -197,13 +234,13 @@ export function useUpdateCycle() {
       end_date?: string;
       retrospective_notes?: string;
       auto_rollover?: boolean;
-      status?: 'planned' | 'active' | 'completed';
+      status?: "planned" | "active" | "completed";
     }) => {
       void projectId;
       const { data, error } = await supabase
-        .from('cycles')
+        .from("cycles")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
@@ -213,7 +250,9 @@ export function useUpdateCycle() {
       storeUpdateCycle(id, updates);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["cycles", variables.projectId],
+      });
     },
   });
 }
@@ -238,9 +277,9 @@ export function useCompleteSprintWithRollover() {
     }) => {
       // Mark cycle as completed
       const { error: updateErr } = await supabase
-        .from('cycles')
-        .update({ status: 'completed' })
-        .eq('id', cycleId);
+        .from("cycles")
+        .update({ status: "completed" })
+        .eq("id", cycleId);
       if (updateErr) throw updateErr;
 
       // Get cycle config
@@ -252,7 +291,11 @@ export function useCompleteSprintWithRollover() {
       const byId = store.getState().byId;
       const incompleteIds = ticketIds.filter((id) => {
         const t = byId[id];
-        return t && t.status_category !== 'completed' && t.status_category !== 'canceled';
+        return (
+          t &&
+          t.status_category !== "completed" &&
+          t.status_category !== "canceled"
+        );
       });
 
       if (incompleteIds.length === 0) return { rolledOver: 0 };
@@ -265,12 +308,14 @@ export function useCompleteSprintWithRollover() {
         startDate.setDate(startDate.getDate() + 1);
         const endDate = new Date(startDate);
         const duration = Math.round(
-          (new Date(cycle.end_date).getTime() - new Date(cycle.start_date).getTime()) / (1000 * 60 * 60 * 24),
+          (new Date(cycle.end_date).getTime() -
+            new Date(cycle.start_date).getTime()) /
+            (1000 * 60 * 60 * 24),
         );
         endDate.setDate(endDate.getDate() + duration);
 
         const { data: newCycle, error: createErr } = await supabase
-          .from('cycles')
+          .from("cycles")
           .insert({
             project_id: projectId,
             name: `${cycle.name} (next)`,
@@ -286,14 +331,21 @@ export function useCompleteSprintWithRollover() {
 
       // Move incomplete tickets to next cycle
       const { error: insertErr } = await supabase
-        .from('ticket_cycles')
-        .insert(incompleteIds.map((tid) => ({ ticket_id: tid, cycle_id: targetCycleId! })));
+        .from("ticket_cycles")
+        .insert(
+          incompleteIds.map((tid) => ({
+            ticket_id: tid,
+            cycle_id: targetCycleId!,
+          })),
+        );
       if (insertErr) throw insertErr;
 
       return { rolledOver: incompleteIds.length, newCycleId: targetCycleId };
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cycles', variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["cycles", variables.projectId],
+      });
     },
   });
 }

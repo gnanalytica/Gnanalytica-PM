@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
 
 const supabase = createClient();
 
@@ -17,13 +17,13 @@ type Article = {
 
 export default function KBPage() {
   const { data: articles, isLoading } = useQuery({
-    queryKey: ['kb-articles-public'],
+    queryKey: ["kb-articles-public"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('kb_articles')
-        .select('id, title, slug, excerpt, published, created_at')
-        .eq('published', true)
-        .order('created_at', { ascending: false });
+        .from("kb_articles")
+        .select("id, title, slug, excerpt, published, created_at")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Article[];
     },
@@ -31,7 +31,9 @@ export default function KBPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-content-primary mb-4">Knowledge Base</h1>
+      <h1 className="text-lg font-semibold text-content-primary mb-4">
+        Knowledge Base
+      </h1>
 
       {isLoading ? (
         <p className="text-sm text-content-muted">Loading...</p>

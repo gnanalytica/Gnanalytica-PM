@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import type { Ticket } from '@/types';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import type { Ticket } from "@/types";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const supabase = createClient();
 
@@ -20,13 +20,13 @@ export function useRealtimeTickets(projectId: string | undefined) {
 
   useEffect(() => {
     const unsubscribe = queryClient.getMutationCache().subscribe((event) => {
-      if (event.mutation?.options.mutationKey?.[0] !== 'tickets') return;
+      if (event.mutation?.options.mutationKey?.[0] !== "tickets") return;
 
-      if (event.type === 'updated') {
+      if (event.type === "updated") {
         const status = event.mutation.state.status;
-        if (status === 'pending') {
+        if (status === "pending") {
           mutatingCount.current++;
-        } else if (status === 'success' || status === 'error') {
+        } else if (status === "success" || status === "error") {
           mutatingCount.current = Math.max(0, mutatingCount.current - 1);
         }
       }
@@ -41,7 +41,7 @@ export function useRealtimeTickets(projectId: string | undefined) {
     const { addTicket, updateTicket, removeTicket } = useTicketStore.getState();
 
     const handleInsert = (
-      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>
+      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>,
     ) => {
       if (mutatingCount.current > 0) return;
 
@@ -53,13 +53,13 @@ export function useRealtimeTickets(projectId: string | undefined) {
 
       // Background refetch for full relations (assignee, creator, labels)
       queryClient.invalidateQueries({
-        queryKey: ['tickets', projectId],
-        refetchType: 'active',
+        queryKey: ["tickets", projectId],
+        refetchType: "active",
       });
     };
 
     const handleUpdate = (
-      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>
+      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>,
     ) => {
       if (mutatingCount.current > 0) return;
 
@@ -80,19 +80,19 @@ export function useRealtimeTickets(projectId: string | undefined) {
 
       // Background refetch for full relation data
       queryClient.invalidateQueries({
-        queryKey: ['tickets', projectId],
-        refetchType: 'active',
+        queryKey: ["tickets", projectId],
+        refetchType: "active",
       });
       if (existing) {
         queryClient.invalidateQueries({
-          queryKey: ['ticket', row.id],
-          refetchType: 'active',
+          queryKey: ["ticket", row.id],
+          refetchType: "active",
         });
       }
     };
 
     const handleDelete = (
-      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>
+      payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>,
     ) => {
       if (mutatingCount.current > 0) return;
 
@@ -102,42 +102,48 @@ export function useRealtimeTickets(projectId: string | undefined) {
       // Remove from Zustand store
       removeTicket(deletedId);
 
-      queryClient.removeQueries({ queryKey: ['ticket', deletedId] });
+      queryClient.removeQueries({ queryKey: ["ticket", deletedId] });
     };
 
     const channel = supabase
       .channel(`tickets:${projectId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tickets',
+          event: "INSERT",
+          schema: "public",
+          table: "tickets",
           filter: `project_id=eq.${projectId}`,
         },
-        handleInsert
+        handleInsert,
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tickets',
+          event: "UPDATE",
+          schema: "public",
+          table: "tickets",
           filter: `project_id=eq.${projectId}`,
         },
-        handleUpdate
+        handleUpdate,
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'tickets',
+          event: "DELETE",
+          schema: "public",
+          table: "tickets",
           filter: `project_id=eq.${projectId}`,
         },
-        handleDelete
+        handleDelete,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn(
+            "[Realtime] tickets channel error — will retry with backoff",
+          );
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -154,42 +160,48 @@ export function useRealtimeComments(ticketId: string) {
 
   useEffect(() => {
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["comments", ticketId] });
     };
 
     const channel = supabase
       .channel(`comments:${ticketId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'comments',
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
           filter: `ticket_id=eq.${ticketId}`,
         },
-        invalidate
+        invalidate,
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'comments',
+          event: "UPDATE",
+          schema: "public",
+          table: "comments",
           filter: `ticket_id=eq.${ticketId}`,
         },
-        invalidate
+        invalidate,
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'comments',
+          event: "DELETE",
+          schema: "public",
+          table: "comments",
           filter: `ticket_id=eq.${ticketId}`,
         },
-        invalidate
+        invalidate,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn(
+            "[Realtime] comments channel error — will retry with backoff",
+          );
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -206,16 +218,38 @@ export function useRealtimeTicketRelations(ticketId: string) {
   useEffect(() => {
     if (!ticketId) return;
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-relations', ticketId] });
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-relations", ticketId],
+      });
     };
 
     const channel = supabase
       .channel(`relations:${ticketId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_relations', filter: `source_ticket_id=eq.${ticketId}` }, invalidate)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_relations', filter: `target_ticket_id=eq.${ticketId}` }, invalidate)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_relations",
+          filter: `source_ticket_id=eq.${ticketId}`,
+        },
+        invalidate,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_relations",
+          filter: `target_ticket_id=eq.${ticketId}`,
+        },
+        invalidate,
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [ticketId, queryClient]);
 }
 
@@ -228,15 +262,26 @@ export function useRealtimeTicketAssignees(ticketId: string) {
   useEffect(() => {
     if (!ticketId) return;
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
     };
 
     const channel = supabase
       .channel(`assignees:${ticketId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_assignees', filter: `ticket_id=eq.${ticketId}` }, invalidate)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_assignees",
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        invalidate,
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [ticketId, queryClient]);
 }
 
@@ -249,15 +294,28 @@ export function useRealtimeTicketAttachments(ticketId: string) {
   useEffect(() => {
     if (!ticketId) return;
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-attachments', ticketId] });
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-attachments", ticketId],
+      });
     };
 
     const channel = supabase
       .channel(`attachments:${ticketId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_attachments', filter: `ticket_id=eq.${ticketId}` }, invalidate)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_attachments",
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        invalidate,
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [ticketId, queryClient]);
 }
 
@@ -270,15 +328,21 @@ export function useRealtimeCommentReactions(ticketId: string) {
   useEffect(() => {
     if (!ticketId) return;
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["comments", ticketId] });
     };
 
     const channel = supabase
       .channel(`reactions:${ticketId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reactions' }, invalidate)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comment_reactions" },
+        invalidate,
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [ticketId, queryClient]);
 }
 
@@ -294,18 +358,24 @@ export function useRealtimeNotifications(userId: string | undefined) {
     const channel = supabase
       .channel(`notifications:${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
           filter: `user_id=eq.${userId}`,
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn(
+            "[Realtime] notifications channel error — will retry with backoff",
+          );
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

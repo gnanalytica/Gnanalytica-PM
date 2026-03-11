@@ -9,16 +9,22 @@
 function Bone({ className }: { className?: string }) {
   return (
     <div
-      className={`rounded bg-surface-tertiary animate-shimmer ${className ?? ''}`}
+      className={`rounded bg-surface-tertiary animate-shimmer ${className ?? ""}`}
     />
   );
 }
 
 /** Dark variant for sidebar */
-function DarkBone({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function DarkBone({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
-      className={`rounded bg-surface-tertiary animate-shimmer ${className ?? ''}`}
+      className={`rounded bg-surface-tertiary animate-shimmer ${className ?? ""}`}
       style={style}
     />
   );
@@ -49,7 +55,7 @@ export function IssueRowSkeleton() {
 
 export function IssueListSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div className="rounded-sm overflow-hidden">
+    <div className="rounded-md overflow-hidden">
       {Array.from({ length: rows }, (_, i) => (
         <IssueRowSkeleton key={i} />
       ))}
@@ -60,9 +66,13 @@ export function IssueListSkeleton({ rows = 8 }: { rows?: number }) {
 // ── BoardCardSkeleton ──
 // Matches TicketCard: priority dot + ID row, title row, optional labels
 
-export function BoardCardSkeleton({ showLabels = false }: { showLabels?: boolean }) {
+export function BoardCardSkeleton({
+  showLabels = false,
+}: {
+  showLabels?: boolean;
+}) {
   return (
-    <div className="bg-surface-tertiary rounded-sm px-2 py-1">
+    <div className="bg-surface-tertiary rounded-md px-2 py-1">
       {/* Row 1: priority dot + ID … avatar */}
       <div className="flex items-center justify-between gap-2 mb-0.5">
         <div className="flex items-center gap-1.5">
@@ -89,7 +99,10 @@ export function BoardSkeleton() {
   return (
     <div className="flex gap-2.5">
       {columnCards.map((count, col) => (
-        <div key={col} className="w-64 bg-surface-secondary rounded-sm p-2 flex-shrink-0">
+        <div
+          key={col}
+          className="w-64 bg-surface-secondary rounded-md p-2 flex-shrink-0"
+        >
           {/* Column header */}
           <div className="flex items-center justify-between mb-1.5">
             <Bone className="h-3 w-20" />
@@ -152,7 +165,10 @@ export function SidebarSkeleton() {
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-2 px-2 py-[5px]">
                 <DarkBone className="w-2 h-2 rounded-full" />
-                <DarkBone className="h-3.5" style={{ width: `${70 - i * 10}%` }} />
+                <DarkBone
+                  className="h-3.5"
+                  style={{ width: `${70 - i * 10}%` }}
+                />
               </div>
             ))}
           </div>

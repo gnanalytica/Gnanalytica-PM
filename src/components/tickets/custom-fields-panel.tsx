@@ -1,7 +1,11 @@
-'use client';
+"use client";
 
-import { useCustomFieldDefinitions, useCustomFieldValues, useUpsertCustomFieldValue } from '@/lib/hooks/use-custom-fields';
-import type { CustomFieldDefinition } from '@/types';
+import {
+  useCustomFieldDefinitions,
+  useCustomFieldValues,
+  useUpsertCustomFieldValue,
+} from "@/lib/hooks/use-custom-fields";
+import type { CustomFieldDefinition } from "@/types";
 
 function FieldInput({
   definition,
@@ -13,51 +17,53 @@ function FieldInput({
   onChange: (value: string | null) => void;
 }) {
   switch (definition.field_type) {
-    case 'checkbox':
+    case "checkbox":
       return (
         <input
           type="checkbox"
-          checked={value === 'true'}
-          onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
+          checked={value === "true"}
+          onChange={(e) => onChange(e.target.checked ? "true" : "false")}
           className="rounded border-border-subtle text-accent w-3.5 h-3.5"
         />
       );
-    case 'select':
+    case "select":
       return (
         <select
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary"
         >
           <option value="">None</option>
           {definition.options?.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
       );
-    case 'number':
+    case "number":
       return (
         <input
           type="number"
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary w-24"
         />
       );
-    case 'date':
+    case "date":
       return (
         <input
           type="date"
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary"
         />
       );
-    case 'url':
+    case "url":
       return (
         <input
           type="url"
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           placeholder="https://..."
           className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary w-full"
@@ -67,7 +73,7 @@ function FieldInput({
       return (
         <input
           type="text"
-          value={value ?? ''}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary w-full"
         />
@@ -92,10 +98,14 @@ export function CustomFieldsPanel({
 
   return (
     <div className="space-y-1">
-      <span className="text-[12px] font-medium uppercase tracking-wide text-content-muted">Custom Fields</span>
+      <span className="text-[12px] font-medium uppercase tracking-wide text-content-muted">
+        Custom Fields
+      </span>
       {definitions.map((def) => (
         <div key={def.id} className="flex items-center justify-between py-0.5">
-          <span className="text-[12px] text-content-muted w-24 flex-shrink-0">{def.name}</span>
+          <span className="text-[12px] text-content-muted w-24 flex-shrink-0">
+            {def.name}
+          </span>
           <div className="flex-1 flex justify-end">
             <FieldInput
               definition={def}

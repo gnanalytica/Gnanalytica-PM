@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { logError } from '@/lib/log-error';
+import { useEffect } from "react";
+import { logError } from "@/lib/log-error";
 
 /**
  * Next.js route-level error boundary for the (app) group.
@@ -15,7 +15,7 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logError(error, { boundary: 'app-error', digest: error.digest });
+    logError(error, { boundary: "app-error", digest: error.digest });
   }, [error]);
 
   return (

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@/lib/supabase-browser';
-import type { Profile } from '@/types';
+import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase-browser";
+import type { Profile } from "@/types";
 
 export type CommentSearchResult = {
   id: string;
@@ -47,23 +47,25 @@ export function useCommentSearch(query: string, enabled: boolean) {
       try {
         const supabase = createClient();
         const { data, error } = await supabase
-          .from('comments')
-          .select('id, ticket_id, body, created_at, user:profiles(*), ticket:tickets(id, title, project_id)')
-          .ilike('body', `%${query}%`)
+          .from("comments")
+          .select(
+            "id, ticket_id, body, created_at, user:profiles(*), ticket:tickets(id, title, project_id)",
+          )
+          .ilike("body", `%${query}%`)
           .limit(5)
           .abortSignal(controller.signal);
 
         if (controller.signal.aborted) return;
 
         if (error) {
-          console.error('Comment search error:', error);
+          console.error("Comment search error:", error);
           setResults([]);
         } else {
           setResults((data as unknown as CommentSearchResult[]) ?? []);
         }
       } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === 'AbortError') return;
-        console.error('Comment search error:', err);
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("Comment search error:", err);
         setResults([]);
       } finally {
         if (!controller.signal.aborted) {

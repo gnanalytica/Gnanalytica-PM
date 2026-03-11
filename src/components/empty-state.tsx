@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 type EmptyStateProps = {
   icon?: ReactNode;
@@ -16,7 +16,13 @@ type EmptyStateProps = {
 
 export function ClipboardIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -28,7 +34,13 @@ export function ClipboardIcon({ className }: { className?: string }) {
 
 export function FolderIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -40,7 +52,13 @@ export function FolderIcon({ className }: { className?: string }) {
 
 export function FunnelIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -52,7 +70,13 @@ export function FunnelIcon({ className }: { className?: string }) {
 
 export function ChatBubbleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -64,7 +88,13 @@ export function ChatBubbleIcon({ className }: { className?: string }) {
 
 export function BellIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -76,7 +106,13 @@ export function BellIcon({ className }: { className?: string }) {
 
 export function ClockIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -88,7 +124,13 @@ export function ClockIcon({ className }: { className?: string }) {
 
 export function ArrowPathIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1}
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -100,7 +142,13 @@ export function ArrowPathIcon({ className }: { className?: string }) {
 
 // ── Main component ──
 
-export function EmptyState({ icon, title, description, action, compact }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+  compact,
+}: EmptyStateProps) {
   if (compact) {
     return (
       <div className="flex flex-col items-center gap-1 py-3 px-3">
@@ -112,7 +160,7 @@ export function EmptyState({ icon, title, description, action, compact }: EmptyS
         {action && (
           <button
             onClick={action.onClick}
-            className="mt-1.5 text-[11px] text-accent hover:opacity-80 transition-opacity duration-[120ms] cursor-pointer"
+            className="mt-1.5 text-[11px] text-accent hover:opacity-80 active:scale-[0.96] transition-all duration-150 cursor-pointer"
           >
             {action.label}
           </button>
@@ -122,20 +170,20 @@ export function EmptyState({ icon, title, description, action, compact }: EmptyS
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4">
-      {icon && (
-        <div className="text-content-muted mb-3">{icon}</div>
-      )}
-      <h3 className="text-sm font-medium text-content-secondary">{title}</h3>
+    <div className="flex flex-col items-center justify-center py-16 px-6">
+      {icon && <div className="text-content-muted opacity-40 mb-5">{icon}</div>}
+      <h3 className="text-sm font-semibold text-content-secondary tracking-tight">
+        {title}
+      </h3>
       {description && (
-        <p className="mt-1 text-xs text-content-muted max-w-xs text-center">
+        <p className="mt-2 text-[13px] text-content-muted max-w-sm text-center leading-relaxed">
           {description}
         </p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-3 px-4 py-1.5 text-xs bg-accent text-white rounded hover:opacity-90 active:opacity-80 transition-opacity duration-[120ms] cursor-pointer"
+          className="mt-5 px-5 py-2 text-xs font-medium bg-accent text-white rounded-lg hover:bg-accent-hover active:scale-[0.97] transition-all cursor-pointer shadow-sm"
         >
           {action.label}
         </button>

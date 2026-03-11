@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { logError } from '@/lib/log-error';
+import { useEffect } from "react";
+import { logError } from "@/lib/log-error";
 
 /**
  * Next.js global error boundary — catches errors in the root layout itself.
@@ -15,7 +15,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logError(error, { boundary: 'global-error', digest: error.digest });
+    logError(error, { boundary: "global-error", digest: error.digest });
   }, [error]);
 
   return (
@@ -23,25 +23,25 @@ export default function GlobalError({
       <body>
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            padding: '2rem',
-            background: '#fafafa',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            fontFamily: "Inter, system-ui, sans-serif",
+            padding: "2rem",
+            background: "#fafafa",
           }}
         >
           <div
             style={{
               width: 48,
               height: 48,
-              borderRadius: '50%',
-              background: '#fee2e2',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              borderRadius: "50%",
+              background: "#fee2e2",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               marginBottom: 16,
             }}
           >
@@ -64,8 +64,8 @@ export default function GlobalError({
             style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#111827',
-              margin: '0 0 6px',
+              color: "#111827",
+              margin: "0 0 6px",
             }}
           >
             Something went wrong
@@ -73,9 +73,9 @@ export default function GlobalError({
           <p
             style={{
               fontSize: 13,
-              color: '#6b7280',
-              margin: '0 0 20px',
-              textAlign: 'center',
+              color: "#6b7280",
+              margin: "0 0 20px",
+              textAlign: "center",
               maxWidth: 400,
             }}
           >
@@ -84,14 +84,14 @@ export default function GlobalError({
           <button
             onClick={reset}
             style={{
-              padding: '8px 16px',
+              padding: "8px 16px",
               fontSize: 13,
               fontWeight: 500,
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
+              background: "#111827",
+              color: "#fff",
+              border: "none",
               borderRadius: 6,
-              cursor: 'pointer',
+              cursor: "pointer",
             }}
           >
             Try again

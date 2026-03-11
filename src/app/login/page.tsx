@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/lib/hooks/use-auth';
+import { useState } from "react";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function LoginPage() {
   const { signInWithGoogle } = useAuth();
@@ -14,7 +14,9 @@ export default function LoginPage() {
       setError(null);
       await signInWithGoogle();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign in failed. Please try again.');
+      setError(
+        e instanceof Error ? e.message : "Sign in failed. Please try again.",
+      );
       setLoading(false);
     }
   };
@@ -23,8 +25,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-surface-primary">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-content-primary">Internal PM</h1>
-          <p className="mt-2 text-content-secondary">Project Management System</p>
+          <h1 className="text-3xl font-bold text-content-primary">
+            Internal PM
+          </h1>
+          <p className="mt-2 text-content-secondary">
+            Project Management System
+          </p>
         </div>
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 text-center">

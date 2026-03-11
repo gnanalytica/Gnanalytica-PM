@@ -1,26 +1,30 @@
-'use client';
+"use client";
 
-import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
-import { useSyncQueueStore, type MutationDescriptor } from '@/lib/sync-queue';
+import {
+  QueryClient,
+  QueryClientProvider,
+  MutationCache,
+} from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
+import { useSyncQueueStore, type MutationDescriptor } from "@/lib/sync-queue";
 
 // ── Retry helpers ──
 
 /** Don't retry client errors (4xx) except 408 (timeout) and 429 (rate limit). */
 function isRetryable(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
+  if (error && typeof error === "object" && "status" in error) {
     const status = (error as { status: number }).status;
     if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
       return false;
     }
   }
   // Also check .code for Supabase/Postgres errors
-  if (error && typeof error === 'object' && 'code' in error) {
+  if (error && typeof error === "object" && "code" in error) {
     const code = (error as { code: string }).code;
     // PGRST* codes are PostgREST client errors — don't retry
-    if (typeof code === 'string' && code.startsWith('PGRST')) return false;
+    if (typeof code === "string" && code.startsWith("PGRST")) return false;
     // 42* = syntax/access errors — don't retry
-    if (typeof code === 'string' && code.startsWith('42')) return false;
+    if (typeof code === "string" && code.startsWith("42")) return false;
   }
   return true;
 }
@@ -38,12 +42,12 @@ function retryDelay(attemptIndex: number): number {
 
 function describeMutation(variables: unknown): string {
   const vars = variables as Record<string, unknown> | null;
-  if (!vars) return 'Save changes';
-  if ('title' in vars && !('id' in vars)) {
+  if (!vars) return "Save changes";
+  if ("title" in vars && !("id" in vars)) {
     return `Create: ${String(vars.title).slice(0, 40)}`;
   }
-  if ('id' in vars) return 'Update ticket';
-  return 'Save changes';
+  if ("id" in vars) return "Update ticket";
+  return "Save changes";
 }
 
 // ── Derive dedup key + descriptor from mutation context ──
@@ -53,33 +57,40 @@ function deriveDedupeKey(
   variables: unknown,
 ): string | null {
   const key = mutationKey?.[0];
-  if (key !== 'tickets' && key !== 'comments') return null;
+  if (key !== "tickets" && key !== "comments") return null;
 
   const vars = variables as Record<string, unknown> | null;
   if (!vars) return null;
 
-  if (key === 'tickets') {
+  if (key === "tickets") {
     // Delete: has id, no title, no position updates → "delete:tickets:<id>"
-    if ('id' in vars && Object.keys(vars).length <= 2 && 'project_id' in vars && !('title' in vars) && !('status' in vars) && !('position' in vars)) {
+    if (
+      "id" in vars &&
+      Object.keys(vars).length <= 2 &&
+      "project_id" in vars &&
+      !("title" in vars) &&
+      !("status" in vars) &&
+      !("position" in vars)
+    ) {
       return `delete:tickets:${vars.id}`;
     }
     // Update: has id → "update:tickets:<id>"
-    if ('id' in vars) {
+    if ("id" in vars) {
       return `update:tickets:${vars.id}`;
     }
     // Reorder: has id + position → "reorder:tickets:<id>" (covered by update above)
     // Create: no id → "create:tickets:<project_id>:<title_hash>"
-    if ('project_id' in vars && 'title' in vars) {
+    if ("project_id" in vars && "title" in vars) {
       const hash = simpleHash(String(vars.title));
       return `create:tickets:${vars.project_id}:${hash}`;
     }
   }
 
-  if (key === 'comments') {
-    if ('id' in vars && 'ticket_id' in vars) {
+  if (key === "comments") {
+    if ("id" in vars && "ticket_id" in vars) {
       return `delete:comments:${vars.id}`;
     }
-    if ('ticket_id' in vars && 'body' in vars) {
+    if ("ticket_id" in vars && "body" in vars) {
       const hash = simpleHash(String(vars.body));
       return `create:comments:${vars.ticket_id}:${hash}`;
     }
@@ -96,43 +107,56 @@ function deriveDescriptor(
   const vars = variables as Record<string, unknown> | null;
   if (!vars) return null;
 
-  if (key === 'tickets') {
+  if (key === "tickets") {
     // Delete
-    if ('id' in vars && Object.keys(vars).length <= 2 && 'project_id' in vars && !('title' in vars) && !('status' in vars) && !('position' in vars)) {
-      return { table: 'tickets', operation: 'delete', payload: { id: vars.id } };
+    if (
+      "id" in vars &&
+      Object.keys(vars).length <= 2 &&
+      "project_id" in vars &&
+      !("title" in vars) &&
+      !("status" in vars) &&
+      !("position" in vars)
+    ) {
+      return {
+        table: "tickets",
+        operation: "delete",
+        payload: { id: vars.id },
+      };
     }
     // Update (has id)
-    if ('id' in vars) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    if ("id" in vars) {
       const { id, project_id, label_ids, ...fields } = vars;
       return {
-        table: 'tickets',
-        operation: 'update',
+        table: "tickets",
+        operation: "update",
         payload: { id, ...fields } as Record<string, unknown>,
       };
     }
     // Create
-    if ('project_id' in vars && 'title' in vars) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    if ("project_id" in vars && "title" in vars) {
       const { label_ids, ...ticketData } = vars;
       return {
-        table: 'tickets',
-        operation: 'insert',
+        table: "tickets",
+        operation: "insert",
         payload: ticketData as Record<string, unknown>,
       };
     }
   }
 
-  if (key === 'comments') {
+  if (key === "comments") {
     // Delete
-    if ('id' in vars && 'ticket_id' in vars && !('body' in vars)) {
-      return { table: 'comments', operation: 'delete', payload: { id: vars.id } };
+    if ("id" in vars && "ticket_id" in vars && !("body" in vars)) {
+      return {
+        table: "comments",
+        operation: "delete",
+        payload: { id: vars.id },
+      };
     }
     // Create
-    if ('ticket_id' in vars && 'body' in vars) {
+    if ("ticket_id" in vars && "body" in vars) {
       return {
-        table: 'comments',
-        operation: 'insert',
+        table: "comments",
+        operation: "insert",
         payload: {
           ticket_id: vars.ticket_id,
           body: vars.body,
@@ -163,7 +187,8 @@ export function QueryProvider({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            staleTime: 5 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
             refetchOnWindowFocus: false,
             retry: retryFn,
             retryDelay,
@@ -177,7 +202,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
           onError: (error, variables, _context, mutation) => {
             const mutationKey = mutation.options.mutationKey;
             const key = mutationKey?.[0];
-            if (key !== 'tickets' && key !== 'comments') return;
+            if (key !== "tickets" && key !== "comments") return;
 
             const dedupeKey = deriveDedupeKey(mutationKey, variables);
             if (!dedupeKey) return;

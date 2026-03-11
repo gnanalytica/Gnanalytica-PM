@@ -1,16 +1,17 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useActivityLog } from '@/lib/hooks/use-activity-log';
-import { EmptyState, ClockIcon } from '@/components/empty-state';
-import type { ActivityLog, WorkflowStatus } from '@/types';
+import { useMemo } from "react";
+import { useActivityLog } from "@/lib/hooks/use-activity-log";
+import { EmptyState, ClockIcon } from "@/components/empty-state";
+import { avatarColor } from "@/components/tickets/assignee-picker";
+import type { ActivityLog, WorkflowStatus } from "@/types";
 
 // ── Helpers ──
 
 function getRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
@@ -18,32 +19,32 @@ function getRelativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(dateStr).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
+    month: "short",
+    day: "numeric",
   });
 }
 
 const DEFAULT_STATUS_LABELS: Record<string, string> = {
-  backlog: 'Backlog',
-  todo: 'Todo',
-  in_progress: 'In Progress',
-  done: 'Done',
-  canceled: 'Canceled',
+  backlog: "Backlog",
+  todo: "Todo",
+  in_progress: "In Progress",
+  done: "Done",
+  canceled: "Canceled",
 };
 
 const DEFAULT_STATUS_DOT: Record<string, string> = {
-  backlog: 'bg-[#6b7280]',
-  todo: 'bg-[#8b919a]',
-  in_progress: 'bg-[#6e9ade]',
-  done: 'bg-[#5fae7e]',
-  canceled: 'bg-[#c27070]',
+  backlog: "bg-[#6b7280]",
+  todo: "bg-[#8b919a]",
+  in_progress: "bg-[#6e9ade]",
+  done: "bg-[#5fae7e]",
+  canceled: "bg-[#c27070]",
 };
 
 function buildStatusHelpers(workflowStatuses?: WorkflowStatus[]) {
   if (!workflowStatuses || workflowStatuses.length === 0) {
     return {
       getLabel: (v: string) => DEFAULT_STATUS_LABELS[v] ?? v,
-      getDot: (v: string) => DEFAULT_STATUS_DOT[v] ?? 'bg-[#8b919a]',
+      getDot: (v: string) => DEFAULT_STATUS_DOT[v] ?? "bg-[#8b919a]",
     };
   }
   const map = new Map(workflowStatuses.map((s) => [s.key, s]));
@@ -52,98 +53,139 @@ function buildStatusHelpers(workflowStatuses?: WorkflowStatus[]) {
     getDot: (v: string) => {
       const ws = map.get(v);
       if (ws) return `bg-[${ws.color}]`;
-      return DEFAULT_STATUS_DOT[v] ?? 'bg-[#8b919a]';
+      return DEFAULT_STATUS_DOT[v] ?? "bg-[#8b919a]";
     },
   };
 }
 
 // ── Action descriptions ──
 
-function ActionText({ log, statusHelpers }: { log: ActivityLog; statusHelpers: ReturnType<typeof buildStatusHelpers> }) {
+function ActionText({
+  log,
+  statusHelpers,
+}: {
+  log: ActivityLog;
+  statusHelpers: ReturnType<typeof buildStatusHelpers>;
+}) {
   switch (log.action) {
-    case 'ticket_created':
+    case "ticket_created":
       return <span>created this ticket</span>;
 
-    case 'status_changed':
+    case "status_changed":
       return (
         <span>
-          changed status to{' '}
+          changed status to{" "}
           <span className="inline-flex items-center gap-1">
             <span
-              className={`inline-block w-1.5 h-1.5 rounded-full ${statusHelpers.getDot(log.new_value ?? '')}`}
+              className={`inline-block w-1.5 h-1.5 rounded-full ${statusHelpers.getDot(log.new_value ?? "")}`}
             />
             <span className="font-medium text-gray-800">
-              {statusHelpers.getLabel(log.new_value ?? '')}
+              {statusHelpers.getLabel(log.new_value ?? "")}
             </span>
           </span>
           {log.old_value && (
             <span className="text-gray-400">
-              {' '}from {statusHelpers.getLabel(log.old_value)}
+              {" "}
+              from {statusHelpers.getLabel(log.old_value)}
             </span>
           )}
         </span>
       );
 
-    case 'assignee_changed':
+    case "assignee_changed":
       return log.new_value ? (
         <span>assigned this ticket</span>
       ) : (
         <span>removed the assignee</span>
       );
 
-    case 'label_changed':
+    case "label_changed":
       return <span>updated labels</span>;
 
-    case 'comment_added':
+    case "comment_added":
       return <span>added a comment</span>;
 
     default:
-      return <span>{log.action.replace(/_/g, ' ')}</span>;
+      return <span>{log.action.replace(/_/g, " ")}</span>;
   }
 }
 
 // ── Action icon ──
 
 function ActionIcon({ action }: { action: string }) {
-  const base = 'w-3.5 h-3.5';
-  const props = { className: base, fill: 'none', viewBox: '0 0 24 24', strokeWidth: 1.5, stroke: 'currentColor' };
+  const base = "w-3.5 h-3.5";
+  const props = {
+    className: base,
+    fill: "none",
+    viewBox: "0 0 24 24",
+    strokeWidth: 1.5,
+    stroke: "currentColor",
+  };
 
   switch (action) {
-    case 'ticket_created':
+    case "ticket_created":
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
         </svg>
       );
-    case 'status_changed':
+    case "status_changed":
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+          />
         </svg>
       );
-    case 'assignee_changed':
+    case "assignee_changed":
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"
+          />
         </svg>
       );
-    case 'label_changed':
+    case "label_changed":
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 6h.008v.008H6V6Z"
+          />
         </svg>
       );
-    case 'comment_added':
+    case "comment_added":
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+          />
         </svg>
       );
     default:
       return (
         <svg {...props}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+          />
         </svg>
       );
   }
@@ -158,12 +200,12 @@ function getDayLabel(dateStr: string): string {
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
-  if (d >= todayStart) return 'Today';
-  if (d >= yesterdayStart) return 'Yesterday';
+  if (d >= todayStart) return "Today";
+  if (d >= yesterdayStart) return "Yesterday";
   return d.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
+    weekday: "short",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -187,7 +229,15 @@ function groupByDay(logs: ActivityLog[]): DayGroup[] {
 
 // ── Sub-components ──
 
-function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+function Avatar({
+  name,
+  avatarUrl,
+  userId,
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  userId?: string;
+}) {
   if (avatarUrl) {
     return (
       <img
@@ -198,15 +248,23 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
     );
   }
   return (
-    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-      <span className="text-[9px] font-medium text-gray-500">
-        {(name || '?')[0].toUpperCase()}
+    <div className={`w-5 h-5 rounded-full ${avatarColor(userId ?? name)} flex items-center justify-center`}>
+      <span className="text-[9px] font-semibold text-white drop-shadow-sm">
+        {(name || "?")[0].toUpperCase()}
       </span>
     </div>
   );
 }
 
-function TimelineEntry({ log, isLast, statusHelpers }: { log: ActivityLog; isLast: boolean; statusHelpers: ReturnType<typeof buildStatusHelpers> }) {
+function TimelineEntry({
+  log,
+  isLast,
+  statusHelpers,
+}: {
+  log: ActivityLog;
+  isLast: boolean;
+  statusHelpers: ReturnType<typeof buildStatusHelpers>;
+}) {
   return (
     <div className="flex gap-2.5 relative">
       {/* Vertical connector line */}
@@ -216,7 +274,7 @@ function TimelineEntry({ log, isLast, statusHelpers }: { log: ActivityLog; isLas
 
       {/* Avatar */}
       <div className="flex-shrink-0 relative z-10">
-        <Avatar name={log.user?.name ?? ''} avatarUrl={log.user?.avatar_url} />
+        <Avatar name={log.user?.name ?? ""} avatarUrl={log.user?.avatar_url} userId={log.user_id} />
       </div>
 
       {/* Content */}
@@ -225,8 +283,8 @@ function TimelineEntry({ log, isLast, statusHelpers }: { log: ActivityLog; isLas
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-gray-600 leading-relaxed">
               <span className="font-medium text-gray-800">
-                {log.user?.name ?? 'Unknown'}
-              </span>{' '}
+                {log.user?.name ?? "Unknown"}
+              </span>{" "}
               <ActionText log={log} statusHelpers={statusHelpers} />
             </p>
           </div>
@@ -277,9 +335,18 @@ function LoadingSkeleton() {
 
 // ── Main component ──
 
-export function ActivityTimeline({ ticketId, workflowStatuses }: { ticketId: string; workflowStatuses?: WorkflowStatus[] }) {
+export function ActivityTimeline({
+  ticketId,
+  workflowStatuses,
+}: {
+  ticketId: string;
+  workflowStatuses?: WorkflowStatus[];
+}) {
   const { data: logs, isLoading } = useActivityLog(ticketId);
-  const statusHelpers = useMemo(() => buildStatusHelpers(workflowStatuses), [workflowStatuses]);
+  const statusHelpers = useMemo(
+    () => buildStatusHelpers(workflowStatuses),
+    [workflowStatuses],
+  );
 
   const dayGroups = useMemo(
     () => (logs && logs.length > 0 ? groupByDay(logs) : []),

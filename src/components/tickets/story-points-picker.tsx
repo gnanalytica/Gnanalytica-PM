@@ -1,58 +1,73 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { STORY_POINTS } from '@/types';
+import { useState, useRef, useEffect } from "react";
+import { STORY_POINTS } from "@/types";
 
 export function StoryPointsPicker({
   value,
   onChange,
+  isOpen: controlledOpen,
+  onToggle,
 }: {
   value: number | null;
   onChange: (points: number | null) => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const toggle = onToggle ?? (() => setInternalOpen(!internalOpen));
+  const close = onToggle ? () => {} : () => setInternalOpen(false);
+
   useEffect(() => {
-    if (!open) return;
+    if (!open || controlledOpen !== undefined) return;
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setInternalOpen(false);
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open, controlledOpen]);
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative" ref={ref} data-dropdown>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-0.5 rounded text-xs hover:bg-hover transition-colors"
+        onClick={toggle}
+        className={`flex items-center gap-1 px-2 py-1 rounded-md text-[12px] bg-surface-secondary border border-border-subtle transition-all duration-150 hover:bg-hover hover:shadow-xs active:scale-[0.96] ${open ? "ring-1 ring-accent/40 shadow-xs" : ""}`}
       >
         {value != null ? (
-          <span className="bg-surface-secondary px-1.5 py-0.5 rounded text-[11px] font-medium">{value}</span>
+          <span className="font-medium">{value} pts</span>
         ) : (
-          <span className="text-content-muted">None</span>
+          <span className="text-content-muted">Points</span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-surface-tertiary border border-border-subtle rounded-md z-10 p-2">
+        <div className="animate-dropdown-in absolute left-0 top-full mt-1 bg-surface-tertiary border border-border-subtle rounded-lg z-20 p-2 shadow-lg">
           <div className="grid grid-cols-4 gap-1">
             {STORY_POINTS.map((sp) => (
               <button
                 key={sp}
-                onClick={() => { onChange(sp); setOpen(false); }}
-                className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
+                onClick={() => {
+                  onChange(sp);
+                  close();
+                }}
+                className={`w-8 h-8 rounded text-xs font-medium transition-all duration-150 active:scale-[0.95] ${
                   value === sp
-                    ? 'bg-accent text-white'
-                    : 'bg-surface-secondary text-content-secondary hover:bg-hover'
+                    ? "bg-accent text-white shadow-sm"
+                    : "bg-surface-secondary text-content-secondary hover:bg-hover hover:shadow-xs"
                 }`}
               >
                 {sp}
               </button>
             ))}
             <button
-              onClick={() => { onChange(null); setOpen(false); }}
-              className="w-8 h-8 rounded text-xs text-content-muted hover:bg-hover transition-colors"
+              onClick={() => {
+                onChange(null);
+                close();
+              }}
+              className="w-8 h-8 rounded text-xs text-content-muted hover:bg-hover transition-all duration-150 active:scale-[0.95]"
             >
               -
             </button>

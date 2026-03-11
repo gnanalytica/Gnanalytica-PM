@@ -1,10 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import { useProjectTickets } from '@/lib/hooks/use-tickets';
-import { useActiveCycle, useCycleTickets, useAssignTicketToCycle, useRemoveTicketFromCycle, useProjectCycles } from '@/lib/hooks/use-cycles';
-import { StatusCircle, PriorityIcon } from '@/components/tickets/ticket-list-view';
-import type { Ticket } from '@/types';
+import { useState, useMemo, useCallback } from "react";
+import { useProjectTickets } from "@/lib/hooks/use-tickets";
+import {
+  useActiveCycle,
+  useCycleTickets,
+  useAssignTicketToCycle,
+  useRemoveTicketFromCycle,
+  useProjectCycles,
+} from "@/lib/hooks/use-cycles";
+import {
+  StatusCircle,
+  PriorityIcon,
+} from "@/components/tickets/ticket-list-view";
+import { AvatarStack } from "@/components/tickets/assignee-picker";
+import type { Ticket } from "@/types";
 
 export function SprintPlanning({
   projectId,
@@ -20,8 +30,8 @@ export function SprintPlanning({
   const assignTicket = useAssignTicketToCycle();
   const removeTicket = useRemoveTicketFromCycle();
 
-  const [backlogSearch, setBacklogSearch] = useState('');
-  const [sprintSearch, setSprintSearch] = useState('');
+  const [backlogSearch, setBacklogSearch] = useState("");
+  const [sprintSearch, setSprintSearch] = useState("");
 
   const cycleTicketIds = useMemo(
     () => new Set(cycleTickets.map((t) => t.id)),
@@ -31,7 +41,10 @@ export function SprintPlanning({
   // Backlog: tickets not in the active cycle
   const backlogTickets = useMemo(() => {
     const base = allTickets.filter(
-      (t) => !cycleTicketIds.has(t.id) && t.status_category !== 'completed' && t.status_category !== 'canceled',
+      (t) =>
+        !cycleTicketIds.has(t.id) &&
+        t.status_category !== "completed" &&
+        t.status_category !== "canceled",
     );
     if (!backlogSearch.trim()) return base;
     const q = backlogSearch.toLowerCase();
@@ -51,9 +64,10 @@ export function SprintPlanning({
   );
 
   const completedPoints = useMemo(
-    () => cycleTickets
-      .filter((t) => t.status_category === 'completed')
-      .reduce((sum, t) => sum + (t.story_points ?? 0), 0),
+    () =>
+      cycleTickets
+        .filter((t) => t.status_category === "completed")
+        .reduce((sum, t) => sum + (t.story_points ?? 0), 0),
     [cycleTickets],
   );
 
@@ -92,7 +106,9 @@ export function SprintPlanning({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-content-primary">Sprint Planning</h3>
+        <h3 className="text-sm font-medium text-content-primary">
+          Sprint Planning
+        </h3>
         <div className="flex items-center gap-3 text-[11px] text-content-muted">
           <span>{sprintPoints} pts planned</span>
           <span>{completedPoints} pts completed</span>
@@ -104,13 +120,15 @@ export function SprintPlanning({
         {/* Backlog pane */}
         <div className="border border-border-subtle rounded-md overflow-hidden">
           <div className="bg-surface-secondary border-b border-border-subtle px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-content-muted uppercase">Backlog ({backlogTickets.length})</span>
+            <span className="text-[11px] font-medium text-content-muted uppercase">
+              Backlog ({backlogTickets.length})
+            </span>
             <input
               type="text"
               value={backlogSearch}
               onChange={(e) => setBacklogSearch(e.target.value)}
               placeholder="Search..."
-              className="text-[11px] bg-transparent border border-border-subtle rounded px-1.5 py-0.5 w-28 text-content-primary"
+              className="text-[11px] bg-transparent border border-border-subtle rounded px-1.5 py-0.5 w-28 text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
             />
           </div>
           <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
@@ -124,7 +142,9 @@ export function SprintPlanning({
               />
             ))}
             {backlogTickets.length === 0 && (
-              <p className="text-[11px] text-content-muted text-center py-4">No backlog items</p>
+              <p className="text-[11px] text-content-muted text-center py-4">
+                No backlog items
+              </p>
             )}
           </div>
         </div>
@@ -140,7 +160,7 @@ export function SprintPlanning({
               value={sprintSearch}
               onChange={(e) => setSprintSearch(e.target.value)}
               placeholder="Search..."
-              className="text-[11px] bg-transparent border border-border-subtle rounded px-1.5 py-0.5 w-28 text-content-primary"
+              className="text-[11px] bg-transparent border border-border-subtle rounded px-1.5 py-0.5 w-28 text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
             />
           </div>
           <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
@@ -154,7 +174,9 @@ export function SprintPlanning({
               />
             ))}
             {filteredSprintTickets.length === 0 && (
-              <p className="text-[11px] text-content-muted text-center py-4">No sprint items</p>
+              <p className="text-[11px] text-content-muted text-center py-4">
+                No sprint items
+              </p>
             )}
           </div>
           {/* Points bar */}
@@ -164,7 +186,9 @@ export function SprintPlanning({
                 <div className="flex-1 h-1.5 bg-surface-tertiary rounded-full overflow-hidden">
                   <div
                     className="h-full bg-accent rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (completedPoints / sprintPoints) * 100)}%` }}
+                    style={{
+                      width: `${Math.min(100, (completedPoints / sprintPoints) * 100)}%`,
+                    }}
                   />
                 </div>
                 <span className="text-[10px] text-content-muted">
@@ -186,16 +210,16 @@ function TicketRow({
   onClick,
 }: {
   ticket: Ticket;
-  action: 'add' | 'remove';
+  action: "add" | "remove";
   onAction: () => void;
   onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle hover:bg-hover transition-colors group">
+    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle hover:bg-hover active:bg-hover/80 transition-all duration-150 group">
       <StatusCircle status={ticket.status} />
       <button
         onClick={onClick}
-        className="flex-1 text-[12px] text-content-primary truncate text-left hover:text-accent transition-colors"
+        className="flex-1 text-[12px] text-content-primary truncate text-left hover:text-accent active:scale-[0.96] transition-all duration-150"
       >
         {ticket.title}
       </button>
@@ -205,15 +229,26 @@ function TicketRow({
         </span>
       )}
       <PriorityIcon priority={ticket.priority} />
+      {/* Assignee avatars */}
+      <div className="flex-shrink-0 hidden sm:block">
+        {ticket.assignees && ticket.assignees.length > 0 ? (
+          <AvatarStack assignees={ticket.assignees.map((a) => a.user).filter(Boolean)} max={2} />
+        ) : ticket.assignee ? (
+          <AvatarStack assignees={[ticket.assignee]} max={1} />
+        ) : null}
+      </div>
       <button
-        onClick={(e) => { e.stopPropagation(); onAction(); }}
-        className={`opacity-0 group-hover:opacity-100 text-[10px] px-1.5 py-0.5 rounded transition-all ${
-          action === 'add'
-            ? 'text-accent hover:bg-accent/10'
-            : 'text-content-muted hover:text-red-400 hover:bg-red-400/10'
+        onClick={(e) => {
+          e.stopPropagation();
+          onAction();
+        }}
+        className={`opacity-0 group-hover:opacity-100 text-[10px] px-1.5 py-0.5 rounded active:scale-[0.95] transition-all duration-150 ${
+          action === "add"
+            ? "text-accent hover:bg-accent/10"
+            : "text-content-muted hover:text-red-400 hover:bg-red-400/10"
         }`}
       >
-        {action === 'add' ? '+ Add' : '- Remove'}
+        {action === "add" ? "+ Add" : "- Remove"}
       </button>
     </div>
   );

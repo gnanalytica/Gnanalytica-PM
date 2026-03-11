@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import type { Profile } from '@/types';
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import type { Profile } from "@/types";
 
 const supabase = createClient();
 
 export function useMembers() {
   return useQuery({
-    queryKey: ['members'],
+    queryKey: ["members"],
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('name');
+        .from("profiles")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },

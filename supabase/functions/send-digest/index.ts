@@ -41,7 +41,7 @@ serve(async (_req: Request) => {
 
     // Build digest HTML
     const activityItems = activities
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .map((a: any) => `<li><strong>${a.ticket?.title ?? 'Unknown'}</strong>: ${a.field} changed</li>`)
       .join('\n');
 

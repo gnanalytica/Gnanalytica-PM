@@ -1,14 +1,21 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient } from "@supabase/ssr";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let client: ReturnType<typeof createBrowserClient<any>> | null = null;
 
 export function createClient() {
   if (client) return client;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   client = createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      realtime: {
+        params: { eventsPerSecond: 2 },
+        heartbeatIntervalMs: 30000,
+        reconnectAfterMs: (tries: number) => Math.min(1000 * 2 ** tries, 30000),
+        timeout: 10000,
+      },
+    },
   );
   return client;
 }

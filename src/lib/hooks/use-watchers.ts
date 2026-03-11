@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import type { TicketWatcher } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import type { TicketWatcher } from "@/types";
 
 const supabase = createClient();
 
 export function useWatchers(ticketId: string) {
   return useQuery({
-    queryKey: ['watchers', ticketId],
+    queryKey: ["watchers", ticketId],
     queryFn: async (): Promise<TicketWatcher[]> => {
       const { data, error } = await supabase
-        .from('ticket_watchers')
-        .select('*')
-        .eq('ticket_id', ticketId);
+        .from("ticket_watchers")
+        .select("*")
+        .eq("ticket_id", ticketId);
       if (error) throw error;
       return data ?? [];
     },
@@ -42,20 +42,25 @@ export function useToggleWatch() {
     }) => {
       if (watching) {
         const { error } = await supabase
-          .from('ticket_watchers')
+          .from("ticket_watchers")
           .delete()
-          .eq('ticket_id', ticketId)
-          .eq('user_id', userId);
+          .eq("ticket_id", ticketId)
+          .eq("user_id", userId);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('ticket_watchers')
-          .upsert({ ticket_id: ticketId, user_id: userId }, { onConflict: 'ticket_id,user_id' });
+          .from("ticket_watchers")
+          .upsert(
+            { ticket_id: ticketId, user_id: userId },
+            { onConflict: "ticket_id,user_id" },
+          );
         if (error) throw error;
       }
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['watchers', variables.ticketId] });
+      queryClient.invalidateQueries({
+        queryKey: ["watchers", variables.ticketId],
+      });
     },
   });
 }
@@ -66,8 +71,11 @@ export function useToggleWatch() {
  */
 export async function ensureWatching(ticketId: string, userId: string) {
   await supabase
-    .from('ticket_watchers')
-    .upsert({ ticket_id: ticketId, user_id: userId }, { onConflict: 'ticket_id,user_id' });
+    .from("ticket_watchers")
+    .upsert(
+      { ticket_id: ticketId, user_id: userId },
+      { onConflict: "ticket_id,user_id" },
+    );
 }
 
 /**
@@ -82,9 +90,9 @@ export async function notifyWatchers(
   excludeIds?: string[],
 ) {
   const { data: watchers } = await supabase
-    .from('ticket_watchers')
-    .select('user_id')
-    .eq('ticket_id', ticketId);
+    .from("ticket_watchers")
+    .select("user_id")
+    .eq("ticket_id", ticketId);
 
   if (!watchers || watchers.length === 0) return;
 
@@ -99,6 +107,6 @@ export async function notifyWatchers(
     }));
 
   if (notifications.length > 0) {
-    await supabase.from('notifications').insert(notifications);
+    await supabase.from("notifications").insert(notifications);
   }
 }

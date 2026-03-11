@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useRef, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import type { Milestone } from '@/types';
+import { useRef, useMemo, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
+import { createClient } from "@/lib/supabase-browser";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import type { Milestone } from "@/types";
 
 const supabase = createClient();
 
@@ -14,13 +15,13 @@ export function useHydrateMilestones(projectId: string | undefined) {
   const hydratedRef = useRef<string | null>(null);
 
   const query = useQuery({
-    queryKey: ['milestones', projectId],
+    queryKey: ["milestones", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('milestones')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('target_date', { ascending: true, nullsFirst: false });
+        .from("milestones")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("target_date", { ascending: true, nullsFirst: false });
       if (error) throw error;
 
       const milestones: Milestone[] = data ?? [];
@@ -30,10 +31,12 @@ export function useHydrateMilestones(projectId: string | undefined) {
     enabled: !!projectId,
   });
 
-  if (query.data && hydratedRef.current !== projectId) {
-    hydratedRef.current = projectId ?? null;
-    useTicketStore.getState().setMilestones(query.data);
-  }
+  useEffect(() => {
+    if (query.data && hydratedRef.current !== projectId) {
+      hydratedRef.current = projectId ?? null;
+      useTicketStore.getState().setMilestones(query.data);
+    }
+  }, [query.data, projectId]);
 
   return { isLoading: query.isLoading, isError: query.isError };
 }
@@ -41,10 +44,12 @@ export function useHydrateMilestones(projectId: string | undefined) {
 // ── Selectors ──
 
 export function useProjectMilestones(projectId: string): Milestone[] {
-  const { milestonesById, milestoneIds } = useTicketStore((s) => ({
-    milestonesById: s.milestonesById,
-    milestoneIds: s.milestoneIds,
-  }));
+  const { milestonesById, milestoneIds } = useTicketStore(
+    useShallow((s) => ({
+      milestonesById: s.milestonesById,
+      milestoneIds: s.milestoneIds,
+    })),
+  );
 
   return useMemo(
     () =>
@@ -68,7 +73,7 @@ export function useCreateMilestone() {
       target_date?: string;
     }) => {
       const { data, error } = await supabase
-        .from('milestones')
+        .from("milestones")
         .insert(milestone)
         .select()
         .single();
@@ -79,7 +84,9 @@ export function useCreateMilestone() {
       useTicketStore.getState().addMilestone(data);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['milestones', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["milestones", variables.project_id],
+      });
     },
   });
 }
@@ -98,13 +105,13 @@ export function useUpdateMilestone() {
       name?: string;
       description?: string;
       target_date?: string | null;
-      status?: 'active' | 'completed' | 'canceled';
+      status?: "active" | "completed" | "canceled";
     }) => {
       void project_id;
       const { data, error } = await supabase
-        .from('milestones')
+        .from("milestones")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
@@ -114,7 +121,9 @@ export function useUpdateMilestone() {
       useTicketStore.getState().updateMilestone(id, updates);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['milestones', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["milestones", variables.project_id],
+      });
     },
   });
 }
@@ -123,16 +132,24 @@ export function useDeleteMilestone() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, project_id }: { id: string; project_id: string }) => {
+    mutationFn: async ({
+      id,
+      project_id,
+    }: {
+      id: string;
+      project_id: string;
+    }) => {
       void project_id;
-      const { error } = await supabase.from('milestones').delete().eq('id', id);
+      const { error } = await supabase.from("milestones").delete().eq("id", id);
       if (error) throw error;
     },
     onMutate: ({ id }) => {
       useTicketStore.getState().removeMilestone(id);
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['milestones', variables.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["milestones", variables.project_id],
+      });
     },
   });
 }

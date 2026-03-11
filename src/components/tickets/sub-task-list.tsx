@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useShallow } from 'zustand/react/shallow';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import { useCreateTicket, useUpdateTicket } from '@/lib/hooks/use-tickets';
-import { StatusCircle } from '@/components/tickets/ticket-list-view';
-import type { Ticket } from '@/types';
+import { useState, useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import { useCreateTicket, useUpdateTicket } from "@/lib/hooks/use-tickets";
+import { StatusCircle } from "@/components/tickets/ticket-list-view";
+import type { Ticket } from "@/types";
 
 export function SubTaskList({
   parentId,
@@ -17,7 +17,7 @@ export function SubTaskList({
   onTicketClick?: (ticketId: string) => void;
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
+  const [newTitle, setNewTitle] = useState("");
   const createTicket = useCreateTicket();
   const updateTicket = useUpdateTicket();
 
@@ -30,11 +30,16 @@ export function SubTaskList({
       ids
         .map((id) => byId[id])
         .filter((t): t is Ticket => t != null && t.parent_id === parentId)
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        ),
     [byId, ids, parentId],
   );
 
-  const completedCount = subTasks.filter((t) => t.status_category === 'completed').length;
+  const completedCount = subTasks.filter(
+    (t) => t.status_category === "completed",
+  ).length;
   const totalCount = subTasks.length;
 
   const handleAdd = async () => {
@@ -43,14 +48,14 @@ export function SubTaskList({
       project_id: projectId,
       title: newTitle.trim(),
       parent_id: parentId,
-      issue_type: 'sub_task',
+      issue_type: "sub_task",
     });
-    setNewTitle('');
+    setNewTitle("");
     setShowAddForm(false);
   };
 
   const toggleComplete = (task: Ticket) => {
-    const newStatus = task.status_category === 'completed' ? 'todo' : 'done';
+    const newStatus = task.status_category === "completed" ? "todo" : "done";
     updateTicket.mutate({
       id: task.id,
       project_id: projectId,
@@ -66,7 +71,7 @@ export function SubTaskList({
         </span>
         <button
           onClick={() => setShowAddForm(true)}
-          className="text-[11px] text-content-muted hover:text-content-secondary transition-colors"
+          className="text-[11px] text-content-muted hover:text-content-secondary active:scale-[0.96] transition-all duration-150"
         >
           + Add
         </button>
@@ -89,15 +94,18 @@ export function SubTaskList({
             key={task.id}
             className="flex items-center gap-2 py-1 px-1 rounded hover:bg-hover transition-colors group"
           >
-            <button onClick={() => toggleComplete(task)} className="flex-shrink-0">
+            <button
+              onClick={() => toggleComplete(task)}
+              className="flex-shrink-0 active:scale-[0.96] transition-all duration-150"
+            >
               <StatusCircle status={task.status} />
             </button>
             <button
               onClick={() => onTicketClick?.(task.id)}
-              className={`text-[13px] truncate flex-1 text-left ${
-                task.status_category === 'completed'
-                  ? 'text-content-muted line-through'
-                  : 'text-content-primary'
+              className={`text-[13px] truncate flex-1 text-left active:scale-[0.96] transition-all duration-150 ${
+                task.status_category === "completed"
+                  ? "text-content-muted line-through"
+                  : "text-content-primary"
               }`}
             >
               {task.title}
@@ -117,14 +125,17 @@ export function SubTaskList({
             className="flex-1 border border-border-subtle rounded px-2 py-1 text-xs bg-surface-secondary text-content-primary"
             autoFocus
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAdd();
-              if (e.key === 'Escape') { setShowAddForm(false); setNewTitle(''); }
+              if (e.key === "Enter") handleAdd();
+              if (e.key === "Escape") {
+                setShowAddForm(false);
+                setNewTitle("");
+              }
             }}
           />
           <button
             onClick={handleAdd}
             disabled={!newTitle.trim() || createTicket.isPending}
-            className="px-2 py-1 text-xs bg-accent text-white rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="px-2 py-1 text-xs bg-accent text-white rounded hover:opacity-90 hover:shadow-xs disabled:opacity-50 active:scale-[0.96] transition-all duration-150"
           >
             Add
           </button>

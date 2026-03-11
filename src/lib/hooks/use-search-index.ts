@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import Fuse from 'fuse.js';
-import { useShallow } from 'zustand/react/shallow';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import { useProjects } from '@/lib/hooks/use-projects';
-import type { Ticket, Project } from '@/types';
+import { useMemo } from "react";
+import Fuse from "fuse.js";
+import { useShallow } from "zustand/react/shallow";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import { useProjects } from "@/lib/hooks/use-projects";
+import type { Ticket, Project } from "@/types";
 
 export type SearchResultItem =
-  | { type: 'ticket'; item: Ticket; projectName?: string }
-  | { type: 'project'; item: Project };
+  | { type: "ticket"; item: Ticket; projectName?: string }
+  | { type: "project"; item: Project };
 
 export function useSearchIndex(): Fuse<SearchResultItem> | null {
   const { byId, ids } = useTicketStore(
@@ -24,7 +24,7 @@ export function useSearchIndex(): Fuse<SearchResultItem> | null {
     if (projects) {
       for (const p of projects) {
         projectMap.set(p.id, p.name);
-        items.push({ type: 'project', item: p });
+        items.push({ type: "project", item: p });
       }
     }
 
@@ -32,7 +32,7 @@ export function useSearchIndex(): Fuse<SearchResultItem> | null {
       const t = byId[id];
       if (t) {
         items.push({
-          type: 'ticket',
+          type: "ticket",
           item: t,
           projectName: projectMap.get(t.project_id),
         });
@@ -47,17 +47,17 @@ export function useSearchIndex(): Fuse<SearchResultItem> | null {
       includeScore: true,
       minMatchCharLength: 2,
       keys: [
-        { name: 'item.title', weight: 2.0 },
-        { name: 'item.name', weight: 2.0 },
-        { name: 'item.description', weight: 0.8 },
-        { name: 'item.assignee.name', weight: 0.6 },
-        { name: 'item.assignees.user.name', weight: 0.5 },
-        { name: 'item.labels.name', weight: 0.5 },
-        { name: 'projectName', weight: 0.4 },
-        { name: 'item.issue_type', weight: 0.4 },
-        { name: 'item.status', weight: 0.3 },
-        { name: 'item.priority', weight: 0.3 },
-        { name: 'item.story_points', weight: 0.2 },
+        { name: "item.title", weight: 2.0 },
+        { name: "item.name", weight: 2.0 },
+        { name: "item.description", weight: 0.8 },
+        { name: "item.assignee.name", weight: 0.6 },
+        { name: "item.assignees.user.name", weight: 0.5 },
+        { name: "item.labels.name", weight: 0.5 },
+        { name: "projectName", weight: 0.4 },
+        { name: "item.issue_type", weight: 0.4 },
+        { name: "item.status", weight: 0.3 },
+        { name: "item.priority", weight: 0.3 },
+        { name: "item.story_points", weight: 0.2 },
       ],
     });
   }, [byId, ids, projects]);

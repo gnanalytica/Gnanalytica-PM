@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -10,13 +10,13 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts';
-import { useProjectCycles, useActiveCycle } from '@/lib/hooks/use-cycles';
-import { useBurndownData } from '@/lib/hooks/use-analytics';
+} from "recharts";
+import { useProjectCycles, useActiveCycle } from "@/lib/hooks/use-cycles";
+import { useBurndownData } from "@/lib/hooks/use-analytics";
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function BurndownChart({ projectId }: { projectId: string }) {
@@ -49,9 +49,11 @@ export function BurndownChart({ projectId }: { projectId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500">Burndown</h3>
+        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          Burndown
+        </h3>
         <select
-          value={cycleId ?? ''}
+          value={cycleId ?? ""}
           onChange={(e) => setSelectedCycleId(e.target.value || null)}
           className="text-xs border border-border-subtle rounded px-2 py-1 bg-surface-tertiary cursor-pointer"
         >
@@ -78,13 +80,19 @@ export function BurndownChart({ projectId }: { projectId: string }) {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+          <AreaChart
+            data={chartData}
+            margin={{ top: 4, right: 8, left: -8, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.04)"
+            />
             <XAxis
               dataKey="date"
               tick={{ fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
               interval="preserveStartEnd"
             />
             <YAxis
@@ -94,7 +102,11 @@ export function BurndownChart({ projectId }: { projectId: string }) {
               allowDecimals={false}
             />
             <Tooltip
-              contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)' }}
+              contentStyle={{
+                fontSize: 12,
+                borderRadius: 6,
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
               labelFormatter={(label) => label}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />

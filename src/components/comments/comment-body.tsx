@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { segmentBody } from '@/lib/mentions';
-import type { Profile } from '@/types';
+import { segmentBody } from "@/lib/mentions";
+import type { Profile } from "@/types";
 
 export function CommentBody({
   body,
@@ -15,11 +15,8 @@ export function CommentBody({
   return (
     <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap">
       {segments.map((seg, i) =>
-        seg.type === 'mention' ? (
-          <span
-            key={i}
-            className="text-blue-600 bg-blue-50 rounded px-0.5"
-          >
+        seg.type === "mention" ? (
+          <span key={i} className="text-blue-600 bg-blue-50 rounded px-0.5">
             {seg.value}
           </span>
         ) : (

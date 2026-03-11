@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { VelocityChart } from './velocity-chart';
-import { BurndownChart } from './burndown-chart';
-import { CompletionTrends } from './completion-trends';
-import { ProjectOverview } from './project-overview';
+import { VelocityChart } from "./velocity-chart";
+import { BurndownChart } from "./burndown-chart";
+import { CompletionTrends } from "./completion-trends";
+import { ProjectOverview } from "./project-overview";
 
 export function AnalyticsDashboard({ projectId }: { projectId: string }) {
   return (

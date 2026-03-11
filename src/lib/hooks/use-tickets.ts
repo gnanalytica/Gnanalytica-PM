@@ -1,16 +1,30 @@
-'use client';
+"use client";
 
-import { useMemo, useEffect, useRef } from 'react';
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useShallow } from 'zustand/react/shallow';
-import { createClient } from '@/lib/supabase-browser';
-import { logTicketChanges, fetchTicketSnapshot } from '@/lib/hooks/use-activity-log';
-import { ensureWatching, notifyWatchers } from '@/lib/hooks/use-watchers';
-import { useTicketStore } from '@/lib/store/ticket-store';
-import { toast } from '@/lib/hooks/use-toast';
-import type { Ticket, Label, TicketPriority, IssueType, StatusCategory } from '@/types';
-import { getStatusCategory } from '@/types';
-import { getCycleIssues } from '@/lib/store/ticket-store';
+import { useMemo, useEffect, useRef } from "react";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
+import { createClient } from "@/lib/supabase-browser";
+import {
+  logTicketChanges,
+  fetchTicketSnapshot,
+} from "@/lib/hooks/use-activity-log";
+import { ensureWatching, notifyWatchers } from "@/lib/hooks/use-watchers";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import { toast } from "@/lib/hooks/use-toast";
+import type {
+  Ticket,
+  Label,
+  TicketPriority,
+  IssueType,
+  StatusCategory,
+} from "@/types";
+import { getStatusCategory } from "@/types";
+import { getCycleIssues } from "@/lib/store/ticket-store";
 
 const supabase = createClient();
 
@@ -24,16 +38,19 @@ type TicketPage = {
   page: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeTicket(t: any): Ticket {
   return {
     ...t,
-    issue_type: t.issue_type ?? 'task',
+    issue_type: t.issue_type ?? "task",
     story_points: t.story_points ?? null,
     start_date: t.start_date ?? null,
     parent_id: t.parent_id ?? null,
     epic_id: t.epic_id ?? null,
     milestone_id: t.milestone_id ?? null,
+    first_response_at: t.first_response_at ?? null,
+    resolved_at: t.resolved_at ?? null,
+    sla_response_breached: t.sla_response_breached ?? false,
+    sla_resolution_breached: t.sla_resolution_breached ?? false,
     labels: t.labels?.map((tl: { label: unknown }) => tl.label) ?? [],
     assignees: t.assignees ?? [],
     parent: t.parent ?? null,
@@ -48,19 +65,22 @@ export const TICKET_SELECT = `
   labels:ticket_labels(label:labels(*)),
   assignees:ticket_assignees(user:profiles(*)),
   milestone:milestones(id,name,target_date,status),
-  parent:tickets!tickets_parent_id_fkey(id,title,status)
+  parent:tickets!parent_id(id,title,status)
 `;
 
-async function fetchProjectTicketsPage(projectId: string, page: number): Promise<TicketPage> {
+async function fetchProjectTicketsPage(
+  projectId: string,
+  page: number,
+): Promise<TicketPage> {
   const from = page * TICKET_PAGE_SIZE;
   const to = from + TICKET_PAGE_SIZE - 1;
 
   const { data, error, count } = await supabase
-    .from('tickets')
-    .select(TICKET_SELECT, { count: 'exact' })
-    .eq('project_id', projectId)
-    .order('position', { ascending: true })
-    .order('created_at', { ascending: false })
+    .from("tickets")
+    .select(TICKET_SELECT, { count: "exact" })
+    .eq("project_id", projectId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false })
     .range(from, to);
 
   if (error) throw error;
@@ -73,9 +93,9 @@ async function fetchProjectTicketsPage(projectId: string, page: number): Promise
 
 async function fetchTicketById(ticketId: string): Promise<Ticket> {
   const { data, error } = await supabase
-    .from('tickets')
+    .from("tickets")
     .select(TICKET_SELECT)
-    .eq('id', ticketId)
+    .eq("id", ticketId)
     .single();
   if (error) throw error;
   return normalizeTicket(data);
@@ -110,7 +130,7 @@ export function useHydrateTickets(projectId: string | undefined) {
   const syncedProjectRef = useRef<string | undefined>(undefined);
 
   const query = useInfiniteQuery({
-    queryKey: ['tickets', projectId],
+    queryKey: ["tickets", projectId],
     queryFn: async ({ pageParam }) => {
       if (!projectId) return { tickets: [], total: 0, page: 0 };
       return fetchProjectTicketsPage(projectId, pageParam);
@@ -192,7 +212,7 @@ export function useHydrateTickets(projectId: string | undefined) {
  */
 export function useHydrateTicket(ticketId: string) {
   const query = useQuery({
-    queryKey: ['ticket', ticketId],
+    queryKey: ["ticket", ticketId],
     queryFn: async () => {
       const ticket = await fetchTicketById(ticketId);
       upsertTicketInStore(ticket);
@@ -235,7 +255,10 @@ export function useProjectTickets(projectId: string): Ticket[] {
   );
 }
 
-export function useTicketsByStatus(projectId: string, status: string): Ticket[] {
+export function useTicketsByStatus(
+  projectId: string,
+  status: string,
+): Ticket[] {
   const { byId, ids } = useTicketStore(
     useShallow((s) => ({ byId: s.byId, ids: s.ids })),
   );
@@ -294,7 +317,12 @@ export function useAssignedTickets(userId: string): Ticket[] {
     const result: Ticket[] = [];
     for (let i = 0; i < ids.length; i++) {
       const t = byId[ids[i]];
-      if (t && t.assignee_id === userId) result.push(t);
+      if (
+        t &&
+        (t.assignee_id === userId ||
+          t.assignees?.some((a) => a.user?.id === userId))
+      )
+        result.push(t);
     }
     return result.sort(byUpdatedAtDesc);
   }, [byId, ids, userId]);
@@ -341,12 +369,12 @@ export function useRecentlyUpdatedTickets(): Ticket[] {
 
 /** Tickets in a project whose status_category is 'completed'. */
 export function useCompletedIssues(projectId: string): Ticket[] {
-  return useCategoryTickets(projectId, 'completed');
+  return useCategoryTickets(projectId, "completed");
 }
 
 /** Tickets in a project whose status_category is 'started'. */
 export function useStartedIssues(projectId: string): Ticket[] {
-  return useCategoryTickets(projectId, 'started');
+  return useCategoryTickets(projectId, "started");
 }
 
 /** Count of tickets in a project whose status_category is 'backlog'. */
@@ -359,7 +387,8 @@ export function useBacklogCount(projectId: string): number {
     let count = 0;
     for (let i = 0; i < ids.length; i++) {
       const t = byId[ids[i]];
-      if (t && t.project_id === projectId && t.status_category === 'backlog') count++;
+      if (t && t.project_id === projectId && t.status_category === "backlog")
+        count++;
     }
     return count;
   }, [byId, ids, projectId]);
@@ -387,18 +416,24 @@ export function useVelocityPerCycle(cycleIds: string[]): {
         { byId, cycleTicketIds } as Parameters<typeof getCycleIssues>[0],
         cycleId,
       );
-      const completed = issues.filter((t) => t.status_category === 'completed').length;
+      const completed = issues.filter(
+        (t) => t.status_category === "completed",
+      ).length;
       totalCompleted += completed;
       byCycle.push({ cycleId, completed, total: issues.length });
     }
 
-    const average = cycleIds.length === 0 ? 0 : Math.round(totalCompleted / cycleIds.length);
+    const average =
+      cycleIds.length === 0 ? 0 : Math.round(totalCompleted / cycleIds.length);
     return { average, byCycle };
   }, [byId, cycleTicketIds, cycleIds]);
 }
 
 /** Internal: filter project tickets by a single status_category. */
-function useCategoryTickets(projectId: string, category: StatusCategory): Ticket[] {
+function useCategoryTickets(
+  projectId: string,
+  category: StatusCategory,
+): Ticket[] {
   const { byId, ids } = useTicketStore(
     useShallow((s) => ({ byId: s.byId, ids: s.ids })),
   );
@@ -423,7 +458,7 @@ export function useCreateTicket() {
   const removeTicket = useTicketStore((s) => s.removeTicket);
 
   return useMutation({
-    mutationKey: ['tickets'],
+    mutationKey: ["tickets"],
     mutationFn: async (ticket: {
       project_id: string;
       title: string;
@@ -431,6 +466,7 @@ export function useCreateTicket() {
       status?: string;
       priority?: TicketPriority;
       assignee_id?: string | null;
+      assignee_ids?: string[];
       due_date?: string | null;
       label_ids?: string[];
       position?: number;
@@ -441,10 +477,16 @@ export function useCreateTicket() {
       epic_id?: string | null;
       milestone_id?: string | null;
     }) => {
-      const { label_ids, ...ticketData } = ticket;
-      const { data: { user } } = await supabase.auth.getUser();
+      const { label_ids, assignee_ids, ...ticketData } = ticket;
+      // Set primary assignee from multi-assign list
+      if (assignee_ids && assignee_ids.length > 0) {
+        ticketData.assignee_id = assignee_ids[0];
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const { data, error } = await supabase
-        .from('tickets')
+        .from("tickets")
         .insert({ ...ticketData, created_by: user?.id })
         .select()
         .single();
@@ -452,16 +494,28 @@ export function useCreateTicket() {
 
       if (label_ids && label_ids.length > 0) {
         const { error: labelError } = await supabase
-          .from('ticket_labels')
-          .insert(label_ids.map((lid) => ({ ticket_id: data.id, label_id: lid })));
+          .from("ticket_labels")
+          .insert(
+            label_ids.map((lid) => ({ ticket_id: data.id, label_id: lid })),
+          );
         if (labelError) throw labelError;
+      }
+
+      // Insert multi-assignees into junction table
+      if (assignee_ids && assignee_ids.length > 0) {
+        const { error: assigneeError } = await supabase
+          .from("ticket_assignees")
+          .insert(
+            assignee_ids.map((uid) => ({ ticket_id: data.id, user_id: uid })),
+          );
+        if (assigneeError) throw assigneeError;
       }
 
       return data;
     },
     onMutate: async (newTicket) => {
       const tempId = `temp-${Date.now()}`;
-      const status = newTicket.status ?? 'todo';
+      const status = newTicket.status ?? "todo";
       const optimistic: Ticket = {
         id: tempId,
         project_id: newTicket.project_id,
@@ -469,19 +523,23 @@ export function useCreateTicket() {
         description: newTicket.description ?? null,
         status,
         status_category: getStatusCategory(status),
-        priority: newTicket.priority ?? 'medium',
+        priority: newTicket.priority ?? "medium",
         assignee_id: newTicket.assignee_id ?? null,
-        created_by: '',
+        created_by: "",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         due_date: newTicket.due_date ?? null,
         position: newTicket.position ?? 0,
-        issue_type: newTicket.issue_type ?? 'task',
+        issue_type: newTicket.issue_type ?? "task",
         story_points: newTicket.story_points ?? null,
         start_date: newTicket.start_date ?? null,
         parent_id: newTicket.parent_id ?? null,
         epic_id: newTicket.epic_id ?? null,
         milestone_id: newTicket.milestone_id ?? null,
+        first_response_at: null,
+        resolved_at: null,
+        sla_response_breached: false,
+        sla_resolution_breached: false,
         labels: [],
         assignees: [],
       };
@@ -494,20 +552,26 @@ export function useCreateTicket() {
         removeTicket(context.tempId);
       }
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       if (data?.id && data?.created_by) {
-        logTicketChanges(data.id, data.created_by, 'created', {}, {});
+        logTicketChanges(data.id, data.created_by, "created", {}, {});
         // Auto-watch: creator
         await ensureWatching(data.id, data.created_by);
-        // Auto-watch: assignee (if set)
-        if (data.assignee_id) {
-          await ensureWatching(data.id, data.assignee_id);
+        // Auto-watch: all assignees
+        const watchIds = variables.assignee_ids ?? (data.assignee_id ? [data.assignee_id] : []);
+        for (const uid of watchIds) {
+          await ensureWatching(data.id, uid);
         }
       }
-      toast('Issue created');
+      toast("Issue created");
     },
-    onSettled: (_data, _err, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tickets', variables.project_id] });
+    onSettled: (_data, _err, variables, context) => {
+      // Only refetch on error — optimistic update already covers the success case
+      if (_err && context?.tempId) {
+        queryClient.invalidateQueries({
+          queryKey: ["tickets", variables.project_id],
+        });
+      }
     },
   });
 }
@@ -518,11 +582,12 @@ export function useUpdateTicket() {
   const store = useTicketStore;
 
   return useMutation({
-    mutationKey: ['tickets'],
+    mutationKey: ["tickets"],
     mutationFn: async ({
       id,
       project_id,
       label_ids,
+      assignee_ids,
       ...updates
     }: {
       id: string;
@@ -532,6 +597,7 @@ export function useUpdateTicket() {
       status?: string;
       priority?: TicketPriority;
       assignee_id?: string | null;
+      assignee_ids?: string[];
       due_date?: string | null;
       label_ids?: string[];
       position?: number;
@@ -547,55 +613,79 @@ export function useUpdateTicket() {
       // Snapshot old state (status, assignee_id, label_ids) in parallel
       const oldSnap = await fetchTicketSnapshot(id);
 
+      // Sync primary assignee from multi-assign list
+      if (assignee_ids !== undefined) {
+        updates.assignee_id = assignee_ids[0] ?? null;
+      }
+
       const { data, error } = await supabase
-        .from('tickets')
+        .from("tickets")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
 
       if (label_ids !== undefined) {
-        await supabase.from('ticket_labels').delete().eq('ticket_id', id);
+        await supabase.from("ticket_labels").delete().eq("ticket_id", id);
         if (label_ids.length > 0) {
           const { error: labelError } = await supabase
-            .from('ticket_labels')
+            .from("ticket_labels")
             .insert(label_ids.map((lid) => ({ ticket_id: id, label_id: lid })));
           if (labelError) throw labelError;
         }
       }
 
+      // Sync multi-assignees junction table
+      if (assignee_ids !== undefined) {
+        await supabase.from("ticket_assignees").delete().eq("ticket_id", id);
+        if (assignee_ids.length > 0) {
+          const { error: assigneeError } = await supabase
+            .from("ticket_assignees")
+            .insert(
+              assignee_ids.map((uid) => ({ ticket_id: id, user_id: uid })),
+            );
+          if (assigneeError) throw assigneeError;
+          // Auto-watch all assignees
+          for (const uid of assignee_ids) {
+            await ensureWatching(id, uid);
+          }
+        }
+      }
+
       // Log all detected changes in a single batch insert
-      await logTicketChanges(id, data.created_by, 'updated', oldSnap, {
+      await logTicketChanges(id, data.created_by, "updated", oldSnap, {
         status: updates.status,
-        assignee_id: 'assignee_id' in updates ? updates.assignee_id : undefined,
+        assignee_id: "assignee_id" in updates ? updates.assignee_id : undefined,
         label_ids,
       });
 
       // Notify watchers of meaningful field changes
-      const { data: { user: actorUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: actorUser },
+      } = await supabase.auth.getUser();
       if (actorUser) {
         const actorId = actorUser.id;
 
         if (updates.status && updates.status !== oldSnap.status) {
-          await notifyWatchers(id, 'status_changed', actorId);
+          await notifyWatchers(id, "status_changed", actorId);
         }
         if (updates.priority && updates.priority !== oldSnap.priority) {
-          await notifyWatchers(id, 'priority_changed', actorId);
+          await notifyWatchers(id, "priority_changed", actorId);
         }
-        if ('assignee_id' in updates && updates.assignee_id !== oldSnap.assignee_id) {
-          // Exclude the new assignee — they get a direct 'ticket_assigned' notification
-          // from the ticket page handler.
+        if (
+          "assignee_id" in updates &&
+          updates.assignee_id !== oldSnap.assignee_id
+        ) {
           const excludeIds = updates.assignee_id ? [updates.assignee_id] : [];
-          await notifyWatchers(id, 'ticket_assigned', actorId, excludeIds);
+          await notifyWatchers(id, "ticket_assigned", actorId, excludeIds);
         }
       }
 
       return data;
     },
     onMutate: async (variables) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, project_id, label_ids, ...fields } = variables;
+      const { id, project_id, label_ids, assignee_ids, ...fields } = variables;
 
       // Snapshot for rollback
       const previous = store.getState().byId[id];
@@ -603,10 +693,31 @@ export function useUpdateTicket() {
       // Resolve label objects for optimistic update
       let labelUpdate: { labels: Label[] } | Record<string, never> = {};
       if (label_ids !== undefined) {
-        const allLabels = queryClient.getQueryData<Label[]>(['labels', project_id]);
+        const allLabels = queryClient.getQueryData<Label[]>([
+          "labels",
+          project_id,
+        ]);
         if (allLabels) {
-          labelUpdate = { labels: allLabels.filter((l) => label_ids.includes(l.id)) };
+          labelUpdate = {
+            labels: allLabels.filter((l) => label_ids.includes(l.id)),
+          };
         }
+      }
+
+      // Resolve assignee objects for optimistic multi-assign update
+      let assigneeUpdate: Record<string, unknown> = {};
+      if (assignee_ids !== undefined) {
+        const allMembers =
+          queryClient.getQueryData<{ id: string; name: string; avatar_url: string | null }[]>(["members"]) ?? [];
+        assigneeUpdate = {
+          assignee_id: assignee_ids[0] ?? null,
+          assignees: assignee_ids
+            .map((uid) => {
+              const m = allMembers.find((p) => p.id === uid);
+              return m ? { user: m } : null;
+            })
+            .filter(Boolean),
+        };
       }
 
       // Derive status_category when status changes
@@ -615,7 +726,12 @@ export function useUpdateTicket() {
         : {};
 
       // Optimistic update in Zustand store
-      storeUpdate(id, { ...fields, ...labelUpdate, ...categoryUpdate });
+      storeUpdate(id, {
+        ...fields,
+        ...labelUpdate,
+        ...assigneeUpdate,
+        ...categoryUpdate,
+      });
 
       return { previous };
     },
@@ -626,12 +742,16 @@ export function useUpdateTicket() {
     },
     onSuccess: (_data, variables) => {
       if (variables.status) {
-        toast(`Status changed to ${variables.status.replace('_', ' ')}`);
+        toast(`Status changed to ${variables.status.replace("_", " ")}`);
       }
     },
-    onSettled: (_data, _err, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tickets', variables.project_id] });
-      queryClient.invalidateQueries({ queryKey: ['ticket', variables.id] });
+    onSettled: (_data, _err, variables, context) => {
+      // Only refetch on error — optimistic update already covers the success case
+      if (_err && context?.previous) {
+        queryClient.invalidateQueries({
+          queryKey: ["tickets", variables.project_id],
+        });
+      }
     },
   });
 }
@@ -641,9 +761,9 @@ export function useDeleteTicket() {
   const removeTicket = useTicketStore((s) => s.removeTicket);
 
   return useMutation({
-    mutationKey: ['tickets'],
+    mutationKey: ["tickets"],
     mutationFn: async ({ id }: { id: string; project_id: string }) => {
-      const { error } = await supabase.from('tickets').delete().eq('id', id);
+      const { error } = await supabase.from("tickets").delete().eq("id", id);
       if (error) throw error;
     },
     onMutate: (variables) => {
@@ -656,8 +776,45 @@ export function useDeleteTicket() {
         useTicketStore.getState().addTicket(context.previous);
       }
     },
-    onSettled: (_data, _err, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tickets', variables.project_id] });
+    onSuccess: (_data, variables, context) => {
+      const prev = context?.previous;
+      if (prev) {
+        toast("Issue deleted", {
+          undoFn: async () => {
+            // Re-insert the ticket
+            const { error } = await supabase.from("tickets").insert({
+              id: prev.id,
+              project_id: prev.project_id,
+              title: prev.title,
+              description: prev.description,
+              status: prev.status,
+              status_category: prev.status_category,
+              priority: prev.priority,
+              issue_type: prev.issue_type,
+              assignee_id: prev.assignee_id,
+              created_by: prev.created_by,
+              story_points: prev.story_points,
+              due_date: prev.due_date,
+              start_date: prev.start_date,
+              position: prev.position,
+            });
+            if (!error) {
+              useTicketStore.getState().addTicket(prev);
+              queryClient.invalidateQueries({
+                queryKey: ["tickets", variables.project_id],
+              });
+              toast("Issue restored");
+            }
+          },
+        });
+      }
+    },
+    onSettled: (_data, _err, variables, context) => {
+      if (_err && context?.previous) {
+        queryClient.invalidateQueries({
+          queryKey: ["tickets", variables.project_id],
+        });
+      }
     },
   });
 }
@@ -667,12 +824,12 @@ export function useReorderTicket() {
   const storeUpdate = useTicketStore((s) => s.updateTicket);
 
   return useMutation({
-    mutationKey: ['tickets'],
+    mutationKey: ["tickets"],
     mutationFn: async ({
       id,
       position,
       status,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       status_category,
     }: {
       id: string;
@@ -685,9 +842,9 @@ export function useReorderTicket() {
       if (status !== undefined) updates.status = status;
 
       const { data, error } = await supabase
-        .from('tickets')
+        .from("tickets")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
@@ -721,7 +878,7 @@ export function useUpdateMultipleTickets() {
   const storeUpdate = useTicketStore((s) => s.updateTicket);
 
   return useMutation({
-    mutationKey: ['tickets', 'bulk'],
+    mutationKey: ["tickets", "bulk"],
     mutationFn: async ({
       ids,
       project_id,
@@ -740,9 +897,9 @@ export function useUpdateMultipleTickets() {
     }) => {
       void project_id;
       const { error } = await supabase
-        .from('tickets')
+        .from("tickets")
         .update(updates)
-        .in('id', ids);
+        .in("id", ids);
       if (error) throw error;
     },
     onMutate: ({ ids, updates }) => {
@@ -754,7 +911,11 @@ export function useUpdateMultipleTickets() {
       }
     },
     onSettled: (_data, _err, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tickets', variables.project_id] });
+      if (_err) {
+        queryClient.invalidateQueries({
+          queryKey: ["tickets", variables.project_id],
+        });
+      }
     },
   });
 }

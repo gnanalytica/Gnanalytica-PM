@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 type ToolbarAction = {
   label: string;
@@ -10,10 +10,10 @@ type ToolbarAction = {
 };
 
 const TOOLBAR_ACTIONS: ToolbarAction[] = [
-  { label: 'Bold', icon: 'B', prefix: '**', suffix: '**' },
-  { label: 'Italic', icon: 'I', prefix: '_', suffix: '_' },
-  { label: 'Code', icon: '<>', prefix: '`', suffix: '`' },
-  { label: 'List', icon: '•', prefix: '- ', suffix: '' },
+  { label: "Bold", icon: "B", prefix: "**", suffix: "**" },
+  { label: "Italic", icon: "I", prefix: "_", suffix: "_" },
+  { label: "Code", icon: "<>", prefix: "`", suffix: "`" },
+  { label: "List", icon: "•", prefix: "- ", suffix: "" },
 ];
 
 export function RichTextEditor({
@@ -37,7 +37,8 @@ export function RichTextEditor({
 
   const wrapSelection = useCallback(
     (prefix: string, suffix: string) => {
-      const textarea = document.querySelector<HTMLTextAreaElement>('[data-rich-editor]');
+      const textarea =
+        document.querySelector<HTMLTextAreaElement>("[data-rich-editor]");
       if (!textarea) return;
 
       const start = textarea.selectionStart;
@@ -82,29 +83,31 @@ export function RichTextEditor({
           onClick={() => setShowPreview(!showPreview)}
           className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
             showPreview
-              ? 'bg-accent-soft text-accent'
-              : 'text-content-muted hover:text-content-secondary'
+              ? "bg-accent-soft text-accent"
+              : "text-content-muted hover:text-content-secondary"
           }`}
         >
-          {showPreview ? 'Edit' : 'Preview'}
+          {showPreview ? "Edit" : "Preview"}
         </button>
       </div>
 
       {/* Editor / Preview */}
       {showPreview ? (
         <div className="px-3 py-2 min-h-[80px] text-sm text-content-secondary whitespace-pre-wrap prose prose-sm max-w-none">
-          {value || <span className="text-content-muted">Nothing to preview</span>}
+          {value || (
+            <span className="text-content-muted">Nothing to preview</span>
+          )}
         </div>
       ) : (
         <textarea
           data-rich-editor
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder ?? 'Write a comment... (Markdown supported)'}
+          placeholder={placeholder ?? "Write a comment... (Markdown supported)"}
           className="w-full px-3 py-2 text-sm bg-transparent text-content-primary outline-none resize-none"
           rows={minRows ?? 3}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
               onSubmit?.();
             }
@@ -121,7 +124,7 @@ export function RichTextEditor({
             disabled={!value.trim() || isSubmitting}
             className="px-3 py-1 text-xs bg-accent text-white rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
-            {isSubmitting ? 'Sending...' : (submitLabel ?? 'Comment')}
+            {isSubmitting ? "Sending..." : (submitLabel ?? "Comment")}
           </button>
         </div>
       )}

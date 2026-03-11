@@ -12,7 +12,7 @@ create extension if not exists "pgcrypto";
 -- ============================================
 
 -- Profiles (linked to auth.users)
-create table profiles (
+create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text,
   avatar_url text,
@@ -180,16 +180,19 @@ alter table comments enable row level security;
 alter table notifications enable row level security;
 
 -- Profiles: authenticated users can read all, update own
+drop policy if exists "Profiles are viewable by authenticated users" on profiles;
 create policy "Profiles are viewable by authenticated users"
   on profiles for select
   to authenticated
   using (true);
 
+drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can update own profile"
   on profiles for update
   to authenticated
   using (id = auth.uid());
 
+drop policy if exists "Users can insert own profile" on profiles;
 create policy "Users can insert own profile"
   on profiles for insert
   to authenticated
@@ -345,6 +348,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row

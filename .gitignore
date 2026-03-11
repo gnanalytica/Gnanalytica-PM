@@ -28,6 +28,10 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# OAuth credentials (client_secret must not be committed)
+*Oauth*.json
+*oauth*.json
+
 # vercel
 .vercel
 

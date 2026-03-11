@@ -1,12 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from '@/lib/hooks/use-notifications';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { useRealtimeNotifications } from '@/lib/hooks/use-realtime';
-import { EmptyState, BellIcon } from '@/components/empty-state';
-import type { Notification } from '@/types';
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import {
+  useNotifications,
+  useUnreadCount,
+  useMarkAsRead,
+  useMarkAllAsRead,
+} from "@/lib/hooks/use-notifications";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useRealtimeNotifications } from "@/lib/hooks/use-realtime";
+import { EmptyState, BellIcon } from "@/components/empty-state";
+import type { Notification } from "@/types";
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -26,17 +31,21 @@ export function NotificationBell() {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const formatNotification = (n: Notification) => {
-    const actor = n.actor?.name ?? 'Someone';
+    const actor = n.actor?.name ?? "Someone";
     switch (n.type) {
-      case 'ticket_assigned': return `${actor} assigned you a ticket`;
-      case 'comment_added': return `${actor} commented on a ticket`;
-      case 'mentioned': return `${actor} mentioned you in a comment`;
-      default: return n.type;
+      case "ticket_assigned":
+        return `${actor} assigned you a ticket`;
+      case "comment_added":
+        return `${actor} commented on a ticket`;
+      case "mentioned":
+        return `${actor} mentioned you in a comment`;
+      default:
+        return n.type;
     }
   };
 
@@ -44,26 +53,38 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-1.5 text-content-secondary hover:text-content-primary active:text-content-primary rounded transition-colors duration-[120ms]"
+        className="relative p-1.5 text-content-secondary hover:text-content-primary active:text-content-primary active:scale-[0.95] rounded transition-all duration-[120ms]"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+          />
         </svg>
         {(unreadCount ?? 0) > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-medium">
-            {unreadCount! > 9 ? '9+' : unreadCount}
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-medium badge-animated">
+            {unreadCount! > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-surface-tertiary border border-border-subtle rounded-lg z-50 max-h-96 overflow-y-auto animate-fade-in">
-          <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-content-muted">Notifications</h3>
+        <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-surface-primary border border-border-subtle rounded-xl z-50 max-h-96 overflow-y-auto animate-dropdown-in shadow-overlay">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-content-muted">
+              Notifications
+            </h3>
             {(unreadCount ?? 0) > 0 && (
               <button
                 onClick={() => markAllAsRead.mutate()}
-                className="text-xs text-blue-600 hover:underline active:text-blue-800 rounded transition-colors duration-[120ms]"
+                className="text-xs text-blue-600 hover:underline active:text-blue-800 active:scale-[0.97] rounded transition-all duration-[120ms]"
               >
                 Mark all read
               </button>
@@ -83,7 +104,7 @@ export function NotificationBell() {
                 <div
                   key={n.id}
                   className={`px-3 py-2 border-b border-border-subtle last:border-b-0 hover:bg-hover active:bg-hover transition-colors duration-[120ms] ${
-                    !n.read ? 'bg-blue-500/5' : ''
+                    !n.read ? "bg-blue-500/5" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

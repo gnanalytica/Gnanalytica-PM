@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import type { TicketAttachment } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import type { TicketAttachment } from "@/types";
 
 const supabase = createClient();
 
 export function useTicketAttachments(ticketId: string) {
   return useQuery({
-    queryKey: ['ticket-attachments', ticketId],
+    queryKey: ["ticket-attachments", ticketId],
     queryFn: async (): Promise<TicketAttachment[]> => {
       const { data, error } = await supabase
-        .from('ticket_attachments')
-        .select('*, uploader:profiles!ticket_attachments_uploaded_by_fkey(*)')
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: false });
+        .from("ticket_attachments")
+        .select("*, uploader:profiles!ticket_attachments_uploaded_by_fkey(*)")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -33,17 +33,19 @@ export function useUploadAttachment() {
       ticketId: string;
       file: File;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
       const storagePath = `attachments/${ticketId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
-        .from('ticket-attachments')
+        .from("ticket-attachments")
         .upload(storagePath, file);
       if (uploadError) throw uploadError;
 
       const { data, error } = await supabase
-        .from('ticket_attachments')
+        .from("ticket_attachments")
         .insert({
           ticket_id: ticketId,
           uploaded_by: user.id,
@@ -58,7 +60,9 @@ export function useUploadAttachment() {
       return data;
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-attachments', variables.ticketId] });
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-attachments", variables.ticketId],
+      });
     },
   });
 }
@@ -75,12 +79,17 @@ export function useDeleteAttachment() {
       ticketId: string;
       storagePath: string;
     }) => {
-      await supabase.storage.from('ticket-attachments').remove([storagePath]);
-      const { error } = await supabase.from('ticket_attachments').delete().eq('id', id);
+      await supabase.storage.from("ticket-attachments").remove([storagePath]);
+      const { error } = await supabase
+        .from("ticket_attachments")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSettled: (_d, _e, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-attachments', variables.ticketId] });
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-attachments", variables.ticketId],
+      });
     },
   });
 }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase-browser';
-import type { ActivityLog } from '@/types';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase-browser";
+import type { ActivityLog } from "@/types";
 
 const supabase = createClient();
 
@@ -39,7 +39,7 @@ type TicketSnapshot = {
  */
 export async function logActivities(entries: ActivityEntry[]) {
   if (entries.length === 0) return;
-  await supabase.from('activity_log').insert(entries);
+  await supabase.from("activity_log").insert(entries);
 }
 
 // ── Legacy helper (used by use-comments.ts) ──
@@ -56,17 +56,21 @@ export async function logActivity(
   old_value?: string | null,
   new_value?: string | null,
 ) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return;
 
-  await logActivities([{
-    ticket_id,
-    user_id: user.id,
-    action,
-    field: field ?? null,
-    old_value: old_value ?? null,
-    new_value: new_value ?? null,
-  }]);
+  await logActivities([
+    {
+      ticket_id,
+      user_id: user.id,
+      action,
+      field: field ?? null,
+      old_value: old_value ?? null,
+      new_value: new_value ?? null,
+    },
+  ]);
 }
 
 // ── Diff-based mutation wrapper ──
@@ -82,17 +86,17 @@ export async function logActivity(
 export async function logTicketChanges(
   ticketId: string,
   userId: string,
-  action: 'created' | 'updated',
+  action: "created" | "updated",
   oldState: TicketSnapshot,
   newState: TicketSnapshot,
 ) {
   const entries: ActivityEntry[] = [];
   const base = { ticket_id: ticketId, user_id: userId };
 
-  if (action === 'created') {
+  if (action === "created") {
     entries.push({
       ...base,
-      action: 'ticket_created',
+      action: "ticket_created",
       field: null,
       old_value: null,
       new_value: null,
@@ -103,30 +107,36 @@ export async function logTicketChanges(
   if (newState.status !== undefined && newState.status !== oldState.status) {
     entries.push({
       ...base,
-      action: 'status_changed',
-      field: 'status',
+      action: "status_changed",
+      field: "status",
       old_value: oldState.status ?? null,
       new_value: newState.status,
     });
   }
 
   // Priority change
-  if (newState.priority !== undefined && newState.priority !== oldState.priority) {
+  if (
+    newState.priority !== undefined &&
+    newState.priority !== oldState.priority
+  ) {
     entries.push({
       ...base,
-      action: 'priority_changed',
-      field: 'priority',
+      action: "priority_changed",
+      field: "priority",
       old_value: oldState.priority ?? null,
       new_value: newState.priority,
     });
   }
 
   // Assignee change
-  if (newState.assignee_id !== undefined && newState.assignee_id !== oldState.assignee_id) {
+  if (
+    newState.assignee_id !== undefined &&
+    newState.assignee_id !== oldState.assignee_id
+  ) {
     entries.push({
       ...base,
-      action: 'assignee_changed',
-      field: 'assignee_id',
+      action: "assignee_changed",
+      field: "assignee_id",
       old_value: oldState.assignee_id ?? null,
       new_value: newState.assignee_id ?? null,
     });
@@ -142,53 +152,67 @@ export async function logTicketChanges(
     if (added.length > 0 || removed.length > 0) {
       entries.push({
         ...base,
-        action: 'label_changed',
-        field: 'labels',
-        old_value: (oldState.label_ids ?? []).join(',') || null,
-        new_value: newState.label_ids.join(',') || null,
+        action: "label_changed",
+        field: "labels",
+        old_value: (oldState.label_ids ?? []).join(",") || null,
+        new_value: newState.label_ids.join(",") || null,
       });
     }
   }
 
   // Issue type change
-  if (newState.issue_type !== undefined && newState.issue_type !== oldState.issue_type) {
+  if (
+    newState.issue_type !== undefined &&
+    newState.issue_type !== oldState.issue_type
+  ) {
     entries.push({
       ...base,
-      action: 'issue_type_changed',
-      field: 'issue_type',
+      action: "issue_type_changed",
+      field: "issue_type",
       old_value: oldState.issue_type ?? null,
       new_value: newState.issue_type,
     });
   }
 
   // Story points change
-  if (newState.story_points !== undefined && newState.story_points !== oldState.story_points) {
+  if (
+    newState.story_points !== undefined &&
+    newState.story_points !== oldState.story_points
+  ) {
     entries.push({
       ...base,
-      action: 'story_points_changed',
-      field: 'story_points',
-      old_value: oldState.story_points != null ? String(oldState.story_points) : null,
-      new_value: newState.story_points != null ? String(newState.story_points) : null,
+      action: "story_points_changed",
+      field: "story_points",
+      old_value:
+        oldState.story_points != null ? String(oldState.story_points) : null,
+      new_value:
+        newState.story_points != null ? String(newState.story_points) : null,
     });
   }
 
   // Start date change
-  if (newState.start_date !== undefined && newState.start_date !== oldState.start_date) {
+  if (
+    newState.start_date !== undefined &&
+    newState.start_date !== oldState.start_date
+  ) {
     entries.push({
       ...base,
-      action: 'start_date_changed',
-      field: 'start_date',
+      action: "start_date_changed",
+      field: "start_date",
       old_value: oldState.start_date ?? null,
       new_value: newState.start_date ?? null,
     });
   }
 
   // Milestone change
-  if (newState.milestone_id !== undefined && newState.milestone_id !== oldState.milestone_id) {
+  if (
+    newState.milestone_id !== undefined &&
+    newState.milestone_id !== oldState.milestone_id
+  ) {
     entries.push({
       ...base,
-      action: 'milestone_changed',
-      field: 'milestone_id',
+      action: "milestone_changed",
+      field: "milestone_id",
       old_value: oldState.milestone_id ?? null,
       new_value: newState.milestone_id ?? null,
     });
@@ -198,19 +222,22 @@ export async function logTicketChanges(
   if (newState.epic_id !== undefined && newState.epic_id !== oldState.epic_id) {
     entries.push({
       ...base,
-      action: 'epic_changed',
-      field: 'epic_id',
+      action: "epic_changed",
+      field: "epic_id",
       old_value: oldState.epic_id ?? null,
       new_value: newState.epic_id ?? null,
     });
   }
 
   // Parent change
-  if (newState.parent_id !== undefined && newState.parent_id !== oldState.parent_id) {
+  if (
+    newState.parent_id !== undefined &&
+    newState.parent_id !== oldState.parent_id
+  ) {
     entries.push({
       ...base,
-      action: 'parent_changed',
-      field: 'parent_id',
+      action: "parent_changed",
+      field: "parent_id",
       old_value: oldState.parent_id ?? null,
       new_value: newState.parent_id ?? null,
     });
@@ -230,14 +257,13 @@ export async function fetchTicketSnapshot(
 ): Promise<TicketSnapshot> {
   const [{ data: ticket }, { data: labels }] = await Promise.all([
     supabase
-      .from('tickets')
-      .select('status, priority, assignee_id, issue_type, story_points, start_date, milestone_id, epic_id, parent_id')
-      .eq('id', ticketId)
+      .from("tickets")
+      .select(
+        "status, priority, assignee_id, issue_type, story_points, start_date, milestone_id, epic_id, parent_id",
+      )
+      .eq("id", ticketId)
       .single(),
-    supabase
-      .from('ticket_labels')
-      .select('label_id')
-      .eq('ticket_id', ticketId),
+    supabase.from("ticket_labels").select("label_id").eq("ticket_id", ticketId),
   ]);
 
   return {
@@ -258,13 +284,13 @@ export async function fetchTicketSnapshot(
 
 export function useActivityLog(ticketId: string) {
   return useQuery({
-    queryKey: ['activity-log', ticketId],
+    queryKey: ["activity-log", ticketId],
     queryFn: async (): Promise<ActivityLog[]> => {
       const { data, error } = await supabase
-        .from('activity_log')
-        .select('*, user:profiles(*)')
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: false });
+        .from("activity_log")
+        .select("*, user:profiles(*)")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -275,6 +301,6 @@ export function useActivityLog(ticketId: string) {
 export function useInvalidateActivityLog() {
   const queryClient = useQueryClient();
   return (ticketId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['activity-log', ticketId] });
+    queryClient.invalidateQueries({ queryKey: ["activity-log", ticketId] });
   };
 }

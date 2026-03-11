@@ -53,7 +53,7 @@ serve(async (_req: Request) => {
       if (!user?.email) continue;
 
       const items = userTickets
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         .map((t: any) => `<li><strong>${t.title}</strong> — due ${t.due_date} (${t.project?.name ?? 'Unknown project'})</li>`)
         .join('\n');
 

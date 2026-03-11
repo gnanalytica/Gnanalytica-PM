@@ -1,33 +1,48 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useRef, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { useHydrateMyTickets, useUserActivity } from '@/lib/hooks/use-my-tickets';
-import { useAssignedTickets, useCreatedTickets } from '@/lib/hooks/use-tickets';
-import { useWorkspaceNav } from '@/lib/hooks/use-workspace-nav';
-import { TicketSidePanel } from '@/components/tickets/ticket-side-panel';
-import { EmptyState, ClipboardIcon, ClockIcon } from '@/components/empty-state';
-import { MyIssueListSkeleton } from '@/components/skeletons';
-import { PriorityIcon, StatusCircle } from '@/components/tickets/ticket-list-view';
-import type { Ticket, ActivityLog } from '@/types';
+import { useState, useMemo, useRef, useCallback } from "react";
+import Image from "next/image";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useAuth } from "@/lib/hooks/use-auth";
+import {
+  useHydrateMyTickets,
+  useUserActivity,
+} from "@/lib/hooks/use-my-tickets";
+import { useAssignedTickets, useCreatedTickets } from "@/lib/hooks/use-tickets";
+import { useWorkspaceNav } from "@/lib/hooks/use-workspace-nav";
+import { EmptyState, ClipboardIcon, ClockIcon } from "@/components/empty-state";
+import { MyIssueListSkeleton } from "@/components/skeletons";
+import {
+  PriorityIcon,
+  StatusCircle,
+} from "@/components/tickets/ticket-list-view";
+import { avatarColor } from "@/components/tickets/assignee-picker";
+import type { Ticket, ActivityLog } from "@/types";
 
 // ── Constants ──
 
-type Tab = 'assigned' | 'created' | 'activity';
+type Tab = "assigned" | "created" | "activity";
 
 const ACTION_LABELS: Record<string, string> = {
-  ticket_created: 'created ticket',
-  status_changed: 'changed status',
-  assignee_changed: 'changed assignee',
-  comment_added: 'commented on',
+  ticket_created: "created ticket",
+  status_changed: "changed status",
+  assignee_changed: "changed assignee",
+  comment_added: "commented on",
 };
 
 // ── Date grouping utility ──
 
-type DateGroups<T> = { today: T[]; yesterday: T[]; thisWeek: T[]; earlier: T[] };
+type DateGroups<T> = {
+  today: T[];
+  yesterday: T[];
+  thisWeek: T[];
+  earlier: T[];
+};
 
-function groupByDate<T>(items: T[], dateKey: (item: T) => string): DateGroups<T> {
+function groupByDate<T>(
+  items: T[],
+  dateKey: (item: T) => string,
+): DateGroups<T> {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart);
@@ -35,7 +50,12 @@ function groupByDate<T>(items: T[], dateKey: (item: T) => string): DateGroups<T>
   const weekStart = new Date(todayStart);
   weekStart.setDate(weekStart.getDate() - todayStart.getDay());
 
-  const groups: DateGroups<T> = { today: [], yesterday: [], thisWeek: [], earlier: [] };
+  const groups: DateGroups<T> = {
+    today: [],
+    yesterday: [],
+    thisWeek: [],
+    earlier: [],
+  };
 
   for (const item of items) {
     const d = new Date(dateKey(item));
@@ -55,26 +75,35 @@ function groupByDate<T>(items: T[], dateKey: (item: T) => string): DateGroups<T>
 
 // ── Flatten grouped data into virtualizable rows ──
 
-type VirtualTicketRow = { type: 'header'; label: string; count: number } | { type: 'ticket'; ticket: Ticket };
+type VirtualTicketRow =
+  | { type: "header"; label: string; count: number }
+  | { type: "ticket"; ticket: Ticket };
 type VirtualActivityRow =
-  | { type: 'header'; label: string; count: number }
-  | { type: 'activity'; entry: ActivityLog & { ticket?: { id: string; title: string } } };
+  | { type: "header"; label: string; count: number }
+  | {
+      type: "activity";
+      entry: ActivityLog & { ticket?: { id: string; title: string } };
+    };
 
 function flattenTicketGroups(tickets: Ticket[]): VirtualTicketRow[] {
   if (tickets.length === 0) return [];
   const groups = groupByDate(tickets, (t) => t.updated_at);
   const sections: { label: string; items: Ticket[] }[] = [
-    { label: 'Today', items: groups.today },
-    { label: 'Yesterday', items: groups.yesterday },
-    { label: 'This Week', items: groups.thisWeek },
-    { label: 'Earlier', items: groups.earlier },
+    { label: "Today", items: groups.today },
+    { label: "Yesterday", items: groups.yesterday },
+    { label: "This Week", items: groups.thisWeek },
+    { label: "Earlier", items: groups.earlier },
   ];
   const rows: VirtualTicketRow[] = [];
   for (const section of sections) {
     if (section.items.length === 0) continue;
-    rows.push({ type: 'header', label: section.label, count: section.items.length });
+    rows.push({
+      type: "header",
+      label: section.label,
+      count: section.items.length,
+    });
     for (const ticket of section.items) {
-      rows.push({ type: 'ticket', ticket });
+      rows.push({ type: "ticket", ticket });
     }
   }
   return rows;
@@ -86,17 +115,21 @@ function flattenActivityGroups(
   if (entries.length === 0) return [];
   const groups = groupByDate(entries, (e) => e.created_at);
   const sections = [
-    { label: 'Today', items: groups.today },
-    { label: 'Yesterday', items: groups.yesterday },
-    { label: 'This Week', items: groups.thisWeek },
-    { label: 'Earlier', items: groups.earlier },
+    { label: "Today", items: groups.today },
+    { label: "Yesterday", items: groups.yesterday },
+    { label: "This Week", items: groups.thisWeek },
+    { label: "Earlier", items: groups.earlier },
   ];
   const rows: VirtualActivityRow[] = [];
   for (const section of sections) {
     if (section.items.length === 0) continue;
-    rows.push({ type: 'header', label: section.label, count: section.items.length });
+    rows.push({
+      type: "header",
+      label: section.label,
+      count: section.items.length,
+    });
     for (const entry of section.items) {
-      rows.push({ type: 'activity', entry });
+      rows.push({ type: "activity", entry });
     }
   }
   return rows;
@@ -116,19 +149,22 @@ function ticketShortId(id: string) {
 
 function formatDescriptiveDate(isoDate: string): string {
   const d = new Date(isoDate);
-  return `Updated on ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+  return `Updated on ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 }
 
 function formatRelativeTime(isoDate: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'now';
+  if (minutes < 1) return "now";
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d`;
-  return new Date(isoDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(isoDate).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 // ── Virtualized ticket list with date grouping ──
@@ -146,7 +182,7 @@ function VirtualizedTicketList({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (rows[index].type === 'header' ? 32 : 40),
+    estimateSize: (index) => (rows[index].type === "header" ? 32 : 40),
     overscan: 10,
     measureElement: (el) => el.getBoundingClientRect().height,
   });
@@ -155,33 +191,42 @@ function VirtualizedTicketList({
 
   return (
     <div ref={scrollRef} className="overflow-y-auto flex-1">
-      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
 
-          if (row.type === 'header') {
+          if (row.type === "header") {
             return (
               <div
                 key={`header-${row.label}`}
                 ref={virtualizer.measureElement}
                 data-index={virtualRow.index}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
+                  width: "100%",
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
                 <div className="flex items-center gap-2 px-6 pt-3 pb-1">
-                  <svg className="w-3 h-3 text-content-muted" viewBox="0 0 16 16" fill="currentColor">
+                  <svg
+                    className="w-3 h-3 text-content-muted"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
                     <path d="M6 4l4 4-4 4" />
                   </svg>
                   <span className="text-[12px] font-medium text-content-secondary">
                     {row.label}
                   </span>
                   <span className="text-[11px] text-content-muted flex items-center gap-0.5">
-                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor" opacity="0.5">
+                    <svg
+                      className="w-3 h-3"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      opacity="0.5"
+                    >
                       <path d="M8 3l5 9H3z" />
                     </svg>
                     {row.count}
@@ -199,10 +244,10 @@ function VirtualizedTicketList({
               ref={virtualizer.measureElement}
               data-index={virtualRow.index}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
+                width: "100%",
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
@@ -237,7 +282,10 @@ function VirtualizedTicketList({
                       <span
                         key={label.id}
                         className="px-1.5 py-px rounded text-[10px] font-medium leading-tight"
-                        style={{ backgroundColor: label.color + '15', color: label.color }}
+                        style={{
+                          backgroundColor: label.color + "15",
+                          color: label.color,
+                        }}
                       >
                         {label.name}
                       </span>
@@ -249,11 +297,17 @@ function VirtualizedTicketList({
                 <div className="flex-shrink-0 ml-2.5">
                   {ticket.assignee ? (
                     ticket.assignee.avatar_url ? (
-                      <img src={ticket.assignee.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                      <Image
+                        src={ticket.assignee.avatar_url}
+                        alt=""
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 rounded-full"
+                      />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-surface-tertiary flex items-center justify-center">
-                        <span className="text-[9px] font-medium text-content-muted">
-                          {(ticket.assignee.name ?? '?')[0].toUpperCase()}
+                      <div className={`w-5 h-5 rounded-full ${avatarColor(ticket.assignee.id)} flex items-center justify-center`}>
+                        <span className="text-[9px] font-semibold text-white drop-shadow-sm">
+                          {(ticket.assignee.name ?? "?")[0].toUpperCase()}
                         </span>
                       </div>
                     )
@@ -290,7 +344,7 @@ function VirtualizedActivityList({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (rows[index].type === 'header' ? 32 : 34),
+    estimateSize: (index) => (rows[index].type === "header" ? 32 : 34),
     overscan: 10,
     measureElement: (el) => el.getBoundingClientRect().height,
   });
@@ -299,33 +353,42 @@ function VirtualizedActivityList({
 
   return (
     <div ref={scrollRef} className="overflow-y-auto flex-1">
-      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
 
-          if (row.type === 'header') {
+          if (row.type === "header") {
             return (
               <div
                 key={`header-${row.label}`}
                 ref={virtualizer.measureElement}
                 data-index={virtualRow.index}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
+                  width: "100%",
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
                 <div className="flex items-center gap-2 px-6 pt-3 pb-1">
-                  <svg className="w-3 h-3 text-content-muted" viewBox="0 0 16 16" fill="currentColor">
+                  <svg
+                    className="w-3 h-3 text-content-muted"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
                     <path d="M6 4l4 4-4 4" />
                   </svg>
                   <span className="text-[12px] font-medium text-content-secondary">
                     {row.label}
                   </span>
                   <span className="text-[11px] text-content-muted flex items-center gap-0.5">
-                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor" opacity="0.5">
+                    <svg
+                      className="w-3 h-3"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      opacity="0.5"
+                    >
                       <path d="M8 3l5 9H3z" />
                     </svg>
                     {row.count}
@@ -344,10 +407,10 @@ function VirtualizedActivityList({
               ref={virtualizer.measureElement}
               data-index={virtualRow.index}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
+                width: "100%",
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
@@ -359,13 +422,19 @@ function VirtualizedActivityList({
                 <span className="text-[13px] text-content-secondary truncate flex-1">
                   <span className="text-content-primary">{actionLabel}</span>
                   {entry.ticket && (
-                    <span className="text-content-muted"> &middot; {entry.ticket.title}</span>
-                  )}
-                  {entry.field === 'status' && entry.old_value && entry.new_value && (
                     <span className="text-content-muted">
-                      {' '}({entry.old_value} &rarr; {entry.new_value})
+                      {" "}
+                      &middot; {entry.ticket.title}
                     </span>
                   )}
+                  {entry.field === "status" &&
+                    entry.old_value &&
+                    entry.new_value && (
+                      <span className="text-content-muted">
+                        {" "}
+                        ({entry.old_value} &rarr; {entry.new_value})
+                      </span>
+                    )}
                 </span>
                 <span className="text-[11px] text-content-muted flex-shrink-0">
                   {formatRelativeTime(entry.created_at)}
@@ -383,7 +452,7 @@ function VirtualizedActivityList({
 
 export default function MyIssuesPage() {
   const { profile, loading: authLoading } = useAuth();
-  const userId = profile?.id ?? '';
+  const userId = profile?.id ?? "";
 
   const {
     isLoading: ticketsLoading,
@@ -394,40 +463,44 @@ export default function MyIssuesPage() {
   } = useHydrateMyTickets(userId);
   const assignedTickets = useAssignedTickets(userId);
   const createdTickets = useCreatedTickets(userId);
-  const { data: activity, isLoading: activityLoading } = useUserActivity(userId);
+  const { data: activity, isLoading: activityLoading } =
+    useUserActivity(userId);
 
-  const { ticketId: selectedTicketId, openTicket, closeTicket } = useWorkspaceNav();
+  const { openTicket } = useWorkspaceNav();
 
-  const [tab, setTab] = useState<Tab>('assigned');
+  const [tab, setTab] = useState<Tab>("assigned");
 
   // Show loading while auth is resolving or tickets are being fetched
   const isLoading = authLoading || ticketsLoading;
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
-    { key: 'assigned', label: 'Assigned', count: assignedTickets.length },
-    { key: 'created', label: 'Created', count: createdTickets.length },
-    { key: 'activity', label: 'Activity' },
+    { key: "assigned", label: "Assigned", count: assignedTickets.length },
+    { key: "created", label: "Created", count: createdTickets.length },
+    { key: "activity", label: "Activity" },
   ];
 
-  const handleTicketClick = useCallback((id: string) => openTicket(id), [openTicket]);
+  const handleTicketClick = useCallback(
+    (id: string) => openTicket(id),
+    [openTicket],
+  );
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="h-11 flex items-center px-6 border-b border-border-subtle flex-shrink-0">
+      <div className="h-11 flex items-center px-4 sm:px-6 border-b border-border-subtle flex-shrink-0">
         <h1 className="text-13 font-medium text-content-primary">My Issues</h1>
       </div>
 
       {/* Tab bar — bordered pill buttons */}
-      <div className="flex items-center gap-1 px-6 py-1.5 flex-shrink-0">
+      <div className="flex items-center gap-1 px-4 sm:px-6 py-1.5 flex-shrink-0">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-2.5 py-1 text-[12px] font-medium rounded-full border transition-colors ${
               tab === t.key
-                ? 'bg-content-primary/10 border-content-primary/20 text-content-primary'
-                : 'border-border-subtle text-content-muted hover:text-content-secondary hover:border-content-muted'
+                ? "bg-content-primary/10 border-content-primary/20 text-content-primary"
+                : "border-border-subtle text-content-muted hover:text-content-secondary hover:border-content-muted"
             }`}
           >
             {t.label}
@@ -449,53 +522,60 @@ export default function MyIssuesPage() {
         </div>
       ) : (
         <>
-          {tab === 'assigned' && (
-            assignedTickets.length > 0 ? (
-              <VirtualizedTicketList tickets={assignedTickets} onTicketClick={handleTicketClick} />
+          {tab === "assigned" &&
+            (assignedTickets.length > 0 ? (
+              <VirtualizedTicketList
+                tickets={assignedTickets}
+                onTicketClick={handleTicketClick}
+              />
             ) : (
               <EmptyState
                 icon={<ClipboardIcon className="w-10 h-10" />}
                 title="No tickets assigned to you"
                 description="Issues assigned to you will appear here."
               />
-            )
-          )}
+            ))}
 
-          {tab === 'created' && (
-            createdTickets.length > 0 ? (
-              <VirtualizedTicketList tickets={createdTickets} onTicketClick={handleTicketClick} />
+          {tab === "created" &&
+            (createdTickets.length > 0 ? (
+              <VirtualizedTicketList
+                tickets={createdTickets}
+                onTicketClick={handleTicketClick}
+              />
             ) : (
               <EmptyState
                 icon={<ClipboardIcon className="w-10 h-10" />}
                 title="No tickets created"
                 description="Issues you create will appear here."
               />
-            )
-          )}
+            ))}
 
-          {tab === 'activity' && (
-            activityLoading ? (
+          {tab === "activity" &&
+            (activityLoading ? (
               <LoadingSkeleton />
             ) : activity && activity.length > 0 ? (
-              <VirtualizedActivityList entries={activity} onEntryClick={handleTicketClick} />
+              <VirtualizedActivityList
+                entries={activity}
+                onEntryClick={handleTicketClick}
+              />
             ) : (
               <EmptyState
                 icon={<ClockIcon className="w-10 h-10" />}
                 title="No recent activity"
                 description="Your actions across all projects will appear here."
               />
-            )
-          )}
+            ))}
         </>
       )}
 
       {isFetchingNextPage && (
         <p className="text-center py-2 text-[11px] text-content-muted">
-          Loading more ({loadedCount}{totalCount != null ? ` of ~${totalCount}` : ''})...
+          Loading more ({loadedCount}
+          {totalCount != null ? ` of ~${totalCount}` : ""})...
         </p>
       )}
 
-      <TicketSidePanel ticketId={selectedTicketId} onClose={closeTicket} />
+      {/* TicketSidePanel removed — now at layout level */}
     </div>
   );
 }
