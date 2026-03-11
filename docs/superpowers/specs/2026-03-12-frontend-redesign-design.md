@@ -42,7 +42,9 @@ The core redesign introduces a flexible multi-view system while maintaining the 
 - Assignee: Opens lightweight person picker
 - Dates: Calendar picker or natural language input
 - Visual feedback: Hover highlight, input border on active field, brief checkmark on save
-- Undo capability: Unsaved changes auto-discard after 10 seconds or on Escape
+- Unsaved State: Input field shows dotted border (#FF6B35 in light, #FF8557 in dark) with visual indicator (dot) in title bar. After 5 seconds of inactivity, tooltip appears: "Changes will be discarded in 5s". Pressing Escape immediately discards without confirmation.
+- On Save: Brief checkmark appears (500ms fade out) next to field confirming save successful
+- On Error: Red border on input with inline error message below. Retry button available next to message
 
 ### Mode 2: Expanded Ticket View
 **Purpose:** Deep work on a single ticket, comprehensive property editing
@@ -77,11 +79,22 @@ The core redesign introduces a flexible multi-view system while maintaining the 
 - **Global Filters:** Status, assignee, project, date range
 
 **Customization:**
-- Drag-and-drop to reorder widgets
-- Resize widgets (small, medium, large)
-- Hide/show widgets via settings
-- Save custom dashboard layouts per user
-- Smart defaults: Dashboard layout adapts to user role (PM sees planning, dev sees sprints)
+- Dashboard Grid: 12-column responsive grid
+  - Desktop (1200px+): Full 12 columns
+  - Tablet (768px-1199px): 6 columns
+  - Mobile (< 768px): 1 column (stacked)
+- Widget Sizing:
+  - Small: 3 columns, 240px height (fixed)
+  - Medium: 6 columns, 360px height (fixed)
+  - Large: 12 columns, 480px height (fixed)
+  - Resizable: Users can extend height in 120px increments (min 240px, max 600px)
+- Drag-and-drop to reorder widgets (visual feedback: 0.7 opacity on dragging, smooth drop animation 200ms)
+- Hide/show widgets via settings panel (right-click on widget header)
+- Save custom dashboard layouts per user (stored in database, auto-saved after drag/resize)
+- Smart defaults: Dashboard layout adapts to user role
+  - Product Manager: Project Overview, Upcoming Deadlines, Tasks by Status, Team Workload
+  - Developer: Sprint Velocity, My Tasks, Upcoming Deadlines, Team Workload
+  - Admin: All Tasks, Team Workload, Overdue, Project Overview
 
 **Global Views Dropdown:**
 - All Tasks: Every task in system
@@ -189,6 +202,28 @@ The core redesign introduces a flexible multi-view system while maintaining the 
 - Thin: 1px (standard dividers, input borders)
 - Thick: 2px (focus states, strong emphasis)
 
+### Component Size Matrix
+
+**Buttons:**
+| Size | Height | Padding (H) | Font | Icon |
+|------|--------|------------|------|------|
+| Small | 28px | 8-12px | Label (12px) | 16px |
+| Medium | 36px | 12-16px | Body Small (13px) | 20px |
+| Large | 44px | 16-20px | Body Regular (14px) | 24px |
+
+**Input Fields:**
+| Type | Height | Padding | Radius |
+|------|--------|---------|--------|
+| Standard | 36px | 12px vertical, 16px horizontal | 8px |
+| Large | 44px | 16px vertical, 20px horizontal | 8px |
+| Inline edit | 32px | 8px vertical, 12px horizontal | 6px |
+
+**Badges/Pills:**
+| Style | Padding | Font | Height |
+|-------|---------|------|--------|
+| Default | 4px 8px | Label (12px) | 24px |
+| Large | 6px 12px | Label (12px) | 28px |
+
 ### Shadows
 
 **Elevation System:**
@@ -286,6 +321,56 @@ The core redesign introduces a flexible multi-view system while maintaining the 
 
 ---
 
+## Data Layer & API Specifications
+
+### Schema Changes
+
+**Projects Table:**
+- Add column: `emoji_slug` (varchar, nullable, e.g., "rocket", "chart", "people")
+- Alternatives: `emoji_unicode` (varchar with actual emoji character) or `icon_id` (reference to icon set)
+- Migration: Default existing projects to null; UX allows setting via project settings
+
+**Dashboard Layouts Table (New):**
+```sql
+CREATE TABLE dashboard_layouts (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  layout_data JSONB,  -- [{widget_id, position, size, hidden}, ...]
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+```
+
+### API Endpoints
+
+**Dashboard Widgets:**
+- `GET /api/dashboard/widgets?user_id=X` — Returns user's widget configuration
+- `POST /api/dashboard/widgets` — Save widget layout (on drag/resize/show/hide)
+- Caching: Widget data cached 30 seconds per user; refreshes on browser focus
+
+**Global Views:**
+- `GET /api/views/my-tasks?user_id=X` — User's assigned tasks (paginated, 25 per page)
+- `GET /api/views/all-tasks` — All tasks in workspace (paginated, 25 per page)
+- `GET /api/views/by-project?project_id=X` — Tasks in project (paginated)
+- `GET /api/views/by-assignee?assignee_id=X` — Tasks assigned to person (paginated)
+- `GET /api/views/overdue` — Overdue tasks (all users)
+- `GET /api/views/due-this-week` — Due within 7 days
+
+**Inline Edits:**
+- `PATCH /api/tickets/:id` — Update single field (title, priority, status, assignee, due_date)
+- Response includes: updated field value, save timestamp, error message (if applicable)
+- Optimistic updates: UI updates immediately; revert on error
+
+### Performance Targets
+
+- Dashboard Time-to-Interactive: < 3 seconds (4G)
+- Inline edit save response: < 200ms
+- Mode transitions: 300ms (animation)
+- Widget drag-drop: 60fps smooth animation
+- Large list (1000+ items): Virtual scrolling with 25-item render window
+
+---
+
 ## Interaction Design
 
 ### Keyboard-First Approach
@@ -368,10 +453,85 @@ The core redesign introduces a flexible multi-view system while maintaining the 
 
 ---
 
+## Mobile Experience
+
+**Navigation (Mobile < 768px):**
+- Bottom tab bar with three options: List, Ticket, Dashboard (icons only, 48px height)
+- Keyboard shortcuts (Cmd+1/2/3) unavailable on mobile; use tab bar instead
+- Inline editing: Tap field to expand into fullscreen edit modal (prevents accidental edits on touch)
+- Quick actions: Always visible (inline with row, right side) on touch; tap to perform
+- Dashboard widgets: Stack vertically (1 column), full width, dragging disabled on mobile
+- Mode transitions: Use slide animation (from right for next view, from left for previous view)
+
+---
+
+## Accessibility Specifications
+
+**Keyboard Navigation:**
+- Tab/Shift+Tab: Navigate between all interactive elements
+- Arrow Keys: Status, Priority, Assignee fields support up/down arrows to cycle through options
+- Enter: Activate inline edit, confirm selection, open ticket
+- Escape: Cancel edit, close dropdown, close ticket detail view
+- Focus Management: Focus order matches visual order (left-to-right, top-to-bottom)
+- Focus Visible: All interactive elements show 2px focus ring (#FF6B35) when focused via keyboard
+
+**Color Contrast (WCAG AA Minimum 4.5:1 for text):**
+- Primary text on background: #1A1A1A on #FAFBFC = 14.5:1 ✓
+- Secondary text on background: #6B5B52 on #FAFBFC = 6.8:1 ✓
+- Warn gray text on surfaces: #9B8F85 on #F5F3F0 = 3.1:1 ✗ **NEEDS ADJUSTMENT**
+  - Fix: Use #7A6B60 (darker) for 5.2:1 contrast instead
+- All accent colors verified against backgrounds before implementation
+
+**Icon-Only Button Labels:**
+- Assign: aria-label="Assign ticket"
+- Due Date: aria-label="Set due date"
+- Priority: aria-label="Change priority"
+- Expand: aria-label="Open ticket details"
+- Quick Actions: Tooltip with 200ms delay for mouse, immediate for keyboard focus
+
+**Dashboard Widget Accessibility:**
+- Drag-drop accessible via keyboard: Tab to widget, Spacebar to activate, arrow keys to move, Spacebar to drop
+- Resize handles: Tab-accessible with clear focus indicator, arrow keys adjust size in 120px increments
+- Hide/show: Right-click (or Space) opens context menu with keyboard navigation
+
+**Screen Reader Support:**
+- Use semantic HTML: `<button>`, `<label>`, `<table>` for list rows (not divs)
+- Live regions for notifications: Save success, errors, status changes
+- Landmark regions: `<nav>` for sidebar, `<main>` for content, `<section>` for widgets
+
+---
+
+## Migration & Rollout Strategy
+
+**Phase-Based Rollout:**
+1. **Phase 1 (Internal Team Only):** Feature flag `redesign.enabled = false` for all external users
+   - Internal team (8 people) opt-in to test redesign
+   - Collect feedback for 1 week
+   - Fix critical issues
+2. **Phase 2 (Beta - 50% of Users):** Feature flag enabled for 50% of user base (if applicable in future)
+   - Monitor performance metrics, error rates
+   - Gather feedback
+   - Iterate for 1 week
+3. **Phase 3 (Full Rollout):** Feature flag enabled globally
+   - Support for old interface removed after 2-week grace period
+   - Detailed release notes provided
+
+**Color Scheme Transition:**
+- Both old (indigo, #6366f1) and new (coral, #FF6B35) colors coexist in globals.css during rollout
+- CSS variables: `--accent-current` points to new color; `--accent-legacy` points to old color
+- After Phase 3: Remove legacy colors and old variables from codebase
+
+**Rollback Plan:**
+- If critical issues found: Revert feature flag, disable redesign UI
+- Database is unaffected (only UI changes); no data loss
+- Revert git commit if needed; redeploy previous version
+
+---
+
 ## Notes & Considerations
 
 - **Backward Compatibility:** Existing data, permissions, and workflows remain unchanged; only UI is redesigned
-- **Performance:** Dashboard widgets load data on-demand; implement pagination for large lists
-- **Mobile:** Current mobile behavior (overlay detail panel) is preserved; new modes not applicable on mobile
-- **Accessibility:** Maintain WCAG AA compliance; ensure all inline edits accessible via keyboard
+- **Performance:** Dashboard widgets load data on-demand; implement pagination for large lists (virtual scrolling)
+- **Mobile:** Current mobile behavior (overlay detail panel) is preserved; new modes adapted for mobile with bottom tab bar
+- **Accessibility:** WCAG AA compliance required; all interactions keyboard-accessible; color contrast verified before dev
 - **Browser Support:** Modern browsers (Chrome, Safari, Firefox, Edge latest versions)
