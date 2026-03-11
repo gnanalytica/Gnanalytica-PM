@@ -114,5 +114,7 @@ export type SemanticColors = typeof COLORS.light.semantic;
 export type SurfaceColors = typeof COLORS.light.surface;
 export type TextColors = typeof COLORS.light.text;
 export type BorderColors = typeof COLORS.light.border;
+export type OtherColors = typeof COLORS.light.other;
 export type ShadowTokens = typeof COLORS.shadows;
 export type SpacingTokens = typeof COLORS.spacing;
+export type RadiusTokens = typeof COLORS.radius;

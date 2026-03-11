@@ -13,9 +13,9 @@
   --color-content-muted: var(--text-muted);
   --color-sidebar: var(--bg-sidebar);
   --color-active: var(--bg-active);
-  --color-accent: var(--accent-blue);
-  --color-accent-soft: var(--accent-blue-soft);
-  --color-accent-hover: var(--accent-blue-hover);
+  --color-accent: var(--accent-coral);
+  --color-accent-soft: var(--accent-coral-soft);
+  --color-accent-hover: var(--accent-coral-hover);
   --color-hover: var(--hover-bg);
   --color-success: var(--color-success-base);
   --color-success-soft: var(--color-success-soft-base);
@@ -61,9 +61,9 @@
   --bg-active: rgba(255, 107, 53, 0.06);
 
   /* Warm coral accent palette */
-  --accent-blue: #FF6B35;
-  --accent-blue-soft: rgba(255, 107, 53, 0.08);
-  --accent-blue-hover: #FF8557;
+  --accent-coral: #FF6B35;
+  --accent-coral-soft: rgba(255, 107, 53, 0.08);
+  --accent-coral-hover: #FF8557;
 
   /* Overlay and backdrop */
   --overlay-bg: rgba(0, 0, 0, 0.4);
@@ -126,9 +126,9 @@
   --bg-active: rgba(255, 133, 87, 0.1);
 
   /* Warm coral accent palette for dark mode */
-  --accent-blue: #FF8557;
-  --accent-blue-soft: rgba(255, 133, 87, 0.12);
-  --accent-blue-hover: #FFA76B;
+  --accent-coral: #FF8557;
+  --accent-coral-soft: rgba(255, 133, 87, 0.12);
+  --accent-coral-hover: #FFA76B;
 
   /* Overlay and backdrop */
   --overlay-bg: rgba(0, 0, 0, 0.6);
@@ -289,7 +289,7 @@ body {
 }
 
 [cmdk-item][data-selected='true'] {
-  background-color: var(--accent-blue-soft);
+  background-color: var(--accent-coral-soft);
   color: var(--text-primary);
 }
 
@@ -486,7 +486,7 @@ body {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 2px;
-  background: var(--accent-blue);
+  background: var(--accent-coral);
   transform: scaleY(0);
   transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -522,8 +522,8 @@ body {
 
 /* Selected issue row */
 .issue-row-selected {
-  background-color: var(--accent-blue-soft);
-  border-left: 2px solid var(--accent-blue);
+  background-color: var(--accent-coral-soft);
+  border-left: 2px solid var(--accent-coral);
 }
 
 /* Modern input/select base styling */
