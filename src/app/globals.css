@@ -37,21 +37,32 @@
 }
 
 :root {
+  /* Surface colors */
   --bg-primary: #ffffff;
   --bg-secondary: #fafbfc;
   --bg-tertiary: #f3f4f6;
+
+  /* Border colors */
   --border-subtle: rgba(0, 0, 0, 0.06);
   --border-medium: rgba(0, 0, 0, 0.10);
+
+  /* Text colors */
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #7A6B60;
+
+  /* Interactive states */
   --hover-bg: rgba(0, 0, 0, 0.035);
-  --focus-ring: rgba(99, 102, 241, 0.5);
+  --focus-ring: rgba(255, 107, 53, 0.5);
   --bg-sidebar: #fafbfc;
-  --bg-active: rgba(99, 102, 241, 0.06);
-  --accent-blue: #6366f1;
-  --accent-blue-soft: rgba(99, 102, 241, 0.08);
-  --accent-blue-hover: #4f46e5;
+  --bg-active: rgba(255, 107, 53, 0.06);
+
+  /* Warm coral accent palette */
+  --accent-blue: #FF6B35;
+  --accent-blue-soft: rgba(255, 107, 53, 0.08);
+  --accent-blue-hover: #FF5520;
+
+  /* Overlay and backdrop */
   --overlay-bg: rgba(0, 0, 0, 0.4);
   --backdrop-blur: 12px;
 
@@ -80,21 +91,32 @@
 }
 
 .dark {
+  /* Surface colors */
   --bg-primary: #0f1117;
   --bg-secondary: #171923;
   --bg-tertiary: #1e2030;
+
+  /* Border colors */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-medium: rgba(255, 255, 255, 0.10);
+
+  /* Text colors */
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(226, 232, 240, 0.6);
   --text-muted: rgba(226, 232, 240, 0.35);
+
+  /* Interactive states */
   --hover-bg: rgba(255, 255, 255, 0.05);
-  --focus-ring: rgba(129, 140, 248, 0.5);
+  --focus-ring: rgba(255, 133, 87, 0.5);
   --bg-sidebar: #141620;
-  --bg-active: rgba(129, 140, 248, 0.1);
-  --accent-blue: #818cf8;
-  --accent-blue-soft: rgba(129, 140, 248, 0.12);
-  --accent-blue-hover: #a5b4fc;
+  --bg-active: rgba(255, 133, 87, 0.1);
+
+  /* Warm coral accent palette for dark mode */
+  --accent-blue: #FF8557;
+  --accent-blue-soft: rgba(255, 133, 87, 0.12);
+  --accent-blue-hover: #FFAA99;
+
+  /* Overlay and backdrop */
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --backdrop-blur: 12px;
 
