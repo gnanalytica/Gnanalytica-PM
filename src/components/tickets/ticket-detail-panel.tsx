@@ -220,7 +220,7 @@ export function TicketDetailPanel({
           <SLABadge ticket={ticket} />
         </div>
 
-        {/* Title section — enhanced typography with 32px heading */}
+        {/* Title section — enhanced typography with 32px heading per design spec */}
         <div className="px-6 py-8 border-b border-border-subtle">
           {editingTitle ? (
             <input
@@ -238,12 +238,12 @@ export function TicketDetailPanel({
                   setEditingTitle(false);
                 }
               }}
-              className="w-full text-3xl font-bold bg-transparent border-b-2 border-accent outline-none py-1 text-content-primary leading-tight"
+              className="w-full bg-transparent border-b-2 border-accent outline-none py-1 text-content-primary leading-tight type-h1"
               autoFocus
             />
           ) : (
             <h1
-              className={`text-3xl font-bold text-content-primary rounded px-2 -mx-2 py-1 transition-colors leading-tight ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
+              className={`type-h1 text-content-primary rounded px-2 -mx-2 py-1 transition-colors ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
               onClick={canEdit ? startEditingTitle : undefined}
             >
               {ticket.title}
