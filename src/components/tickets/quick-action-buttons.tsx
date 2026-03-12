@@ -3,7 +3,6 @@
 import { SVGProps } from 'react';
 
 interface QuickActionButtonsProps {
-  ticketId: string;
   onAssignClick: () => void;
   onDueDateClick: () => void;
   onPriorityClick: () => void;
@@ -27,19 +26,18 @@ const CalendarIcon = (props: SVGProps<SVGSVGElement>) => (
 );
 
 const FlagIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M5.5 2v18m0 0l3.5-2 3.5 2 3.5-2 3.5 2V2l-3.5 2-3.5-2-3.5 2-3.5-2z" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
+    <path d="M5 3v18m0 0h8v-8H5" />
   </svg>
 );
 
 const ExpandIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-    <path d="M9 18l6-6m-6 0l-6-6m6 6h12V6" />
+    <path d="M15 18l-6-6m6 0l-6-6" />
   </svg>
 );
 
 export function QuickActionButtons({
-  ticketId,
   onAssignClick,
   onDueDateClick,
   onPriorityClick,
@@ -58,7 +56,7 @@ export function QuickActionButtons({
       }`}
     >
       <button
-        onClick={onAssignClick}
+        onClick={() => onAssignClick?.()}
         aria-label="Assign"
         title="Assign"
         className={buttonClass}
@@ -66,7 +64,7 @@ export function QuickActionButtons({
         <PersonIcon className={iconClass} />
       </button>
       <button
-        onClick={onDueDateClick}
+        onClick={() => onDueDateClick?.()}
         aria-label="Due Date"
         title="Due Date"
         className={buttonClass}
@@ -74,7 +72,7 @@ export function QuickActionButtons({
         <CalendarIcon className={iconClass} />
       </button>
       <button
-        onClick={onPriorityClick}
+        onClick={() => onPriorityClick?.()}
         aria-label="Priority"
         title="Priority"
         className={buttonClass}
@@ -82,7 +80,7 @@ export function QuickActionButtons({
         <FlagIcon className={iconClass} />
       </button>
       <button
-        onClick={onExpandClick}
+        onClick={() => onExpandClick?.()}
         aria-label="Expand"
         title="Expand"
         className={buttonClass}
