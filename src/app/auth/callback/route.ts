@@ -32,9 +32,19 @@ export async function GET(request: NextRequest) {
       },
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
+      console.error("exchangeCodeForSession error:", {
+        message: error.message,
+        status: error.status,
+        code,
+      });
+      return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
+    }
+
+    if (!data?.session) {
+      console.error("No session returned from exchangeCodeForSession");
       return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
     }
 
