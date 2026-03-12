@@ -656,7 +656,7 @@ function FilterBar({
 
 // ── Row height ──
 
-const ROW_HEIGHT = 44;
+const ROW_HEIGHT = 48;
 
 // ── Main component ──
 

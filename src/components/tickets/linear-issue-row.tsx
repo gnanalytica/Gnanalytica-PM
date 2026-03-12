@@ -9,6 +9,8 @@ import { AvatarStack } from "@/components/tickets/assignee-picker";
 import { useUpdateTicket, useDeleteTicket } from "@/lib/hooks/use-tickets";
 import { useProjectWorkflow } from "@/lib/hooks/use-workflow";
 import { useContextMenu, type ContextMenuItem } from "@/components/context-menu";
+import { InlineEditCell } from "@/components/tickets/inline-edit-cell";
+import { QuickActionButtons } from "@/components/tickets/quick-action-buttons";
 import { TICKET_PRIORITIES, STATUS_EMOJI, PRIORITY_EMOJI } from "@/types";
 import type { Ticket, TicketPriority } from "@/types";
 
@@ -72,6 +74,7 @@ export const LinearIssueRow = memo(function LinearIssueRow({
   onMouseEnter?: () => void;
 }) {
   const [activeDropdown, setActiveDropdown] = useState<"status" | "priority" | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
   const updateTicket = useUpdateTicket();
   const deleteTicket = useDeleteTicket();
   const workflow = useProjectWorkflow(ticket.project_id);
@@ -111,92 +114,101 @@ export const LinearIssueRow = memo(function LinearIssueRow({
     setActiveDropdown(null);
   }, [ticket.id, ticket.project_id, updateTicket]);
 
+  const handleTitleSave = useCallback(async (value: string | number) => {
+    await new Promise((resolve) => {
+      updateTicket.mutate(
+        { id: ticket.id, project_id: ticket.project_id, title: String(value) },
+        { onSuccess: resolve, onError: resolve }
+      );
+    });
+  }, [ticket.id, ticket.project_id, updateTicket]);
+
+  const handleDueDateSave = useCallback(async (value: string | number) => {
+    await new Promise((resolve) => {
+      updateTicket.mutate(
+        { id: ticket.id, project_id: ticket.project_id, due_date: value ? new Date(String(value)).toISOString() : null },
+        { onSuccess: resolve, onError: resolve }
+      );
+    });
+  }, [ticket.id, ticket.project_id, updateTicket]);
+
+  const handleQuickAssign = useCallback(() => {
+    // TODO: Open assignee picker
+  }, []);
+
+  const handleQuickDueDate = useCallback(() => {
+    // TODO: Open date picker
+  }, []);
+
+  const handleQuickPriority = useCallback(() => {
+    setActiveDropdown("priority");
+  }, []);
+
+  const handleQuickExpand = useCallback(() => {
+    onClick?.();
+  }, [onClick]);
+
+  const formatDueDate = (date: string | null): string => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
   return (
     <div
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={() => { setIsHovered(true); onMouseEnter?.(); }}
+      onMouseLeave={() => setIsHovered(false)}
       onContextMenu={onContextMenu}
-      className={`group/row row-interactive flex items-center min-h-[44px] border-b border-border-subtle hover:bg-hover active:bg-hover/80 transition-all duration-[120ms] cursor-pointer ${
+      className={`group/row row-interactive flex items-center h-12 border-b border-border-subtle hover:bg-surface-secondary active:bg-surface-secondary/80 transition-all duration-[120ms] cursor-pointer px-4 gap-2 ${
         isSelected ? "issue-row-selected" : ""
       } ${isFlashing ? "animate-flash" : ""}`}
       onClick={onClick}
     >
-      {/* Checkbox / Priority column — checkbox appears on hover or when checked */}
-      <div
-        className="pl-3 pr-1.5 flex-shrink-0 relative"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (showCheckbox) {
-            onCheckToggle?.(ticket.id);
-          } else {
-            setActiveDropdown(activeDropdown === "priority" ? null : "priority");
-          }
-        }}
-      >
-        {/* Checkbox: shown on hover (if selection enabled) or when checked */}
-        {showCheckbox && (
-          <div
-            className={`absolute inset-0 flex items-center pl-3 z-[1] ${
-              isChecked ? "opacity-100" : "opacity-0 group-hover/row:opacity-100"
-            } transition-opacity duration-100`}
-            onClick={(e) => { e.stopPropagation(); onCheckToggle?.(ticket.id); }}
-          >
-            <div
-              className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all duration-150 cursor-pointer ${
-                isChecked
-                  ? "bg-accent border-accent"
-                  : "border-content-muted/40 hover:border-content-muted bg-surface-primary"
-              }`}
-            >
-              {isChecked && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Priority icon: hidden when checkbox is visible */}
+      {/* Checkbox or Priority indicator */}
+      {showCheckbox && (
         <div
-          className={`${showCheckbox && isChecked ? "opacity-0" : showCheckbox ? "group-hover/row:opacity-0" : ""} transition-opacity duration-100`}
-          onClick={(e) => {
-            if (showCheckbox) return;
-            e.stopPropagation();
-            setActiveDropdown(activeDropdown === "priority" ? null : "priority");
-          }}
+          className="flex-shrink-0"
+          onClick={(e) => { e.stopPropagation(); onCheckToggle?.(ticket.id); }}
         >
-          <div className={`hover:bg-surface-secondary rounded p-0.5 transition-all duration-100 cursor-pointer active:scale-[0.9] ${activeDropdown === "priority" ? "bg-surface-secondary ring-1 ring-accent/30" : ""}`}>
-            <PriorityIcon priority={ticket.priority} />
+          <div
+            className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all duration-150 cursor-pointer ${
+              isChecked
+                ? "bg-accent border-accent"
+                : "border-content-muted/40 hover:border-content-muted bg-surface-primary"
+            }`}
+          >
+            {isChecked && (
+              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            )}
           </div>
-          <InlineDropdown open={activeDropdown === "priority"} onClose={() => setActiveDropdown(null)}>
-            {TICKET_PRIORITIES.map((p) => (
-              <button
-                key={p.value}
-                onClick={(e) => { e.stopPropagation(); handlePriorityChange(p.value); }}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-left transition-all duration-150 active:scale-[0.98] ${
-                  ticket.priority === p.value ? "bg-accent-soft text-accent" : "text-content-secondary hover:bg-hover"
-                }`}
-              >
-                <PriorityIcon priority={p.value} />
-                {PRIORITY_EMOJI[p.value] ?? ""} {p.label}
-                {ticket.priority === p.value && (
-                  <svg className="w-3 h-3 text-accent ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                )}
-              </button>
-            ))}
-          </InlineDropdown>
         </div>
+      )}
+
+      {/* Title — flex-grow with inline editing */}
+      <div className="flex-1 min-w-0 py-1" onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={ticket.title}
+          field="title"
+          onSave={handleTitleSave}
+          placeholder="Untitled"
+          type="text"
+        />
       </div>
 
-      {/* Status circle — clickable */}
+      {/* Status badge — clickable with inline dropdown */}
       <div
-        className="pr-2 flex-shrink-0 relative"
+        className="flex-shrink-0 relative w-20"
         onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === "status" ? null : "status"); }}
       >
-        <div className={`hover:bg-surface-secondary rounded p-0.5 transition-all duration-100 cursor-pointer active:scale-[0.9] ${activeDropdown === "status" ? "bg-surface-secondary ring-1 ring-accent/30" : ""}`}>
+        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium cursor-pointer transition-all duration-100 ${
+          activeDropdown === "status" ? "bg-surface-tertiary ring-1 ring-accent/30" : "hover:bg-surface-tertiary"
+        }`}>
           <StatusCircle status={ticket.status} />
+          <span className="text-content-secondary truncate">
+            {workflow.getStatusLabel(ticket.status)}
+          </span>
         </div>
         <InlineDropdown open={activeDropdown === "status"} onClose={() => setActiveDropdown(null)}>
           {workflow.statuses.map((s) => (
@@ -219,59 +231,75 @@ export const LinearIssueRow = memo(function LinearIssueRow({
         </InlineDropdown>
       </div>
 
-      {/* ID */}
-      <span className="text-[11px] text-content-muted font-mono flex-shrink-0 mr-2.5 select-none">
-        {shortId(ticket.id)}
-      </span>
-
-      {/* Title + description preview */}
-      <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-        <span className="text-[13.5px] text-content-primary font-medium truncate">
-          {ticket.title}
-        </span>
-        {ticket.description && (
-          <span className="text-[12px] text-content-muted truncate hidden md:inline">
-            {ticket.description.slice(0, 80)}
-          </span>
-        )}
-      </div>
-
-      {/* Labels */}
-      {ticket.labels && ticket.labels.length > 0 && (
-        <div className="flex gap-1 flex-shrink-0 ml-2 hidden sm:flex">
-          {ticket.labels.slice(0, 2).map((label) => (
-            <span
-              key={label.id}
-              className="px-1.5 py-px rounded text-[10px] font-medium leading-tight transition-opacity duration-150"
-              style={{
-                backgroundColor: label.color + "15",
-                color: label.color,
-              }}
-            >
-              {label.name}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Assignee avatars */}
-      <div className="flex-shrink-0 ml-3 hidden sm:block">
+      {/* Assignee — clickable for inline editing */}
+      <div className="flex-shrink-0 w-12" onClick={(e) => e.stopPropagation()}>
         {ticket.assignees && ticket.assignees.length > 0 ? (
           <AvatarStack
             assignees={ticket.assignees.map((a) => a.user).filter(Boolean)}
-            max={3}
+            max={1}
           />
         ) : ticket.assignee ? (
           <AvatarStack assignees={[ticket.assignee]} max={1} />
         ) : (
-          <div className="w-5 h-5" />
+          <div className="text-[10px] text-content-muted px-1 py-0.5 rounded hover:bg-surface-tertiary transition-colors cursor-pointer">
+            —
+          </div>
         )}
       </div>
 
-      {/* Updated time */}
-      <span className="text-[11px] text-content-muted flex-shrink-0 w-12 text-right pr-4 ml-3 hidden sm:inline select-none">
-        {relativeTime(ticket.updated_at)}
-      </span>
+      {/* Priority icon — clickable for inline dropdown */}
+      <div
+        className="flex-shrink-0 w-10 relative"
+        onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === "priority" ? null : "priority"); }}
+      >
+        <div className={`inline-flex items-center justify-center hover:bg-surface-tertiary rounded p-1 transition-all duration-100 cursor-pointer ${
+          activeDropdown === "priority" ? "bg-surface-tertiary ring-1 ring-accent/30" : ""
+        }`}>
+          <PriorityIcon priority={ticket.priority} />
+        </div>
+        <InlineDropdown open={activeDropdown === "priority"} onClose={() => setActiveDropdown(null)}>
+          {TICKET_PRIORITIES.map((p) => (
+            <button
+              key={p.value}
+              onClick={(e) => { e.stopPropagation(); handlePriorityChange(p.value); }}
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-left transition-all duration-150 active:scale-[0.98] ${
+                ticket.priority === p.value ? "bg-accent-soft text-accent" : "text-content-secondary hover:bg-hover"
+              }`}
+            >
+              <PriorityIcon priority={p.value} />
+              {PRIORITY_EMOJI[p.value] ?? ""} {p.label}
+              {ticket.priority === p.value && (
+                <svg className="w-3 h-3 text-accent ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </InlineDropdown>
+      </div>
+
+      {/* Due date — inline editable with date input */}
+      <div className="flex-shrink-0 w-20" onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={ticket.due_date ? formatDueDate(ticket.due_date) : ""}
+          field="dueDate"
+          onSave={handleDueDateSave}
+          placeholder="—"
+          type="date"
+        />
+      </div>
+
+      {/* Quick action buttons — show on hover */}
+      <div className="flex-shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
+        <QuickActionButtons
+          isVisible={isHovered}
+          onAssignClick={handleQuickAssign}
+          onDueDateClick={handleQuickDueDate}
+          onPriorityClick={handleQuickPriority}
+          onExpandClick={handleQuickExpand}
+        />
+      </div>
+
       {contextMenu}
     </div>
   );
