@@ -8,6 +8,7 @@ import {
 import { AvatarStack } from "@/components/tickets/assignee-picker";
 import { useUpdateTicket, useDeleteTicket } from "@/lib/hooks/use-tickets";
 import { useProjectWorkflow } from "@/lib/hooks/use-workflow";
+import { useProject } from "@/lib/hooks/use-projects";
 import { useContextMenu, type ContextMenuItem } from "@/components/context-menu";
 import { InlineEditCell } from "@/components/tickets/inline-edit-cell";
 import { QuickActionButtons } from "@/components/tickets/quick-action-buttons";
@@ -78,6 +79,7 @@ export const LinearIssueRow = memo(function LinearIssueRow({
   const updateTicket = useUpdateTicket();
   const deleteTicket = useDeleteTicket();
   const workflow = useProjectWorkflow(ticket.project_id);
+  const { data: project } = useProject(ticket.project_id);
 
   const { onContextMenu, contextMenu } = useContextMenu(() => {
     const statusItems: ContextMenuItem[] = workflow.statuses.map((s) => ({
@@ -185,6 +187,14 @@ export const LinearIssueRow = memo(function LinearIssueRow({
           </div>
         </div>
       )}
+
+      {/* Project emoji/icon */}
+      <div
+        className="w-8 h-8 rounded flex items-center justify-center bg-surface-tertiary text-lg flex-shrink-0"
+        title={project?.name || 'No project'}
+      >
+        {project?.name?.charAt(0).toUpperCase() || '📋'}
+      </div>
 
       {/* Title — flex-grow with inline editing */}
       <div className="flex-1 min-w-0 py-1" onClick={(e) => e.stopPropagation()}>
