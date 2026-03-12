@@ -174,7 +174,7 @@ export function TicketDetailPanel({
 
   return (
     <div className="h-full flex flex-col animate-panel-in">
-      {/* Header */}
+      {/* Toolbar header */}
       <div className="flex items-center justify-between px-5 h-11 border-b border-border-subtle flex-shrink-0" onContextMenu={onHeaderContextMenu}>
         <div className="flex items-center gap-2">
           <FavoriteStar itemType="ticket" itemId={ticket.id} />
@@ -193,6 +193,7 @@ export function TicketDetailPanel({
         {headerContextMenu}
         <button
           onClick={onClose}
+          aria-label="Close detail panel"
           className="text-content-muted hover:text-content-secondary active:text-content-primary active:scale-[0.95] rounded transition-all duration-[120ms] p-1"
         >
           <svg
@@ -219,8 +220,8 @@ export function TicketDetailPanel({
           <SLABadge ticket={ticket} />
         </div>
 
-        {/* Title — inline editable */}
-        <div className="px-5 pt-1 pb-1">
+        {/* Title section — enhanced typography with 32px heading */}
+        <div className="px-6 py-8 border-b border-border-subtle">
           {editingTitle ? (
             <input
               type="text"
@@ -237,165 +238,177 @@ export function TicketDetailPanel({
                   setEditingTitle(false);
                 }
               }}
-              className="w-full text-base font-medium bg-transparent border-b-2 border-accent outline-none py-0.5 text-content-primary"
+              className="w-full text-3xl font-bold bg-transparent border-b-2 border-accent outline-none py-1 text-content-primary leading-tight"
               autoFocus
             />
           ) : (
-            <h2
-              className={`text-base font-medium text-content-primary rounded px-1 -mx-1 py-0.5 transition-colors ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
+            <h1
+              className={`text-3xl font-bold text-content-primary rounded px-2 -mx-2 py-1 transition-colors leading-tight ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
               onClick={canEdit ? startEditingTitle : undefined}
             >
               {ticket.title}
-            </h2>
+            </h1>
           )}
         </div>
 
-        {/* Description — inline editable */}
-        <div className="px-5 pb-3">
+        {/* Description section — enhanced with WYSIWYG-like editor */}
+        <div className="px-6 py-6 border-b border-border-subtle">
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-content-secondary">Description</h2>
+            {editingDesc && <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent-soft animate-pulse" title="Unsaved changes" />}
+          </div>
           {editingDesc ? (
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              onBlur={saveDesc}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setEditingDesc(false);
-                }
-              }}
-              className="w-full text-sm bg-transparent border-b-2 border-accent outline-none resize-none py-0.5 text-content-secondary"
-              rows={4}
-              autoFocus
-            />
+            <div className="space-y-2">
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                onBlur={saveDesc}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setEditingDesc(false);
+                  }
+                }}
+                className="w-full min-h-[200px] text-sm bg-surface-secondary border border-accent rounded-md outline-none resize-none px-4 py-3 text-content-primary placeholder-content-muted focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all duration-150"
+                placeholder="Add a description..."
+                autoFocus
+              />
+              <p className="text-[11px] text-content-muted">Supports markdown: **bold**, *italic*, `code`, [links](url)</p>
+            </div>
           ) : ticket.description ? (
             <div
-              className={`rounded px-1 -mx-1 py-0.5 transition-colors ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
+              className={`rounded-md px-4 py-3 transition-colors bg-surface-secondary min-h-[100px] flex items-start ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
               onClick={canEdit ? startEditingDesc : undefined}
             >
               <MarkdownRenderer content={ticket.description} />
             </div>
           ) : (
             <p
-              className={`text-sm rounded px-1 -mx-1 py-0.5 transition-colors text-content-muted ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
+              className={`text-sm rounded-md px-4 py-3 transition-colors text-content-muted bg-surface-secondary min-h-[100px] flex items-center ${canEdit ? "cursor-text hover:bg-hover" : ""}`}
               onClick={canEdit ? startEditingDesc : undefined}
             >
-              {canEdit ? "Add a description..." : "No description"}
+              {canEdit ? "Click to add a description..." : "No description"}
             </p>
           )}
         </div>
 
-        {/* Labels */}
-        <div className="px-5 pb-2">
-          <div className="flex items-center gap-1 flex-wrap">
-            {ticket.labels &&
-              ticket.labels.length > 0 &&
-              ticket.labels.map((label) => (
+        {/* Labels section */}
+        {(ticket.labels && ticket.labels.length > 0 || canEdit) && (
+          <div className="px-6 py-4 border-b border-border-subtle">
+            <div className="flex items-center gap-1 flex-wrap">
+              {ticket.labels &&
+                ticket.labels.length > 0 &&
+                ticket.labels.map((label) => (
+                  <button
+                    key={label.id}
+                    onClick={() => canEdit && handleLabelToggle(label.id)}
+                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-150 ${canEdit ? "active:scale-[0.95] hover:opacity-80 cursor-pointer" : "cursor-default"}`}
+                    style={{
+                      backgroundColor: label.color + "20",
+                      color: label.color,
+                    }}
+                    title={canEdit ? `Remove ${label.name}` : label.name}
+                  >
+                    {label.name}
+                  </button>
+                ))}
+              {canEdit && (
                 <button
-                  key={label.id}
-                  onClick={() => canEdit && handleLabelToggle(label.id)}
-                  className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-all duration-150 ${canEdit ? "active:scale-[0.95] hover:opacity-80 cursor-pointer" : "cursor-default"}`}
-                  style={{
-                    backgroundColor: label.color + "20",
-                    color: label.color,
-                  }}
-                  title={canEdit ? `Remove ${label.name}` : label.name}
+                  onClick={() => setShowLabelInput(!showLabelInput)}
+                  className={`text-content-muted hover:text-content-secondary active:scale-[0.96] transition-all duration-150 text-xs px-2 py-1 rounded-md hover:bg-hover ${showLabelInput ? "bg-hover text-content-secondary" : ""}`}
                 >
-                  {label.name}
+                  + Label
                 </button>
-              ))}
-            {canEdit && (
-              <button
-                onClick={() => setShowLabelInput(!showLabelInput)}
-                className={`text-content-muted hover:text-content-secondary active:scale-[0.96] transition-all duration-150 text-xs px-1.5 py-0.5 rounded hover:bg-hover ${showLabelInput ? "bg-hover text-content-secondary" : ""}`}
-              >
-                + Label
-              </button>
+              )}
+            </div>
+
+            {showLabelInput && canEdit && (
+              <div className="mt-3 space-y-2">
+                {projectLabels && projectLabels.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {projectLabels.map((label) => {
+                      const isSelected =
+                        ticket.labels?.some((l) => l.id === label.id) ?? false;
+                      return (
+                        <button
+                          key={label.id}
+                          onClick={() => handleLabelToggle(label.id)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-all duration-150 active:scale-[0.96] ${
+                            isSelected
+                              ? "ring-1 ring-offset-1 ring-accent"
+                              : "opacity-50 hover:opacity-80"
+                          }`}
+                          style={{
+                            backgroundColor: label.color + "15",
+                            color: label.color,
+                            borderColor: label.color + (isSelected ? "" : "40"),
+                          }}
+                        >
+                          {label.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    placeholder="New label"
+                    className="flex-1 border border-border-subtle rounded-md px-2.5 py-1 text-xs bg-surface-secondary text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreateLabel();
+                      }
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        setShowLabelInput(false);
+                      }
+                    }}
+                  />
+                  <select
+                    value={newLabelColor}
+                    onChange={(e) => setNewLabelColor(e.target.value)}
+                    className="border border-border-subtle rounded-md px-1.5 py-1 text-xs cursor-pointer bg-surface-secondary text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
+                  >
+                    {LABEL_COLORS.map((c) => (
+                      <option key={c} value={c} style={{ color: c }}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleCreateLabel}
+                    disabled={!newLabelName.trim() || createLabel.isPending}
+                    className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:opacity-90 active:scale-[0.96] disabled:opacity-50 transition-all duration-150"
+                  >
+                    {createLabel.isPending ? "..." : "Add"}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
+        )}
 
-          {showLabelInput && canEdit && (
-            <div className="mt-2 space-y-2">
-              {projectLabels && projectLabels.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {projectLabels.map((label) => {
-                    const isSelected =
-                      ticket.labels?.some((l) => l.id === label.id) ?? false;
-                    return (
-                      <button
-                        key={label.id}
-                        onClick={() => handleLabelToggle(label.id)}
-                        className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-all duration-150 active:scale-[0.96] ${
-                          isSelected
-                            ? "ring-1 ring-offset-1 ring-accent"
-                            : "opacity-50 hover:opacity-80"
-                        }`}
-                        style={{
-                          backgroundColor: label.color + "15",
-                          color: label.color,
-                          borderColor: label.color + (isSelected ? "" : "40"),
-                        }}
-                      >
-                        {label.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="flex gap-1.5">
-                <input
-                  type="text"
-                  value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
-                  placeholder="New label"
-                  className="flex-1 border border-border-subtle rounded-md px-2.5 py-1 text-xs bg-surface-secondary text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateLabel();
-                    }
-                    if (e.key === "Escape") {
-                      e.preventDefault();
-                      setShowLabelInput(false);
-                    }
-                  }}
-                />
-                <select
-                  value={newLabelColor}
-                  onChange={(e) => setNewLabelColor(e.target.value)}
-                  className="border border-border-subtle rounded-md px-1.5 py-1 text-xs cursor-pointer bg-surface-secondary text-content-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
-                >
-                  {LABEL_COLORS.map((c) => (
-                    <option key={c} value={c} style={{ color: c }}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleCreateLabel}
-                  disabled={!newLabelName.trim() || createLabel.isPending}
-                  className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:opacity-90 active:scale-[0.96] disabled:opacity-50 transition-all duration-150"
-                >
-                  {createLabel.isPending ? "..." : "Add"}
-                </button>
-              </div>
+        {/* Start date section */}
+        {canEdit && (
+          <div className="px-6 py-4 border-b border-border-subtle">
+            <div className="flex items-center gap-3">
+              <label htmlFor="start-date" className="text-xs font-medium text-content-secondary">Start date</label>
+              <input
+                id="start-date"
+                type="date"
+                value={ticket.start_date ?? ""}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                disabled={!canEdit}
+                className="border border-border-subtle rounded-md px-3 py-2 text-sm bg-surface-secondary text-content-primary cursor-pointer outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors disabled:cursor-default disabled:opacity-60"
+              />
             </div>
-          )}
-        </div>
-
-        {/* Start date */}
-        <div className="px-5 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-content-muted">Start date</span>
-            <input
-              type="date"
-              value={ticket.start_date ?? ""}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              disabled={!canEdit}
-              className="border border-border-subtle rounded px-2 py-0.5 text-xs bg-surface-secondary text-content-primary cursor-pointer outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors disabled:cursor-default disabled:opacity-60"
-            />
           </div>
-        </div>
+        )}
 
         {/* Sub-tasks */}
         <CollapsibleSection
