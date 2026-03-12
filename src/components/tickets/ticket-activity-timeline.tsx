@@ -255,7 +255,7 @@ function CommentComponent({ comment }: CommentComponentProps) {
 
         <div className="bg-surface-secondary rounded-lg px-3 py-2 mb-2">
           <p className="text-sm text-content-secondary break-words">
-            {comment.content}
+            {sanitizeContent(comment.content)}
           </p>
         </div>
       </div>
@@ -298,6 +298,7 @@ function CommentForm({ onSubmit, disabled }: CommentFormProps) {
     <form onSubmit={handleSubmit} className="pt-4 border-t border-border-subtle">
       <div className="space-y-2">
         <textarea
+          aria-label="Add comment"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a comment..."
@@ -312,6 +313,7 @@ function CommentForm({ onSubmit, disabled }: CommentFormProps) {
 
         <div className="flex justify-end">
           <button
+            aria-label="Send comment"
             type="submit"
             disabled={!text.trim() || isLoading}
             className="px-3 py-1.5 text-sm font-medium bg-accent text-white rounded-lg hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
