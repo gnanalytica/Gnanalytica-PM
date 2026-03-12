@@ -6,11 +6,13 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(new URL("/dashboard", origin));
+    return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
 
   try {
-    const response = NextResponse.next();
+    // Collect cookies to set from Supabase
+    const cookiesToSet: Array<{ name: string; value: string; options?: any }> = [];
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,14 +21,8 @@ export async function GET(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                response.cookies.set(name, value, options);
-              });
-            } catch (err) {
-              console.error("Cookie set error:", err);
-            }
+          setAll(cookies) {
+            cookiesToSet.push(...cookies);
           },
         },
       },
@@ -48,16 +44,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
     }
 
-    // Successful auth - redirect to dashboard
-    const redirectResponse = NextResponse.redirect(new URL("/dashboard", origin));
+    // Successful auth - create redirect response with cookies
+    const response = NextResponse.redirect(new URL("/dashboard", origin));
 
-    // Manually copy set-cookie headers if they exist
-    const setCookieHeaders = response.headers.getSetCookie?.() || [];
-    setCookieHeaders.forEach(cookie => {
-      redirectResponse.headers.append("set-cookie", cookie);
+    // Apply all cookies Supabase collected
+    cookiesToSet.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options);
     });
 
-    return redirectResponse;
+    return response;
   } catch (err) {
     console.error("Auth callback error:", err);
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
