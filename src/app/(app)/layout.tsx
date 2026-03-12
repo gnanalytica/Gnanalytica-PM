@@ -17,6 +17,7 @@ import { useWorkspaceNav } from "@/lib/hooks/use-workspace-nav";
 import { TicketDetailPanel } from "@/components/tickets/ticket-detail-panel";
 import { TicketSidePanel } from "@/components/tickets/ticket-side-panel";
 import { useResizable, ResizeHandle } from "@/components/resize-handle";
+import { ModeToggle } from "@/components/mode-toggle";
 
 function handleError(error: Error, info: React.ErrorInfo) {
   logError(error, {
@@ -145,13 +146,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
 
       {/* Main content area — three-panel layout on desktop */}
-      <div className="flex-1 flex flex-row overflow-hidden pt-12 lg:pt-0">
-        {/* Middle panel (page content) */}
-        <main
-          className={`flex-1 overflow-y-auto bg-surface-primary min-w-0 transition-all duration-200 ${ticketId ? "lg:flex-[1_1_0%]" : ""}`}
-        >
-          <PageContent>{children}</PageContent>
-        </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Desktop header with mode toggle */}
+        <div className="hidden lg:flex h-12 border-b border-border-subtle bg-surface-primary items-center px-4 justify-between">
+          <div className="flex-1" />
+          <ModeToggle />
+          <div className="flex-1" />
+        </div>
+
+        {/* Content panels */}
+        <div className="flex-1 flex flex-row overflow-hidden pt-12 lg:pt-0">
+          {/* Middle panel (page content) */}
+          <main
+            className={`flex-1 overflow-y-auto bg-surface-primary min-w-0 transition-all duration-200 ${ticketId ? "lg:flex-[1_1_0%]" : ""}`}
+          >
+            <PageContent>{children}</PageContent>
+          </main>
 
         {/* Desktop detail panel — inline, not overlay */}
         {ticketId && (
@@ -173,6 +183,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </>
         )}
+        </div>
       </div>
 
       {/* Mobile: overlay side panel */}
