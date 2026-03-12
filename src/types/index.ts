@@ -634,3 +634,35 @@ export const ISSUE_TYPE_EMOJI: Record<string, string> = {
   epic: "\u{1F3AF}",
   sub_task: "\u{1F4CE}",
 };
+
+// ── API Types ──
+
+export interface DashboardLayout {
+  id: string;
+  userId: string;
+  name: string;
+  widgets: WidgetConfig[];
+  userRole?: "product" | "developer" | "admin";
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WidgetConfig {
+  id: string;
+  type: string;
+  title?: string;
+  icon?: string;
+  size: "small" | "medium" | "large";
+  order: number;
+  isVisible: boolean;
+  customHeight?: number;
+}
+
+export interface GlobalView {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  filters: Record<string, any>;
+}

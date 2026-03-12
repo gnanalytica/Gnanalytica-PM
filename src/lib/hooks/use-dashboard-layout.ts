@@ -6,6 +6,7 @@ export interface WidgetConfig {
   id: string;
   type: string;
   title: string;
+  icon?: string;
   size: "small" | "medium" | "large";
   order: number;
   customHeight?: number;

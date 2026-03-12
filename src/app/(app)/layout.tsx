@@ -4,6 +4,7 @@ import { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
+import { MobileModeTabs } from "@/components/layout/mobile-mode-tabs";
 import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { SyncStatus, useSyncProcessor } from "@/lib/sync-queue";
@@ -190,6 +191,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden">
         <TicketSidePanel ticketId={ticketId} onClose={closeTicket} />
       </div>
+
+      {/* Mobile mode tabs */}
+      <MobileModeTabs />
 
       <ErrorBoundary onError={handleError} fallback={null}>
         <CommandPalette />

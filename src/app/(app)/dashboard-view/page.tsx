@@ -148,20 +148,24 @@ export default function DashboardViewPage() {
   // Initialize layout if not already set
   useEffect(() => {
     if (!layout && user) {
+      const userRole = (user.role as "product" | "developer" | "admin") || "admin";
       const defaultWidgetTypes =
-        DEFAULT_LAYOUTS_BY_ROLE[user.role as never] ||
+        DEFAULT_LAYOUTS_BY_ROLE[userRole] ||
         DEFAULT_LAYOUTS_BY_ROLE.admin;
 
-      const defaultWidgets: DashboardWidget[] = defaultWidgetTypes.map(
-        (type, index) => ({
-          id: type,
-          type: type as any,
-          title: WIDGET_METADATA[type as any].title,
-          icon: WIDGET_METADATA[type as any].icon,
-          size: WIDGET_METADATA[type as any].defaultSize,
-          order: index,
-          isVisible: true,
-        })
+      const defaultWidgets: DashboardWidget[] = (defaultWidgetTypes || DEFAULT_LAYOUTS_BY_ROLE.admin).map(
+        (type, index) => {
+          const metadata = WIDGET_METADATA[type];
+          return {
+            id: type,
+            type,
+            title: metadata.title,
+            icon: metadata.icon,
+            size: metadata.defaultSize,
+            order: index,
+            isVisible: true,
+          };
+        }
       );
 
       updateLayout(defaultWidgets);
@@ -173,20 +177,24 @@ export default function DashboardViewPage() {
   const handleResetLayout = useCallback(() => {
     resetLayout();
     if (user) {
+      const userRole = (user.role as "product" | "developer" | "admin") || "admin";
       const defaultWidgetTypes =
-        DEFAULT_LAYOUTS_BY_ROLE[user.role as never] ||
+        DEFAULT_LAYOUTS_BY_ROLE[userRole] ||
         DEFAULT_LAYOUTS_BY_ROLE.admin;
 
-      const defaultWidgets: DashboardWidget[] = defaultWidgetTypes.map(
-        (type, index) => ({
-          id: type,
-          type: type as any,
-          title: WIDGET_METADATA[type as any].title,
-          icon: WIDGET_METADATA[type as any].icon,
-          size: WIDGET_METADATA[type as any].defaultSize,
-          order: index,
-          isVisible: true,
-        })
+      const defaultWidgets: DashboardWidget[] = (defaultWidgetTypes || DEFAULT_LAYOUTS_BY_ROLE.admin).map(
+        (type, index) => {
+          const metadata = WIDGET_METADATA[type];
+          return {
+            id: type,
+            type,
+            title: metadata.title,
+            icon: metadata.icon,
+            size: metadata.defaultSize,
+            order: index,
+            isVisible: true,
+          };
+        }
       );
 
       updateLayout(defaultWidgets);
@@ -296,7 +304,7 @@ export default function DashboardViewPage() {
       {/* Settings Panel */}
       <DashboardSettings
         isOpen={showSettings}
-        widgets={layout?.widgets || []}
+        widgets={(layout?.widgets || []) as DashboardWidget[]}
         onClose={() => setShowSettings(false)}
         onWidgetToggle={handleWidgetToggle}
         onReset={handleResetLayout}
