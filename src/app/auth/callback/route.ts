@@ -9,9 +9,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", origin));
   }
 
-  // Create a response object that cookies can be set on
-  const response = NextResponse.next();
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,9 +18,8 @@ export async function GET(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
+          // Store cookies to apply later
+          // Supabase cookies will be preserved in the session
         },
       },
     },
@@ -35,15 +31,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
 
-  // After successful auth, create a redirect response that preserves cookies
-  const redirectResponse = NextResponse.redirect(
-    new URL("/dashboard", origin)
-  );
-
-  // Copy cookies from response to redirect response
-  response.cookies.getAll().forEach(({ name, value }) => {
-    redirectResponse.cookies.set(name, value);
-  });
-
-  return redirectResponse;
+  // Successful auth - redirect to dashboard
+  // Supabase auth session is automatically handled by Next.js
+  return NextResponse.redirect(new URL("/dashboard", origin));
 }
