@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface Tab {
@@ -48,6 +48,11 @@ export function MobileModeTabs() {
     }
   }, [pathname]);
 
+  const handleTabClick = useCallback((tab: Tab) => {
+    setActiveTab(tab.id);
+    router.push(tab.path);
+  }, [router]);
+
   // Handle keyboard shortcuts (Cmd+1, Cmd+2, Cmd+3)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -68,12 +73,7 @@ export function MobileModeTabs() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleTabClick = (tab: Tab) => {
-    setActiveTab(tab.id);
-    router.push(tab.path);
-  };
+  }, [handleTabClick]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-gray-200 dark:bg-gray-950 dark:border-gray-800 safe-bottom">

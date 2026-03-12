@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useActiveCycle, useCycleTickets } from "@/lib/hooks/use-cycles";
 import { getCycleProgress } from "@/types";
 
@@ -8,11 +8,36 @@ export function CycleProgressWidget({ projectId }: { projectId: string }) {
   void projectId;
   const activeCycle = useActiveCycle();
   const cycleTickets = useCycleTickets(activeCycle?.id ?? null);
+  const nowRef = useRef(0);
+
+  // Initialize nowRef on first render
+  if (nowRef.current === 0) {
+    nowRef.current = Date.now();
+  }
+
+  // Update the current time periodically so daysLeft stays accurate
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nowRef.current = Date.now();
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const progress = useMemo(
     () => getCycleProgress(cycleTickets),
     [cycleTickets],
   );
+
+  const daysLeft = useMemo(() => {
+    if (!activeCycle) return 0;
+    return Math.max(
+      0,
+      Math.ceil(
+        (new Date(activeCycle.end_date).getTime() - nowRef.current) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
+  }, [activeCycle]);
 
   if (!activeCycle) {
     return (
@@ -24,14 +49,6 @@ export function CycleProgressWidget({ projectId }: { projectId: string }) {
       </div>
     );
   }
-
-  const daysLeft = Math.max(
-    0,
-    Math.ceil(
-      (new Date(activeCycle.end_date).getTime() - Date.now()) /
-        (1000 * 60 * 60 * 24),
-    ),
-  );
 
   return (
     <div>

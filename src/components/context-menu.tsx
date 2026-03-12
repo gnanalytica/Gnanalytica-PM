@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 export type ContextMenuItem =
@@ -51,21 +51,28 @@ function ContextMenuPortal({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x, y });
+  const [rect, setRect] = useState<DOMRect | null>(null);
   const [subOpen, setSubOpen] = useState<number | null>(null);
 
-  // Adjust position to stay in viewport
+  // Capture the menu dimensions after first render
   useEffect(() => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
+    if (ref.current) {
+      setRect(ref.current.getBoundingClientRect());
+    }
+  }, []);
+
+  // Compute adjusted position based on viewport constraints
+  const pos = useMemo(() => {
     let nx = x;
     let ny = y;
-    if (x + rect.width > window.innerWidth - 8) nx = window.innerWidth - rect.width - 8;
-    if (y + rect.height > window.innerHeight - 8) ny = window.innerHeight - rect.height - 8;
-    if (nx < 8) nx = 8;
-    if (ny < 8) ny = 8;
-    setPos({ x: nx, y: ny });
-  }, [x, y]);
+    if (rect) {
+      if (x + rect.width > window.innerWidth - 8) nx = window.innerWidth - rect.width - 8;
+      if (y + rect.height > window.innerHeight - 8) ny = window.innerHeight - rect.height - 8;
+      if (nx < 8) nx = 8;
+      if (ny < 8) ny = 8;
+    }
+    return { x: nx, y: ny };
+  }, [x, y, rect]);
 
   // Close on outside click / escape / scroll
   useEffect(() => {

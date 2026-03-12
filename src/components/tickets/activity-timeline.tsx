@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { useActivityLog } from "@/lib/hooks/use-activity-log";
 import { EmptyState, ClockIcon } from "@/components/empty-state";
 import { avatarColor } from "@/components/tickets/assignee-picker";
@@ -240,9 +241,11 @@ function Avatar({
 }) {
   if (avatarUrl) {
     return (
-      <img
+      <Image
         src={avatarUrl}
         alt=""
+        width={20}
+        height={20}
         className="w-5 h-5 rounded-full object-cover"
       />
     );

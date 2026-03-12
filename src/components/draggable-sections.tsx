@@ -11,11 +11,8 @@ export function useDraggableSections(
   storageKey: string,
   defaultOrder: string[],
 ) {
-  const [order, setOrder] = useState<string[]>(defaultOrder);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-
-  // Hydrate from localStorage after mount
-  useEffect(() => {
+  const [order, setOrder] = useState<string[]>(() => {
+    if (typeof window === "undefined") return defaultOrder;
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
@@ -23,15 +20,20 @@ export function useDraggableSections(
         const known = new Set(defaultOrder);
         const filtered = parsed.filter((id) => known.has(id));
         const missing = defaultOrder.filter((id) => !parsed.includes(id));
-        setOrder([...filtered, ...missing]);
+        return [...filtered, ...missing];
       }
     } catch {}
+    return defaultOrder;
+  });
 
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
     try {
       const raw = localStorage.getItem(storageKey + "-collapsed");
-      if (raw) setCollapsed(new Set(JSON.parse(raw)));
+      if (raw) return new Set(JSON.parse(raw));
     } catch {}
-  }, [storageKey, defaultOrder]);
+    return new Set();
+  });
 
   const draggedItem = useRef<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);

@@ -11,18 +11,10 @@ export default function NotificationsSettingsPage() {
   const updatePrefs = useUpdateNotificationPrefs();
 
   const [emailMode, setEmailMode] = useState<"instant" | "digest" | "off">(
-    "instant",
+    prefs?.email_mode ?? "instant",
   );
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [digestEnabled, setDigestEnabled] = useState(false);
-
-  useEffect(() => {
-    if (prefs) {
-      setEmailMode(prefs.email_mode ?? "instant");
-      setPushEnabled(prefs.push_enabled ?? true);
-      setDigestEnabled(prefs.digest_enabled ?? false);
-    }
-  }, [prefs]);
+  const [pushEnabled, setPushEnabled] = useState(prefs?.push_enabled ?? true);
+  const [digestEnabled, setDigestEnabled] = useState(prefs?.digest_enabled ?? false);
 
   const handleSave = () => {
     updatePrefs.mutate({

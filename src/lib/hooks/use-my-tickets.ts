@@ -138,9 +138,9 @@ export function useHydrateMyTickets(userId: string) {
   // Auto-fetch remaining pages in the background
   useEffect(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
-      query.fetchNextPage();
+      void query.fetchNextPage();
     }
-  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
+  }, [query.hasNextPage, query.isFetchingNextPage, query]);
 
   const loadedCount = useMemo(() => {
     if (!pages) return 0;

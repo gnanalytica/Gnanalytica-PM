@@ -34,21 +34,21 @@ const COLUMN_DEFS: Column[] = [
 
 function useColumnWidths() {
   const [widths, setWidths] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") {
+      const initial: Record<string, number> = {};
+      for (const col of COLUMN_DEFS) initial[col.key] = col.defaultWidth;
+      return initial;
+    }
+    try {
+      const raw = localStorage.getItem("pm-spreadsheet-col-widths");
+      if (raw) {
+        return JSON.parse(raw) as Record<string, number>;
+      }
+    } catch {}
     const initial: Record<string, number> = {};
     for (const col of COLUMN_DEFS) initial[col.key] = col.defaultWidth;
     return initial;
   });
-
-  // Hydrate from localStorage after mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("pm-spreadsheet-col-widths");
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, number>;
-        setWidths((prev) => ({ ...prev, ...parsed }));
-      }
-    } catch {}
-  }, []);
 
   const resizeColumn = useCallback((key: string, width: number) => {
     setWidths((prev) => {

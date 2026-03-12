@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ReactNode, useEffect } from "react";
+import React, { useState, ReactNode, useEffect, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -78,13 +78,13 @@ export function WidgetGrid({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Extract widget IDs from children
-  useEffect(() => {
-    const widgetList: GridWidget[] = [];
+  // Extract widget IDs from children (memoized to prevent extra renders)
+  const widgetList = useMemo(() => {
+    const list: GridWidget[] = [];
     React.Children.forEach(children, (child, index) => {
       if (React.isValidElement(child)) {
         const id = child.key || `widget-${index}`;
-        widgetList.push({
+        list.push({
           id: String(id),
           order: index,
           colStart: 1,
@@ -92,8 +92,12 @@ export function WidgetGrid({
         });
       }
     });
-    setWidgets(widgetList);
+    return list;
   }, [children, isMobile, isTablet]);
+
+  useEffect(() => {
+    setWidgets(widgetList);
+  }, [widgetList]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

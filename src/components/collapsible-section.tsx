@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 function persistCollapsedSet(storageKey: string, set: Set<string>) {
   localStorage.setItem(storageKey, JSON.stringify([...set]));
@@ -12,18 +12,27 @@ function persistCollapsedSet(storageKey: string, set: Set<string>) {
  * Initializes empty to avoid hydration mismatch, then syncs after mount.
  */
 export function useCollapsedSections(storageKey: string) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-
-  // Hydrate from localStorage after mount
-  useEffect(() => {
+  const initializedRef = useRef(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    // Initialize from localStorage if available
+    if (typeof window === "undefined") return new Set();
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as string[];
-        setCollapsed(new Set(parsed));
+        return new Set(parsed);
       }
     } catch {}
-  }, [storageKey]);
+    return new Set();
+  });
+
+  // Sync localStorage when collapsed changes (after initialization)
+  useEffect(() => {
+    if (initializedRef.current) {
+      persistCollapsedSet(storageKey, collapsed);
+    }
+    initializedRef.current = true;
+  }, [storageKey, collapsed]);
 
   const toggle = useCallback(
     (sectionId: string) => {

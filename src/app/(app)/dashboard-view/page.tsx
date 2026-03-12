@@ -136,14 +136,10 @@ export default function DashboardViewPage() {
     useDashboardLayout();
 
   const [showSettings, setShowSettings] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isInitialized, setIsInitialized] = useState(true);
 
-  // Mock data
-  useEffect(() => {
-    // In production, this would fetch from API
-    setStats(generateMockDashboardStats());
-  }, []);
+  // Memoize mock data to avoid regenerating on every render
+  const stats = useMemo(() => generateMockDashboardStats(), []);
 
   // Initialize layout if not already set
   useEffect(() => {
@@ -170,8 +166,6 @@ export default function DashboardViewPage() {
 
       updateLayout(defaultWidgets);
     }
-
-    setIsInitialized(true);
   }, [layout, user, updateLayout]);
 
   const handleResetLayout = useCallback(() => {
@@ -231,7 +225,7 @@ export default function DashboardViewPage() {
     return layout.widgets.filter((w) => w.isVisible).sort((a, b) => a.order - b.order);
   }, [layout]);
 
-  if (!isInitialized || !stats) {
+  if (!stats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full" />
@@ -246,7 +240,7 @@ export default function DashboardViewPage() {
         <div>
           <h1 className="text-2xl font-bold text-content-primary">Dashboard</h1>
           <p className="text-sm text-content-muted mt-1">
-            Welcome back! Here's your project overview.
+            Welcome back! Here&apos;s your project overview.
           </p>
         </div>
         <button

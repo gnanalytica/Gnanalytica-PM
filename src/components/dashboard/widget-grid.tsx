@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { TicketCountWidget } from "./widgets/ticket-count-widget";
 import { OverdueWidget } from "./widgets/overdue-widget";
 import { CycleProgressWidget } from "./widgets/cycle-progress-widget";
@@ -31,12 +31,10 @@ function loadWidgets(): WidgetKey[] {
 }
 
 export function WidgetGrid({ projectId }: { projectId: string }) {
-  const [activeWidgets, setActiveWidgets] = useState<WidgetKey[]>([]);
+  const [activeWidgets, setActiveWidgets] = useState<WidgetKey[]>(() =>
+    loadWidgets()
+  );
   const [showConfig, setShowConfig] = useState(false);
-
-  useEffect(() => {
-    setActiveWidgets(loadWidgets());
-  }, []);
 
   const toggleWidget = (key: WidgetKey) => {
     setActiveWidgets((prev) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   useUpdateTicket,
   useStoreTicket,
@@ -51,13 +51,17 @@ export function useTicketActions(ticketId: string | null) {
   const [showLabelInput, setShowLabelInput] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
+  const prevTicketIdRef = useRef(ticketId);
 
   // Reset state when ticket changes
   useEffect(() => {
-    setEditingTitle(false);
-    setEditingDesc(false);
-    setOpenDropdown(null);
-    setShowLabelInput(false);
+    if (prevTicketIdRef.current !== ticketId) {
+      setEditingTitle(false);
+      setEditingDesc(false);
+      setOpenDropdown(null);
+      setShowLabelInput(false);
+      prevTicketIdRef.current = ticketId;
+    }
   }, [ticketId]);
 
   // Click outside dropdown closes it

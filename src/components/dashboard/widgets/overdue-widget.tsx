@@ -1,18 +1,32 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useProjectTickets } from "@/lib/hooks/use-tickets";
 
 export function OverdueWidget({ projectId }: { projectId: string }) {
   const tickets = useProjectTickets(projectId);
+  const nowRef = useRef(0);
+
+  // Initialize nowRef on first render
+  if (nowRef.current === 0) {
+    nowRef.current = Date.now();
+  }
+
+  // Update current time periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nowRef.current = Date.now();
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const overdueTickets = useMemo(() => {
-    const now = new Date();
+    const now = nowRef.current;
     return tickets
       .filter((t) => {
         if (!t.due_date) return false;
         return (
-          new Date(t.due_date) < now &&
+          new Date(t.due_date) < new Date(now) &&
           t.status_category !== "completed" &&
           t.status_category !== "canceled"
         );
@@ -34,7 +48,7 @@ export function OverdueWidget({ projectId }: { projectId: string }) {
         <div className="space-y-1 max-h-[200px] overflow-y-auto">
           {overdueTickets.slice(0, 10).map((t) => {
             const daysOverdue = Math.ceil(
-              (Date.now() - new Date(t.due_date!).getTime()) /
+              (nowRef.current - new Date(t.due_date!).getTime()) /
                 (1000 * 60 * 60 * 24),
             );
             return (

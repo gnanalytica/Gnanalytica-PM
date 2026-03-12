@@ -17,6 +17,16 @@ type ActivityEntry = {
   user?: { name: string };
 };
 
+function formatTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 export function RecentActivityWidget({ projectId }: { projectId: string }) {
   const { data: activities } = useQuery({
     queryKey: ["recent-activity", projectId],
@@ -34,16 +44,6 @@ export function RecentActivityWidget({ projectId }: { projectId: string }) {
     },
     staleTime: 30_000,
   });
-
-  function formatTime(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  }
 
   return (
     <div>

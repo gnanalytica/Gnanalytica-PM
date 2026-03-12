@@ -24,16 +24,17 @@ function triggerThemeTransition() {
 export function useTheme() {
   // Always start with 'dark' for SSR consistency.
   // The real value is read from localStorage in the mount effect.
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "dark";
+    return (localStorage.getItem(STORAGE_KEY) as Theme) || "dark";
+  });
   const [mounted, setMounted] = useState(false);
 
-  // Hydrate from localStorage after mount
+  // Apply theme after mount
   useEffect(() => {
-    const stored = (localStorage.getItem(STORAGE_KEY) as Theme) || "dark";
-    setThemeState(stored);
-    applyTheme(stored);
+    applyTheme(theme);
     setMounted(true);
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
     if (mounted) applyTheme(theme);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   useComments,
   useCreateComment,
@@ -60,9 +61,11 @@ function CommentItem({
     <div style={{ marginLeft: depth > 0 ? depth * 24 : 0 }}>
       <div className="flex gap-2.5">
         {comment.user?.avatar_url ? (
-          <img
+          <Image
             src={comment.user.avatar_url}
             alt={comment.user.name}
+            width={24}
+            height={24}
             className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5"
           />
         ) : (

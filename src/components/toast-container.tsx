@@ -28,7 +28,7 @@ function ToastItem({
   const handleUndo = useCallback(() => {
     toast.undoFn?.();
     onDismiss();
-  }, [toast.undoFn, onDismiss]);
+  }, [toast, onDismiss]);
 
   const variant = toast.variant ?? "success";
 

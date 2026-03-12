@@ -7,6 +7,7 @@ import {
   useCallback,
   type KeyboardEvent,
 } from "react";
+import Image from "next/image";
 import type { Profile } from "@/types";
 import { avatarColor } from "@/components/tickets/assignee-picker";
 
@@ -70,7 +71,7 @@ export function MentionTextarea({
   }, [value]);
 
   useEffect(() => {
-    checkForMention();
+    void checkForMention();
   }, [value, checkForMention]);
 
   const insertMention = (member: Profile) => {
@@ -157,9 +158,11 @@ export function MentionTextarea({
               }`}
             >
               {member.avatar_url ? (
-                <img
+                <Image
                   src={member.avatar_url}
                   alt={member.name}
+                  width={20}
+                  height={20}
                   className="w-5 h-5 rounded-full"
                 />
               ) : (

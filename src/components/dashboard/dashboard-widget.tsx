@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 
 export interface DashboardWidgetProps {
   id: string;
@@ -46,18 +46,13 @@ export function DashboardWidget({
   isLoading = false,
   isEmpty = false,
 }: DashboardWidgetProps) {
-  const [height, setHeight] = useState(WIDGET_DIMENSIONS[size].height);
+  const dimensions = useMemo(() => WIDGET_DIMENSIONS[size], [size]);
+  const [height, setHeight] = useState(dimensions.height);
   const [isResizing, setIsResizing] = useState(false);
   const [showResizeTooltip, setShowResizeTooltip] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const dimensions = WIDGET_DIMENSIONS[size];
-
-  useEffect(() => {
-    setHeight(dimensions.height);
-  }, [size, dimensions.height]);
 
   // Handle resize
   useEffect(() => {

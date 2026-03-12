@@ -278,7 +278,9 @@ export function SyncStatus() {
   const retryFailed = useSyncQueueStore((s) => s.retryFailed);
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const failedItems = items.filter((i) => i.retries >= MAX_RETRIES);
   const pendingItems = items.filter((i) => i.retries < MAX_RETRIES);
@@ -361,7 +363,7 @@ export function SyncStatus() {
 // ── Pending pill with countdown ──
 
 function PendingPill({ items }: { items: SyncItem[] }) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);

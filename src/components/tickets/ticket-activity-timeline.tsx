@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 
 // ── Type definitions ──
 
@@ -106,10 +107,13 @@ function Avatar({ name, avatar, size = "md" }: AvatarProps) {
   };
 
   if (avatar) {
+    const sizePixels = size === "sm" ? 20 : size === "md" ? 32 : 40;
     return (
-      <img
+      <Image
         src={avatar}
         alt={name}
+        width={sizePixels}
+        height={sizePixels}
         className={`${sizeClasses[size]} rounded-full object-cover flex-shrink-0`}
       />
     );
