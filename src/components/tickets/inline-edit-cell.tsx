@@ -23,7 +23,7 @@ export function InlineEditCell({
   const [showCheckmark, setShowCheckmark] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const discardTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const checkmarkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -32,18 +32,12 @@ export function InlineEditCell({
   }, [isEditing]);
 
   useEffect(() => {
-    if (isEditing && localValue !== value) {
-      // Set discard timeout after 5 seconds of inactivity
-      discardTimeoutRef.current = setTimeout(() => {
-        // Show tooltip, then discard after another 5s
-        // For now, just reset after inactivity
-      }, 5000);
-
-      return () => {
-        if (discardTimeoutRef.current) clearTimeout(discardTimeoutRef.current);
-      };
-    }
-  }, [localValue, isEditing, value]);
+    return () => {
+      if (checkmarkTimeoutRef.current) {
+        clearTimeout(checkmarkTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSave = async () => {
     if (localValue === value) {
@@ -60,7 +54,10 @@ export function InlineEditCell({
       setIsEditing(false);
 
       // Fade out checkmark after 500ms
-      setTimeout(() => setShowCheckmark(false), 500);
+      if (checkmarkTimeoutRef.current) {
+        clearTimeout(checkmarkTimeoutRef.current);
+      }
+      checkmarkTimeoutRef.current = setTimeout(() => setShowCheckmark(false), 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
@@ -82,6 +79,7 @@ export function InlineEditCell({
       e.preventDefault();
       handleCancel();
     } else if (e.key === 'Tab') {
+      e.preventDefault();
       handleSave();
     }
   };
@@ -90,6 +88,8 @@ export function InlineEditCell({
     return (
       <div
         onClick={() => setIsEditing(true)}
+        role="button"
+        aria-label={`Edit ${field}: ${value || placeholder}`}
         className="cursor-pointer py-1 px-2 rounded hover:bg-surface-secondary transition-colors group relative"
       >
         <span className="text-content-primary">{value || placeholder}</span>
@@ -110,9 +110,13 @@ export function InlineEditCell({
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleSave}
+        onBlur={() => {
+          if (!error) handleSave();
+        }}
         placeholder={placeholder}
         disabled={isSaving}
+        aria-invalid={!!error}
+        aria-describedby={error ? 'error-message' : undefined}
         className={`flex-1 px-2 py-1 text-13 border rounded transition-all ${
           error
             ? 'border-error bg-error/5'
@@ -123,12 +127,17 @@ export function InlineEditCell({
       />
       {isSaving && <span className="text-accent text-12">Saving...</span>}
       {error && (
-        <button
-          onClick={handleSave}
-          className="text-11 text-error hover:text-error-hover"
-        >
-          Retry
-        </button>
+        <>
+          <span id="error-message" className="text-11 text-error">
+            {error}
+          </span>
+          <button
+            onClick={handleSave}
+            className="text-11 text-error hover:text-error-hover"
+          >
+            Retry
+          </button>
+        </>
       )}
     </div>
   );
