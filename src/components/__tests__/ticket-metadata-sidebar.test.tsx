@@ -216,7 +216,7 @@ describe('TicketMetadataSidebar Component', () => {
     });
 
     it('should handle async onPropertyChange', async () => {
-      const asyncChange = vi.fn(async () => {
+      const asyncChange = vi.fn(async (_field: string, _value: string) => {
         await new Promise(resolve => setTimeout(resolve, 10));
       });
 
