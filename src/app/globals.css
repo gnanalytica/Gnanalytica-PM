@@ -490,6 +490,15 @@ body {
   50% { box-shadow: 0 0 0 4px var(--focus-ring); }
 }
 
+/* ── Fade out animation for inline edit success indicator ── */
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.animate-fade-out {
+  animation: fadeOut 500ms ease-out forwards;
+}
+
 /* ── Reusable interactive utilities ── */
 .btn-base {
   position: relative;
