@@ -1,0 +1,39 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with subtle shadow -->
+  <defs>
+    <filter id="shadow512">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="grad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#grad512)" filter="url(#shadow512)"/>
+
+  <!-- Accent ring -->
+  <circle cx="256" cy="256" r="256" fill="none" stroke="#FF6B35" stroke-width="4" opacity="0.3"/>
+
+  <!-- Letter G design - bold and recognizable -->
+  <g transform="translate(256, 256)">
+    <!-- Outer arc of G -->
+    <path d="M -74 -20 A 96 96 0 0 0 -96 0 A 96 96 0 0 0 0 96 A 96 96 0 0 0 96 0"
+          fill="none" stroke="#FF6B35" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Horizontal bar of G -->
+    <rect x="-10" y="20" width="85" height="20" fill="#FF6B35" rx="4"/>
+  </g>
+
+  <!-- Safe zone indicator (80% center circle - for maskable icons) -->
+  <circle cx="256" cy="256" r="205" fill="none" stroke="#FF6B35" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
+</svg>
