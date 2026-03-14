@@ -749,3 +749,299 @@ textarea::placeholder {
   font-weight: var(--font-weight-caption);
   line-height: var(--line-height-caption);
 }
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* RESPONSIVE DESIGN - Mobile-first breakpoints & accessibility optimizations      */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Extra Small Devices (320px - 479px) ── */
+@media (max-width: 319px) {
+  body {
+    font-size: 14px;
+  }
+  .type-h1 {
+    font-size: 24px;
+  }
+  .type-h2 {
+    font-size: 18px;
+  }
+  .type-h3 {
+    font-size: 16px;
+  }
+}
+
+/* ── Small Devices (480px - 767px) ── */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+  .type-h1 {
+    font-size: 28px;
+  }
+  .type-h2 {
+    font-size: 20px;
+  }
+  .type-h3 {
+    font-size: 17px;
+  }
+
+  /* Increased padding for touch-friendly mobile layout */
+  button, [role="button"], input, select, textarea {
+    padding: 12px 16px;
+  }
+}
+
+/* ── Tablet Devices (768px - 1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  body {
+    font-size: 14px;
+  }
+  .type-h1 {
+    font-size: 30px;
+  }
+  .type-h2 {
+    font-size: 22px;
+  }
+  .type-h3 {
+    font-size: 18px;
+  }
+}
+
+/* ── Desktop (1024px - 1439px) ── */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  body {
+    font-size: 14px;
+  }
+  .type-h1 {
+    font-size: 32px;
+  }
+  .type-h2 {
+    font-size: 24px;
+  }
+  .type-h3 {
+    font-size: 18px;
+  }
+}
+
+/* ── Large Desktop Screens (1440px+) ── */
+@media (min-width: 1440px) {
+  body {
+    font-size: 14px;
+  }
+  .type-h1 {
+    font-size: 36px;
+  }
+  .type-h2 {
+    font-size: 28px;
+  }
+  .type-h3 {
+    font-size: 20px;
+  }
+}
+
+/* ── Extra Large Desktop Screens (1920px+) ── */
+@media (min-width: 1920px) {
+  body {
+    font-size: 15px;
+  }
+  .type-h1 {
+    font-size: 40px;
+  }
+  .type-h2 {
+    font-size: 32px;
+  }
+  .type-h3 {
+    font-size: 24px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* TOUCH DEVICE OPTIMIZATIONS - Minimum 44px touch targets (WCAG guideline)        */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch-enabled devices: increase interactive element sizes */
+  button, a, [role="button"], [tabindex], select {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Increase padding on touch inputs */
+  input, textarea {
+    min-height: 44px;
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents iOS auto-zoom on input focus */
+  }
+
+  /* Larger checkbox/radio targets */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 24px;
+    min-height: 24px;
+    cursor: pointer;
+  }
+
+  /* Disable hover effects on touch devices */
+  .card-interactive:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm-val);
+  }
+
+  .row-interactive:hover::before {
+    transform: scaleY(0);
+  }
+
+  .btn-base:hover {
+    filter: none;
+  }
+
+  /* Add active state feedback instead */
+  .card-interactive:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-xs-val);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* REDUCED MOTION - Accessibility for motion-sensitive users                       */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep visual feedback but without movement */
+  .card-interactive:hover {
+    transform: none;
+    box-shadow: var(--shadow-md-val);
+  }
+
+  .row-interactive:hover::before {
+    transform: scaleY(1);
+  }
+
+  .chevron-animated {
+    transition: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* DARK MODE - OLED Display Optimization (true black for reduced power consumption)  */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  .dark {
+    --bg-background: #000000;
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #121212;
+    --bg-tertiary: #1A1A1A;
+    --bg-sidebar: #000000;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* HIGH CONTRAST MODE - Enhanced visibility for accessibility                      */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-contrast: more) {
+  :root {
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #555555;
+    --border-subtle: #000000;
+    --border-medium: #333333;
+  }
+
+  .dark {
+    --text-primary: #FFFFFF;
+    --text-secondary: #F0F0F0;
+    --text-muted: #E0E0E0;
+    --border-subtle: #FFFFFF;
+    --border-medium: #E0E0E0;
+  }
+
+  /* Thicker focus outlines */
+  :where(button, a, [role="button"], [tabindex], input, textarea, select):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Enhanced borders for interactive elements */
+  button, input, textarea, select {
+    border-width: 2px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* LANDSCAPE ORIENTATION - Mobile in landscape mode adjustments                    */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce vertical spacing on landscape mobile */
+  .type-h1 {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  .type-h2 {
+    font-size: 18px;
+    line-height: 1.1;
+  }
+
+  .type-h3 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  button, [role="button"], input, select, textarea {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* LOW LIGHT MODE - Reduced brightness for dark environments                       */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) and (light-level: dim) {
+  .dark {
+    --text-primary: #E8E6E1;
+    --text-secondary: #C0B8AF;
+    --text-muted: #8B7E77;
+    filter: brightness(0.9);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
+/* PRINT STYLES - Optimized layout for printing                                    */
+/* ════════════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .dark {
+    --bg-primary: white;
+    --bg-secondary: #F5F5F5;
+    --text-primary: black;
+    --text-secondary: #333333;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  button, [role="button"], .btn-base {
+    display: none;
+  }
+
+  @page {
+    margin: 2cm;
+  }
+}
