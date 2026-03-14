@@ -90,9 +90,9 @@ export function InlineEditCell({
         onClick={() => setIsEditing(true)}
         role="button"
         aria-label={`Edit ${field}: ${value || placeholder}`}
-        className="cursor-pointer py-1 px-2 rounded hover:bg-surface-secondary transition-colors group relative"
+        className="cursor-pointer py-1 px-2 rounded hover:bg-surface-secondary transition-colors group relative min-w-0 overflow-hidden"
       >
-        <span className="text-content-primary">{value || placeholder}</span>
+        <span className="text-content-primary truncate block">{value || placeholder}</span>
         {showCheckmark && (
           <span className="absolute right-0 top-1/2 transform -translate-y-1/2 text-success animate-fade-out">
             ✓

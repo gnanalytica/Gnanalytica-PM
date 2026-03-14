@@ -209,14 +209,14 @@ export const LinearIssueRow = memo(function LinearIssueRow({
 
       {/* Status badge — clickable with inline dropdown */}
       <div
-        className="flex-shrink-0 relative w-20"
+        className="flex-shrink-0 relative min-w-fit"
         onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === "status" ? null : "status"); }}
       >
         <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium cursor-pointer transition-all duration-100 ${
           activeDropdown === "status" ? "bg-surface-tertiary ring-1 ring-accent/30" : "hover:bg-surface-tertiary"
         }`}>
           <StatusCircle status={ticket.status} />
-          <span className="text-content-secondary truncate">
+          <span className="text-content-secondary">
             {workflow.getStatusLabel(ticket.status)}
           </span>
         </div>
