@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import { useCreateProject } from "@/lib/hooks/use-projects";
 
 export function CreateProjectDialog({
@@ -15,7 +15,7 @@ export function CreateProjectDialog({
   const [error, setError] = useState<string | null>(null);
   const createProject = useCreateProject();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open) setError(null);
   }, [open]);
 

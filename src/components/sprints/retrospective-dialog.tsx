@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import {
   useUpdateCycle,
   useCompleteSprintWithRollover,
@@ -25,7 +25,7 @@ export function RetrospectiveDialog({
     cycle.auto_rollover ?? false,
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open) {
       setNotes(cycle.retrospective_notes ?? "");
       setAutoRollover(cycle.auto_rollover ?? false);

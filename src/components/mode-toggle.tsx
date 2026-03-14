@@ -1,7 +1,7 @@
 'use client';
 
 import { useModetoggle, type ViewMode } from '@/lib/hooks/use-mode-toggle';
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 
 interface ModeButton {
   mode: ViewMode;
@@ -36,7 +36,7 @@ export function ModeToggle() {
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
 

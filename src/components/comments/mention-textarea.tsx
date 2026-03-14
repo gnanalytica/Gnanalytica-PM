@@ -37,13 +37,12 @@ export function MentionTextarea({
     m.name?.toLowerCase().includes(filter.toLowerCase()),
   );
 
-  const checkForMention = useCallback(() => {
+  useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
 
     const cursor = el.selectionStart;
     const textBefore = value.slice(0, cursor);
-    // Find the last @ that isn't preceded by a word char
     const atIndex = textBefore.lastIndexOf("@");
 
     if (atIndex === -1) {
@@ -51,14 +50,12 @@ export function MentionTextarea({
       return;
     }
 
-    // @ must be at start or after a space/newline
     if (atIndex > 0 && /\w/.test(textBefore[atIndex - 1])) {
       setShowDropdown(false);
       return;
     }
 
     const query = textBefore.slice(atIndex + 1);
-    // No newlines in the query
     if (query.includes("\n")) {
       setShowDropdown(false);
       return;
@@ -69,10 +66,6 @@ export function MentionTextarea({
     setShowDropdown(true);
     setSelectedIndex(0);
   }, [value]);
-
-  useEffect(() => {
-    void checkForMention();
-  }, [value, checkForMention]);
 
   const insertMention = (member: Profile) => {
     if (mentionStart === null) return;

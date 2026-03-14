@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface Tab {
@@ -41,7 +41,7 @@ export function MobileModeTabs() {
   const [activeTab, setActiveTab] = useState<string>("list");
 
   // Determine active tab based on current pathname
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentTab = TABS.find((tab) => pathname.includes(tab.path));
     if (currentTab) {
       setActiveTab(currentTab.id);

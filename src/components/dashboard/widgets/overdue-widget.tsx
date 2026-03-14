@@ -7,13 +7,9 @@ export function OverdueWidget({ projectId }: { projectId: string }) {
   const tickets = useProjectTickets(projectId);
   const nowRef = useRef(0);
 
-  // Initialize nowRef on first render
-  if (nowRef.current === 0) {
-    nowRef.current = Date.now();
-  }
-
   // Update current time periodically
   useEffect(() => {
+    nowRef.current = Date.now();
     const interval = setInterval(() => {
       nowRef.current = Date.now();
     }, 60000); // Update every minute
