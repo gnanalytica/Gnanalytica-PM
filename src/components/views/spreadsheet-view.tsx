@@ -74,6 +74,8 @@ function ColumnResizeHandle({
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const lastResizeTime = useRef(0);
+  const THROTTLE_MS = 16; // ~60fps
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -81,10 +83,15 @@ function ColumnResizeHandle({
       e.stopPropagation();
       startX.current = e.clientX;
       startWidth.current = currentWidth;
+      lastResizeTime.current = Date.now();
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
 
       const onMouseMove = (ev: MouseEvent) => {
+        const now = Date.now();
+        if (now - lastResizeTime.current < THROTTLE_MS) return;
+        lastResizeTime.current = now;
+
         const delta = ev.clientX - startX.current;
         onResize(columnKey, Math.max(minWidth, startWidth.current + delta));
       };

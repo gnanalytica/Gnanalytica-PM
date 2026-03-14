@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { TasksByStatusWidget } from "@/components/dashboard/widgets/tasks-by-status";
 import { UpcomingDeadlinesWidget } from "@/components/dashboard/widgets/upcoming-deadlines";
 import { TeamWorkloadWidget } from "@/components/dashboard/widgets/team-workload";
-import { SprintVelocityWidget } from "@/components/dashboard/widgets/sprint-velocity";
 import { ProjectOverviewWidget } from "@/components/dashboard/widgets/project-overview";
 import { MyTasksWidget } from "@/components/dashboard/widgets/my-tasks";
+
+const SprintVelocityWidget = dynamic(
+  () => import("@/components/dashboard/widgets/sprint-velocity").then(m => ({ default: m.SprintVelocityWidget })),
+  { ssr: false, loading: () => <div className="h-48 bg-surface-tertiary rounded animate-pulse" /> }
+);
 import { DashboardWidget as DashboardWidgetComponent } from "@/components/dashboard/dashboard-widget";
 import { WidgetGrid } from "@/components/dashboard/widget-grid-layout";
 import { DashboardSettings } from "@/components/dashboard/dashboard-settings";

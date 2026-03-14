@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { useProjects, useDeleteProject } from "@/lib/hooks/use-projects";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -13,8 +14,12 @@ import {
 } from "@/lib/store/notification-store";
 import { usePrefetch } from "@/lib/hooks/use-prefetch";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { useState, useCallback } from "react";
+
+const CreateProjectDialog = dynamic(
+  () => import("@/components/projects/create-project-dialog").then(m => ({ default: m.CreateProjectDialog })),
+  { ssr: false }
+);
 import { useTheme } from "@/lib/use-theme";
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import { useContextMenu } from "@/components/context-menu";

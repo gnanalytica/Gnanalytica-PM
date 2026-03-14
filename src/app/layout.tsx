@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { MembersProvider } from "@/providers/members-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "Internal PM",

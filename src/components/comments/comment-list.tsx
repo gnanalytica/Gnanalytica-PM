@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Image from "next/image";
 import {
   useComments,
@@ -18,7 +18,7 @@ import type { Comment } from "@/types";
 
 const MAX_DEPTH = 3;
 
-function CommentItem({
+const CommentItem = memo(function CommentItem({
   comment,
   ticketId,
   assigneeId,
@@ -148,7 +148,7 @@ function CommentItem({
       )}
     </div>
   );
-}
+});
 
 export function CommentList({
   ticketId,

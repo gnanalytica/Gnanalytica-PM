@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useProjects } from "@/lib/hooks/use-projects";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useAssignedTickets } from "@/lib/hooks/use-tickets";
 import { useHydrateMyTickets } from "@/lib/hooks/use-my-tickets";
 import { useWorkspaceNav } from "@/lib/hooks/use-workspace-nav";
-import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
+
+const CreateProjectDialog = dynamic(
+  () => import("@/components/projects/create-project-dialog").then(m => ({ default: m.CreateProjectDialog })),
+  { ssr: false }
+);
 import { EmptyState, FolderIcon } from "@/components/empty-state";
 import { DashboardSkeleton } from "@/components/skeletons";
 import {

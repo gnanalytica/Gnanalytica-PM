@@ -9,11 +9,16 @@ import {
   lazy,
   Suspense,
 } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { TicketListView } from "@/components/tickets/ticket-list-view";
 import { KanbanBoard } from "@/components/board/kanban-board";
-import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { WorkflowEditor } from "@/components/workflow/workflow-editor";
+
+const CreateTicketDialog = dynamic(
+  () => import("@/components/tickets/create-ticket-dialog").then(m => ({ default: m.CreateTicketDialog })),
+  { ssr: false }
+);
 import { useHydrateTickets } from "@/lib/hooks/use-tickets";
 import { useProject, useDeleteProject } from "@/lib/hooks/use-projects";
 import { useRealtimeTickets } from "@/lib/hooks/use-realtime";
