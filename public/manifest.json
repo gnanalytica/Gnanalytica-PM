@@ -1,0 +1,58 @@
+{
+  "name": "Gnanalytica PM - Project Management",
+  "short_name": "Gnanalytica",
+  "description": "Internal Project Management System for team collaboration",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#FF6B35",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-320.png",
+      "sizes": "320x320",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/dashboard-540.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Issues",
+      "url": "/my-issues",
+      "icons": [{ "src": "/icons/issues-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/dashboard-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
