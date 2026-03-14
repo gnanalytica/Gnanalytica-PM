@@ -24,7 +24,7 @@ export function useBurndownData(cycleId: string | null, projectId: string) {
       // Fetch cycle details
       const { data: cycle, error: cycleErr } = await supabase
         .from("cycles")
-        .select("id, name, start_date, end_date, project_id, status, auto_rollover")
+        .select("id, name, start_date, end_date, project_id, status, auto_rollover, retrospective_notes, created_at")
         .eq("id", cycleId!)
         .single();
       if (cycleErr) throw cycleErr;
