@@ -11,8 +11,7 @@ const supabase = createClient();
 
 /**
  * Subscribe to realtime ticket changes for a project.
- * Updates the Zustand store directly for immediate UI response,
- * then triggers a background React Query refetch for full relations.
+ * Updates the Zustand store directly for immediate UI response.
  */
 export function useRealtimeTickets(projectId: string | undefined) {
   const queryClient = useQueryClient();
@@ -51,7 +50,7 @@ export function useRealtimeTickets(projectId: string | undefined) {
       // Add to Zustand store immediately
       addTicket({ ...row, labels: [] });
 
-      // Background refetch for full relations (assignee, creator, labels)
+      // Background refetch for full relations
       queryClient.invalidateQueries({
         queryKey: ["tickets", projectId],
         refetchType: "active",
@@ -66,23 +65,18 @@ export function useRealtimeTickets(projectId: string | undefined) {
       const row = payload.new as unknown as Ticket;
       if (!row?.id) return;
 
-      // Update Zustand store (preserves joined data via partial update)
+      // Update Zustand store (preserves joined data)
       const existing = useTicketStore.getState().byId[row.id];
       if (existing) {
         updateTicket(row.id, {
           ...row,
-          // Preserve joined data that realtime doesn't include
           assignee: existing.assignee,
           creator: existing.creator,
           labels: existing.labels,
         });
       }
 
-      // Background refetch for full relation data
-      queryClient.invalidateQueries({
-        queryKey: ["tickets", projectId],
-        refetchType: "active",
-      });
+      // Only refetch if this ticket is currently open/cached
       if (existing) {
         queryClient.invalidateQueries({
           queryKey: ["ticket", row.id],
@@ -99,14 +93,12 @@ export function useRealtimeTickets(projectId: string | undefined) {
       const deletedId = (payload.old as { id?: string })?.id;
       if (!deletedId) return;
 
-      // Remove from Zustand store
       removeTicket(deletedId);
-
       queryClient.removeQueries({ queryKey: ["ticket", deletedId] });
     };
 
     const channel = supabase
-      .channel(`tickets:${projectId}`)
+      .channel(`project:${projectId}:events`)
       .on(
         "postgres_changes",
         {
@@ -140,7 +132,7 @@ export function useRealtimeTickets(projectId: string | undefined) {
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") {
           console.warn(
-            "[Realtime] tickets channel error — will retry with backoff",
+            "[Realtime] project events channel error — will retry with backoff",
           );
         }
       });
@@ -152,53 +144,96 @@ export function useRealtimeTickets(projectId: string | undefined) {
 }
 
 /**
- * Subscribe to realtime comment changes for a ticket.
- * Handles INSERT, UPDATE, and DELETE events.
+ * Subscribe to all realtime ticket detail changes (comments, assignees, relations, attachments, reactions).
+ * Consolidated into a single channel to reduce connection overhead.
  */
-export function useRealtimeComments(ticketId: string) {
+export function useRealtimeTicketDetail(ticketId: string | undefined) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const invalidate = () => {
+    if (!ticketId) return;
+
+    const invalidateComments = () => {
       queryClient.invalidateQueries({ queryKey: ["comments", ticketId] });
     };
 
+    const invalidateRelations = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-relations", ticketId],
+      });
+    };
+
+    const invalidateAttachments = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-attachments", ticketId],
+      });
+    };
+
+    const invalidateTicket = () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
+    };
+
     const channel = supabase
-      .channel(`comments:${ticketId}`)
+      .channel(`ticket:${ticketId}:detail`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "comments",
           filter: `ticket_id=eq.${ticketId}`,
         },
-        invalidate,
+        invalidateComments,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comment_reactions" },
+        invalidateComments,
       )
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
-          table: "comments",
-          filter: `ticket_id=eq.${ticketId}`,
+          table: "ticket_relations",
+          filter: `source_ticket_id=eq.${ticketId}`,
         },
-        invalidate,
+        invalidateRelations,
       )
       .on(
         "postgres_changes",
         {
-          event: "DELETE",
+          event: "*",
           schema: "public",
-          table: "comments",
+          table: "ticket_relations",
+          filter: `target_ticket_id=eq.${ticketId}`,
+        },
+        invalidateRelations,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_assignees",
           filter: `ticket_id=eq.${ticketId}`,
         },
-        invalidate,
+        invalidateTicket,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ticket_attachments",
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        invalidateAttachments,
       )
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") {
           console.warn(
-            "[Realtime] comments channel error — will retry with backoff",
+            "[Realtime] ticket detail channel error — will retry with backoff",
           );
         }
       });
@@ -209,141 +244,25 @@ export function useRealtimeComments(ticketId: string) {
   }, [ticketId, queryClient]);
 }
 
-/**
- * Subscribe to realtime changes for ticket relations.
- */
+// Keep old function names for backward compatibility, but delegate to consolidated hook
+export function useRealtimeComments(ticketId: string) {
+  useRealtimeTicketDetail(ticketId);
+}
+
 export function useRealtimeTicketRelations(ticketId: string) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!ticketId) return;
-    const invalidate = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["ticket-relations", ticketId],
-      });
-    };
-
-    const channel = supabase
-      .channel(`relations:${ticketId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ticket_relations",
-          filter: `source_ticket_id=eq.${ticketId}`,
-        },
-        invalidate,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ticket_relations",
-          filter: `target_ticket_id=eq.${ticketId}`,
-        },
-        invalidate,
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [ticketId, queryClient]);
+  useRealtimeTicketDetail(ticketId);
 }
 
-/**
- * Subscribe to realtime changes for ticket assignees.
- */
 export function useRealtimeTicketAssignees(ticketId: string) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!ticketId) return;
-    const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
-    };
-
-    const channel = supabase
-      .channel(`assignees:${ticketId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ticket_assignees",
-          filter: `ticket_id=eq.${ticketId}`,
-        },
-        invalidate,
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [ticketId, queryClient]);
+  useRealtimeTicketDetail(ticketId);
 }
 
-/**
- * Subscribe to realtime changes for ticket attachments.
- */
 export function useRealtimeTicketAttachments(ticketId: string) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!ticketId) return;
-    const invalidate = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["ticket-attachments", ticketId],
-      });
-    };
-
-    const channel = supabase
-      .channel(`attachments:${ticketId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ticket_attachments",
-          filter: `ticket_id=eq.${ticketId}`,
-        },
-        invalidate,
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [ticketId, queryClient]);
+  useRealtimeTicketDetail(ticketId);
 }
 
-/**
- * Subscribe to realtime changes for comment reactions.
- */
 export function useRealtimeCommentReactions(ticketId: string) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!ticketId) return;
-    const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", ticketId] });
-    };
-
-    const channel = supabase
-      .channel(`reactions:${ticketId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "comment_reactions" },
-        invalidate,
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [ticketId, queryClient]);
+  useRealtimeTicketDetail(ticketId);
 }
 
 /**

@@ -13,7 +13,7 @@ export function useProjects() {
     queryFn: async (): Promise<Project[]> => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("id, name, description, created_by, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -27,7 +27,7 @@ export function useProject(projectId: string) {
     queryFn: async (): Promise<Project> => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("id, name, description, created_by, created_at")
         .eq("id", projectId)
         .single();
       if (error) throw error;

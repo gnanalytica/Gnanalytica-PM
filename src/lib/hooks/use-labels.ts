@@ -12,7 +12,7 @@ export function useLabels(projectId: string) {
     queryFn: async (): Promise<Label[]> => {
       const { data, error } = await supabase
         .from("labels")
-        .select("*")
+        .select("id, name, color, project_id")
         .eq("project_id", projectId)
         .order("name");
       if (error) throw error;

@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { MembersProvider } from "@/providers/members-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <QueryProvider>
           <AuthProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <MembersProvider>
+              <ThemeProvider>{children}</ThemeProvider>
+            </MembersProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

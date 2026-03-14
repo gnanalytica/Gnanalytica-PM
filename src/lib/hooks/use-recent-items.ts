@@ -16,7 +16,7 @@ export function useRecentItems(limit = 10) {
       if (!user) return [];
       const { data, error } = await supabase
         .from("recent_items")
-        .select("*")
+        .select("id, user_id, item_type, item_id, accessed_at")
         .eq("user_id", user.id)
         .order("accessed_at", { ascending: false })
         .limit(limit);

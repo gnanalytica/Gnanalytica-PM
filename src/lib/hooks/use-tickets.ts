@@ -610,8 +610,20 @@ export function useUpdateTicket() {
     }) => {
       void project_id;
 
-      // Snapshot old state (status, assignee_id, label_ids) in parallel
-      const oldSnap = await fetchTicketSnapshot(id);
+      // Get old snapshot from in-memory Zustand store instead of fetching
+      const existingTicket = store.getState().byId[id];
+      const oldSnap = {
+        status: existingTicket?.status,
+        priority: existingTicket?.priority,
+        assignee_id: existingTicket?.assignee_id ?? null,
+        label_ids: existingTicket?.labels?.map((l) => l.id) ?? [],
+        issue_type: existingTicket?.issue_type,
+        story_points: existingTicket?.story_points ?? null,
+        start_date: existingTicket?.start_date ?? null,
+        milestone_id: existingTicket?.milestone_id ?? null,
+        epic_id: existingTicket?.epic_id ?? null,
+        parent_id: existingTicket?.parent_id ?? null,
+      };
 
       // Sync primary assignee from multi-assign list
       if (assignee_ids !== undefined) {

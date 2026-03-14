@@ -19,6 +19,7 @@ export function useBurndownData(cycleId: string | null, projectId: string) {
 
   return useQuery({
     queryKey: ["burndown", cycleId],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes - burndown doesn't need real-time updates
     queryFn: async () => {
       // Fetch cycle details
       const { data: cycle, error: cycleErr } = await supabase
@@ -152,7 +153,6 @@ export function useBurndownData(cycleId: string | null, projectId: string) {
       return { data, totalScope };
     },
     enabled: !!cycleId,
-    staleTime: 30_000,
   });
 }
 
