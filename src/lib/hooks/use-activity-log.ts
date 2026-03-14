@@ -288,11 +288,11 @@ export function useActivityLog(ticketId: string) {
     queryFn: async (): Promise<ActivityLog[]> => {
       const { data, error } = await supabase
         .from("activity_log")
-        .select("*, user:profiles(*)")
+        .select("id, ticket_id, user_id, action, field, old_value, new_value, created_at, user:profiles(id, name, avatar_url, role, created_at)")
         .eq("ticket_id", ticketId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data ?? []) as unknown as ActivityLog[];
     },
     enabled: !!ticketId,
   });

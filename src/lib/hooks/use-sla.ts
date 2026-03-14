@@ -13,7 +13,7 @@ export function useSLAPolicies(projectId: string | undefined) {
       if (!projectId) return [];
       const { data, error } = await supabase
         .from("sla_policies")
-        .select("*")
+        .select("id, project_id, priority, response_time_minutes, resolution_time_minutes, created_at")
         .eq("project_id", projectId);
       if (error) throw error;
       return (data ?? []) as SLAPolicy[];

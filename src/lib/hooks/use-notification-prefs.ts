@@ -16,7 +16,7 @@ export function useNotificationPrefs() {
       if (!user) return null;
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("*")
+        .select("user_id, email_enabled, email_mode, push_enabled, digest_enabled, digest_frequency, notify_on_assign, notify_on_mention, notify_on_status_change, notify_on_comment, notify_on_due_date, quiet_hours_start, quiet_hours_end, updated_at")
         .eq("user_id", user.id)
         .maybeSingle();
       if (error) throw error;

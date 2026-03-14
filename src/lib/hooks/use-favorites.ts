@@ -17,7 +17,7 @@ export function useFavorites() {
       if (!user) return [];
       const { data, error } = await supabase
         .from("favorites")
-        .select("*")
+        .select("id, user_id, item_type, item_id, position")
         .eq("user_id", user.id)
         .order("position", { ascending: true });
       if (error) throw error;

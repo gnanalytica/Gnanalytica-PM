@@ -39,11 +39,11 @@ export function useComments(ticketId: string) {
     queryFn: async (): Promise<Comment[]> => {
       const { data, error } = await supabase
         .from("comments")
-        .select("*, user:profiles(*)")
+        .select("id, ticket_id, body, user_id, parent_id, created_at, updated_at, user:profiles(id, name, avatar_url, role, created_at)")
         .eq("ticket_id", ticketId)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return buildThreads(data ?? []);
+      return buildThreads((data ?? []) as unknown as Comment[]);
     },
   });
 }
@@ -86,7 +86,7 @@ export function useCreateComment() {
       const { data, error } = await supabase
         .from("comments")
         .insert(insertPayload)
-        .select("*, user:profiles(*)")
+        .select("id, ticket_id, body, user_id, parent_id, created_at, updated_at, user:profiles(id, name, avatar_url, role, created_at)")
         .single();
       if (error) throw error;
 

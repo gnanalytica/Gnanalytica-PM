@@ -58,7 +58,7 @@ async function fetchWorkflow(
 ): Promise<ProjectWorkflow | null> {
   const { data, error } = await supabase
     .from("project_workflows")
-    .select("*")
+    .select("project_id, statuses, transitions")
     .eq("project_id", projectId)
     .maybeSingle();
   if (error) throw error;
@@ -162,7 +162,7 @@ export function useUpdateWorkflow() {
           },
           { onConflict: "project_id" },
         )
-        .select()
+        .select("project_id, statuses, transitions")
         .single();
       if (error) throw error;
       return data;

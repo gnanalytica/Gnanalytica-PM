@@ -28,7 +28,7 @@ export function useOnboarding() {
       // Try to fetch existing row
       const { data, error } = await supabase
         .from("onboarding_state")
-        .select("*")
+        .select("user_id, step, completed, created_at, updated_at")
         .eq("user_id", userId!)
         .single();
 

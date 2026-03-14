@@ -17,7 +17,7 @@ export function useSavedViews(projectId: string | undefined) {
       // Fetch own views + shared views from other users
       const { data, error } = await supabase
         .from("saved_views")
-        .select("*")
+        .select("id, project_id, name, filters, sort_key, sort_dir, created_by, is_shared, share_token, created_at, updated_at")
         .eq("project_id", projectId!)
         .or(`created_by.eq.${user.id},is_shared.eq.true`)
         .order("name");

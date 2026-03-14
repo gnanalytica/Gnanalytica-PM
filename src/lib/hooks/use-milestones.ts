@@ -19,7 +19,7 @@ export function useHydrateMilestones(projectId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("milestones")
-        .select("*")
+        .select("id, name, description, target_date, project_id, status, created_at, updated_at")
         .eq("project_id", projectId)
         .order("target_date", { ascending: true, nullsFirst: false });
       if (error) throw error;

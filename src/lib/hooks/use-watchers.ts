@@ -12,7 +12,7 @@ export function useWatchers(ticketId: string) {
     queryFn: async (): Promise<TicketWatcher[]> => {
       const { data, error } = await supabase
         .from("ticket_watchers")
-        .select("*")
+        .select("ticket_id, user_id, created_at")
         .eq("ticket_id", ticketId);
       if (error) throw error;
       return data ?? [];

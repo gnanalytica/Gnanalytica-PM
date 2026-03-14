@@ -18,7 +18,7 @@ export function useCustomFieldDefinitions(projectId: string | undefined) {
     queryFn: async (): Promise<CustomFieldDefinition[]> => {
       const { data, error } = await supabase
         .from("custom_field_definitions")
-        .select("*")
+        .select("id, project_id, name, field_type, options, required, position, created_at")
         .eq("project_id", projectId!)
         .order("position");
       if (error) throw error;
@@ -89,7 +89,7 @@ export function useCustomFieldValues(ticketId: string) {
     queryFn: async (): Promise<CustomFieldValue[]> => {
       const { data, error } = await supabase
         .from("ticket_custom_field_values")
-        .select("*")
+        .select("id, ticket_id, field_id, value, created_at, updated_at")
         .eq("ticket_id", ticketId);
       if (error) throw error;
       return data ?? [];
