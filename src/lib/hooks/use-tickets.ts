@@ -31,6 +31,7 @@ const supabase = createClient();
 // ── Pure fetch functions ──
 
 const TICKET_PAGE_SIZE = 50;
+const MAX_LOADED_TICKETS = 500; // Cap at 500 tickets per project to prevent memory bloat
 
 type TicketPage = {
   tickets: Ticket[];
@@ -138,7 +139,10 @@ export function useHydrateTickets(projectId: string | undefined) {
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const fetched = (lastPage.page + 1) * TICKET_PAGE_SIZE;
-      return fetched < lastPage.total ? lastPage.page + 1 : undefined;
+      // Stop loading after MAX_LOADED_TICKETS or when all tickets are fetched
+      return fetched < Math.min(lastPage.total, MAX_LOADED_TICKETS)
+        ? lastPage.page + 1
+        : undefined;
     },
     enabled: !!projectId,
   });
