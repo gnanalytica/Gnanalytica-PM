@@ -14,7 +14,8 @@ import {
 } from "@/lib/store/notification-store";
 import { usePrefetch } from "@/lib/hooks/use-prefetch";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { MobileNavDrawer } from "./mobile-nav-drawer";
 
 const CreateProjectDialog = dynamic(
   () => import("@/components/projects/create-project-dialog").then(m => ({ default: m.CreateProjectDialog })),
@@ -534,9 +535,19 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void } = {}) {
   const [settingsCollapsed, setSettingsCollapsed] = useState(false);
   const { theme, toggleTheme, mounted } = useTheme();
   const { prefetchProjectTickets } = usePrefetch();
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const projectMatch = pathname.match(/^\/project\/([^/]+)/);
   const activeProjectId = projectMatch?.[1] ?? undefined;
+
+  // Mobile/desktop detection hook
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const toggleProject = useCallback((projectId: string) => {
     setExpandedProjects((prev) => {
@@ -547,8 +558,18 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void } = {}) {
     });
   }, []);
 
+  // Mobile drawer - show on small screens only
+  if (isMobile) {
+    return (
+      <>
+        <MobileNavDrawer open={mobileDrawerOpen} onClose={() => setMobileDrawerOpen(false)} />
+      </>
+    );
+  }
+
+  // Desktop sidebar - hidden on mobile (<768px)
   return (
-    <aside className="w-full h-screen bg-sidebar text-content-secondary flex flex-col flex-shrink-0 border-r border-border-subtle">
+    <aside className="hidden md:flex w-64 lg:w-72 h-screen bg-sidebar text-content-secondary flex-col flex-shrink-0 border-r border-border-subtle">
       {/* ── Workspace header ── */}
       <div className="flex items-center gap-2.5 px-3.5 h-[52px] flex-shrink-0">
         <div className="w-[26px] h-[26px] rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
