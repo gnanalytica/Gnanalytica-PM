@@ -82,9 +82,7 @@ export const TICKET_SELECT = `
   assignee:profiles!tickets_assignee_id_fkey(id,name,avatar_url,role,created_at),
   creator:profiles!tickets_created_by_fkey(id,name,avatar_url,role,created_at),
   labels:ticket_labels(label:labels(id,name,color,project_id)),
-  assignees:ticket_assignees(user:profiles(id,name,avatar_url,role,created_at)),
-  milestone:milestones(id,name,target_date,status),
-  parent:tickets!parent_id(id,title,status)
+  assignees:ticket_assignees(user:profiles(id,name,avatar_url,role,created_at))
 `;
 
 async function fetchProjectTicketsPage(

@@ -11,10 +11,29 @@ const supabase = createClient();
 // ── Shared select shape (matches fetchProjectTickets in use-tickets.ts) ──
 
 const TICKET_SELECT = `
-  *,
-  assignee:profiles!tickets_assignee_id_fkey(*),
-  creator:profiles!tickets_created_by_fkey(*),
-  labels:ticket_labels(label:labels(*))
+  id,
+  title,
+  description,
+  status,
+  status_category,
+  priority,
+  issue_type,
+  cycle_id,
+  project_id,
+  assignee_id,
+  created_by,
+  parent_id,
+  created_at,
+  updated_at,
+  due_date,
+  is_draft,
+  custom_field_values,
+  sla_due_date,
+  time_tracked_minutes,
+  estimated_minutes,
+  assignee:profiles!tickets_assignee_id_fkey(id,name,avatar_url,role,created_at),
+  creator:profiles!tickets_created_by_fkey(id,name,avatar_url,role,created_at),
+  labels:ticket_labels(label:labels(id,name,color,project_id))
 `;
 
 const MY_TICKETS_PAGE_SIZE = 50;
@@ -173,7 +192,7 @@ export function useUserActivity(userId: string) {
     > => {
       const { data, error } = await supabase
         .from("activity_log")
-        .select("*, user:profiles(*), ticket:tickets(id, title)")
+        .select("*, user:profiles!activity_log_user_id_fkey(id,name,avatar_url,role,created_at), ticket:tickets(id, title)")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50);

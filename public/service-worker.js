@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `gnanalytica-${CACHE_VERSION}`;
 
 // Files to cache on install
@@ -78,21 +78,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for other static assets (images, icons, etc.)
+  // Cache-first for other static assets (images, icons, fonts, etc.)
   event.respondWith(
-    caches.match(request).then((response) => {
-      const fetchPromise = fetch(request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) {
-          return response;
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const cloned = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, cloned);
+          });
         }
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, networkResponse.clone());
-        });
         return networkResponse;
-      }).catch(() => {
-        return response;
       });
-      return response || fetchPromise;
     })
   );
 });
