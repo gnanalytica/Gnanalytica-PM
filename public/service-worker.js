@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `gnanalytica-${CACHE_VERSION}`;
 
 // Files to cache on install
@@ -6,8 +6,8 @@ const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/offline.html',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-192.svg',
+  '/icons/icon-512.svg'
 ];
 
 // Install event - cache static assets
