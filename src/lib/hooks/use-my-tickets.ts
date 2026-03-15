@@ -81,8 +81,10 @@ async function fetchMyTicketsPage(
       .range(from, to),
   ]);
 
-  if (assignedRes.error) throw assignedRes.error;
-  if (createdRes.error) throw createdRes.error;
+  // 416 = Range Not Satisfiable — offset is beyond the result set, treat as empty page
+  const is416 = (e: { code?: string } | null) => e?.code === "PGRST103";
+  if (assignedRes.error && !is416(assignedRes.error)) throw assignedRes.error;
+  if (createdRes.error && !is416(createdRes.error)) throw createdRes.error;
 
   // Deduplicate (a ticket can be both assigned to and created by the user)
   const seen = new Set<string>();
@@ -94,7 +96,10 @@ async function fetchMyTicketsPage(
   }
 
   // Total = max of the two counts (upper bound; actual is lower due to dedup)
-  const total = Math.max(assignedRes.count ?? 0, createdRes.count ?? 0);
+  // On 416 errors, count is null — preserve previous count by using 0
+  const assignedCount = is416(assignedRes.error) ? 0 : (assignedRes.count ?? 0);
+  const createdCount = is416(createdRes.error) ? 0 : (createdRes.count ?? 0);
+  const total = Math.max(assignedCount, createdCount);
 
   return { tickets, total, page };
 }

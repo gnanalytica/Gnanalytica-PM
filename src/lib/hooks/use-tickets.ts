@@ -104,7 +104,8 @@ async function fetchProjectTicketsPage(
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (error) throw error;
+  // 416 = Range Not Satisfiable — offset beyond result set, treat as empty page
+  if (error && error.code !== "PGRST103") throw error;
   return {
     tickets: (data ?? []).map(normalizeTicket),
     total: count ?? 0,
