@@ -208,11 +208,12 @@ export function useHydrateTickets(projectId: string | undefined) {
   }, [pages, pageCount, projectId]);
 
   // Auto-fetch remaining pages in the background after the first page loads
+  const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = query;
   useEffect(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) {
-      void query.fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage && !isError) {
+      void fetchNextPage();
     }
-  }, [query.hasNextPage, query.isFetchingNextPage, query]);
+  }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
 
   const loadedCount = useMemo(() => {
     if (!pages) return 0;
