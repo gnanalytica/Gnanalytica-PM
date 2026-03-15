@@ -3,35 +3,37 @@ import { createBrowserClient } from "@supabase/ssr";
 let client: ReturnType<typeof createBrowserClient<any>> | null = null;
 
 /**
- * Custom lock implementation that prevents orphaned Web Locks from blocking
- * the auth session indefinitely. Uses navigator.locks with a timeout fallback
- * so the app never gets stuck on skeleton loaders.
+ * Custom lock that steals orphaned Web Locks to prevent the auth session
+ * from hanging indefinitely. If the lock can't be acquired within the
+ * timeout, it steals it to recover gracefully.
  */
-const lockTimeout = 5000;
-const navigatorLock: (<R>(
+const navigatorLockWithSteal = async <R>(
   name: string,
   acquireTimeout: number,
   fn: () => Promise<R>,
-) => Promise<R>) = async (name, acquireTimeout, fn) => {
+): Promise<R> => {
   if (typeof navigator === "undefined" || !navigator.locks) {
-    // Fallback for environments without Web Locks API
     return fn();
   }
 
-  const timeout = Math.max(acquireTimeout, lockTimeout);
   const ac = new AbortController();
+  const timeout = Math.max(acquireTimeout, 5000);
   const timer = setTimeout(() => ac.abort(), timeout);
 
   try {
     return await navigator.locks.request(
       name,
       { signal: ac.signal },
-      async () => fn(),
+      () => fn(),
     );
   } catch (e: unknown) {
     if (e instanceof DOMException && e.name === "AbortError") {
-      // Lock timed out — run without lock to prevent hanging
-      return fn();
+      // Lock acquisition timed out — steal the orphaned lock to recover
+      return await navigator.locks.request(
+        name,
+        { steal: true },
+        () => fn(),
+      );
     }
     throw e;
   } finally {
@@ -47,11 +49,7 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        flowType: "pkce",
-        detectSessionInUrl: true,
-        persistSession: true,
-        autoRefreshToken: true,
-        lock: navigatorLock,
+        lock: navigatorLockWithSteal,
       },
       realtime: {
         params: { eventsPerSecond: 2 },
