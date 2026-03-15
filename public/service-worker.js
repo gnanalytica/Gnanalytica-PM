@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `gnanalytica-${CACHE_VERSION}`;
 
 // Files to cache on install
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network first strategy for API calls
+  // Network first strategy for API calls and Supabase
   if (url.pathname.startsWith('/rest/') || url.pathname.startsWith('/auth/')) {
     event.respondWith(
       fetch(request).catch(() => {
@@ -67,7 +67,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets
+  // Never cache Next.js pages or JS chunks — always fetch from network
+  // This prevents stale JS from being served after deployments
+  if (url.pathname.startsWith('/_next/') || url.pathname === '/' || !url.pathname.includes('.')) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return caches.match(request) || caches.match('/offline.html');
+      })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for other static assets (images, icons, etc.)
   event.respondWith(
     caches.match(request).then((response) => {
       const fetchPromise = fetch(request).then((networkResponse) => {
