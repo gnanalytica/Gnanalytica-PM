@@ -83,14 +83,15 @@ export async function PATCH(
       );
     }
 
-    // Check if user is project creator or workspace member
-    const { data: workspace } = await supabase
-      .from("workspace_members")
-      .select("id")
+    // Check if user is project creator or project member
+    const { data: membership } = await supabase
+      .from("project_members")
+      .select("user_id")
+      .eq("project_id", projectId)
       .eq("user_id", user.id)
       .single();
 
-    if (project.created_by !== user.id && !workspace) {
+    if (project.created_by !== user.id && !membership) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }

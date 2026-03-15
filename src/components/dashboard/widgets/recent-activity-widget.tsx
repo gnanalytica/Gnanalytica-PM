@@ -34,7 +34,7 @@ export function RecentActivityWidget({ projectId }: { projectId: string }) {
       const { data, error } = await supabase
         .from("activity_log")
         .select(
-          "id, ticket_id, field, old_value, new_value, changed_by, created_at, ticket:tickets!inner(title, project_id), user:profiles!activity_log_changed_by_fkey(name)",
+          "id, ticket_id, field, old_value, new_value, user_id, created_at, ticket:tickets!inner(title, project_id), user:profiles!activity_log_user_id_fkey(name)",
         )
         .eq("ticket.project_id", projectId)
         .order("created_at", { ascending: false })
